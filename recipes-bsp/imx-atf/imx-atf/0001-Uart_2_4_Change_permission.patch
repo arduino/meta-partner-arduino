@@ -1,0 +1,15 @@
+Index: git/plat/imx/imx8mm/imx8mm_bl31_setup.c
+===================================================================
+--- git.orig/plat/imx/imx8mm/imx8mm_bl31_setup.c	2020-02-03 10:28:19.457103473 +0100
++++ git/plat/imx/imx8mm/imx8mm_bl31_setup.c	2020-02-03 10:28:41.209104124 +0100
+@@ -310,8 +310,8 @@
+ 
+ 	/* Assign M4 to domain 1 */
+ 	mmio_write_32(IMX_RDC_BASE + 0x204, 0x1);
+-	mmio_write_32(IMX_RDC_BASE + 0x518, 0xfc);
+-	mmio_write_32(IMX_RDC_BASE + 0x5A4, 0xf3);
++	//mmio_write_32(IMX_RDC_BASE + 0x518, 0xfc); // changed from 0xFC to give back uart 4 to everyone
++	//mmio_write_32(IMX_RDC_BASE + 0x5A4, 0xf3); // changed from 0xF3 to give back uart 2 to everyone
+ 
+ #if defined (CSU_RDC_TEST)
+ 	csu_test();

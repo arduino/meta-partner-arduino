@@ -1,0 +1,26 @@
+Index: git/core/arch/arm/plat-imx/conf.mk
+===================================================================
+--- git.orig/core/arch/arm/plat-imx/conf.mk
++++ git/core/arch/arm/plat-imx/conf.mk
+@@ -62,7 +62,8 @@ imx8mq-flavorlist = \
+ 	imx8mqevk
+ 
+ imx8mm-flavorlist = \
+-	imx8mmevk
++	imx8mmevk \
++	imx8mmportenta
+ 
+ imx8mn-flavorlist = \
+ 	imx8mnevk
+@@ -300,6 +301,11 @@ CFG_DDR_SIZE ?= 0x80000000
+ CFG_UART_BASE ?= UART2_BASE
+ endif
+ 
++ifneq (,$(filter $(PLATFORM_FLAVOR),imx8mmportenta))
++CFG_DDR_SIZE ?= 0x80000000
++CFG_UART_BASE ?= UART3_BASE
++endif
++
+ ifneq (,$(filter $(PLATFORM_FLAVOR),imx8mnevk))
+ CFG_DDR_SIZE ?= 0x80000000
+ CFG_UART_BASE ?= UART2_BASE
