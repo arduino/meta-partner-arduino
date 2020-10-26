@@ -3583,7 +3583,7 @@ Index: git/include/configs/portenta-m8.h
 ===================================================================
 --- /dev/null
 +++ git/include/configs/portenta-m8.h
-@@ -0,0 +1,367 @@
+@@ -0,0 +1,369 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
 + * Copyright 2018 NXP
@@ -3669,8 +3669,10 @@ Index: git/include/configs/portenta-m8.h
 +#define CONFIG_BOARD_EARLY_INIT_F
 +#define CONFIG_BOARD_LATE_INIT
 +
-+#undef CONFIG_CMD_EXPORTENV
-+#undef CONFIG_CMD_IMPORTENV
++//#undef CONFIG_CMD_EXPORTENV
++//#undef CONFIG_CMD_IMPORTENV
++#define CONFIG_CMD_EXPORTENV
++#define CONFIG_CMD_IMPORTENV
 +#undef CONFIG_CMD_IMLS
 +
 +#undef CONFIG_CMD_CRC32
