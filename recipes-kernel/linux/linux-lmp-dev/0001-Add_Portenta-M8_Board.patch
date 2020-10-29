@@ -2210,7 +2210,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		enable-active-high;
 +	};
 +
-+	reg_audio_board: regulator-audio-board {
++	/*reg_audio_board: regulator-audio-board {
 +		compatible = "regulator-fixed";
 +		regulator-name = "EXT_PWREN";
 +		regulator-min-microvolt = <3300000>;
@@ -2218,9 +2218,9 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		enable-active-high;
 +		startup-delay-us = <300000>;
 +		gpio = <&pca6416 1 GPIO_ACTIVE_HIGH>;
-+	};
++	};*/
 +
-+	wm8524: audio-codec {
++	/*wm8524: audio-codec {
 +		#sound-dai-cells = <0>;
 +		compatible = "wlf,wm8524";
 +		pinctrl-names = "default";
@@ -2251,9 +2251,9 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			sound-dai = <&wm8524>;
 +			clocks = <&clk IMX8MM_CLK_SAI3_ROOT>;
 +		};
-+	};
++	};*/
 +
-+	sound-ak4458 {
++	/*sound-ak4458 {
 +		compatible = "fsl,imx-audio-ak4458";
 +		model = "ak4458-audio";
 +		audio-cpu = <&sai1>;
@@ -2275,7 +2275,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		audio-cpu = <&sai1>;
 +		audio-codec = <&ak4497>;
 +		status = "disabled";
-+	};
++	};*/
 +
 +	sound-spdif {
 +		compatible = "fsl,imx-audio-spdif";
@@ -2296,7 +2296,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	cpu-supply = <&buck2_reg>;
 +};
 +
-+&csi1_bridge {
++/*&csi1_bridge {
 +	fsl,mipi-mode;
 +	status = "okay";
 +	port {
@@ -2304,7 +2304,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			remote-endpoint = <&csi1_mipi_ep>;
 +		};
 +	};
-+};
++};*/
 +
 +&fec1 {
 +	pinctrl-names = "default";
@@ -2320,9 +2320,9 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +
 +		ethphy0: ethernet-phy@0 {
 +			compatible = "ethernet-phy-ieee802.3-c22";
-+			reg = <0>;
-+			at803x,eee-disabled;
-+			at803x,vddio-1p8v;
++			reg = <1>;
++			/*at803x,eee-disabled;
++			at803x,vddio-1p8v;*/
 +		};
 +	};
 +};
@@ -2339,7 +2339,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
 +	ext_osc = <1>;
 +	reserved-region = <&rpmsg_reserved>;
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&sai3 {
@@ -2424,18 +2424,18 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	status = "okay";
 +};
 +
-+&uart2 { /* console */
++&uart2 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_uart2>;
 +	status = "okay";
 +};
 +
-+&uart3 {
++&uart3 { /* console */
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_uart3>;
 +	assigned-clocks = <&clk IMX8MM_CLK_UART3>;
 +	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
-+	fsl,uart-has-rtscts;
++	/*fsl,uart-has-rtscts;*/
 +	status = "okay";
 +};
 +
@@ -2447,11 +2447,11 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	usb-role-switch;
 +	status = "okay";
 +
-+	port {
++	/*port {
 +		usb1_drd_sw: endpoint {
 +			remote-endpoint = <&typec1_dr_sw>;
 +		};
-+	};
++	};*/
 +};
 +
 +&usdhc1 {
@@ -2631,7 +2631,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	pinctrl-0 = <&pinctrl_i2c2>;
 +	status = "okay";
 +
-+	adv_bridge: adv7535@3d {
++	/*adv_bridge: adv7535@3d {
 +		compatible = "adi,adv7533";
 +		reg = <0x3d>;
 +		adi,addr-cec = <0x3b>;
@@ -2647,9 +2647,9 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +				remote-endpoint = <&dsim_to_adv7535>;
 +			};
 +		};
-+	};
++	};*/
 +
-+	ptn5110: tcpc@50 {
++	/*ptn5110: tcpc@50 {
 +		compatible = "nxp,ptn5110";
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&pinctrl_typec1>;
@@ -2676,7 +2676,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			op-sink-microwatt = <15000000>;
 +			self-powered;
 +		};
-+	};
++	};*/
 +};
 +
 +&i2c3 {
@@ -2685,7 +2685,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	pinctrl-0 = <&pinctrl_i2c3>;
 +	status = "okay";
 +
-+	pca6416: gpio@20 {
++	/*pca6416: gpio@20 {
 +		compatible = "ti,tca6416";
 +		reg = <0x20>;
 +		gpio-controller;
@@ -2742,7 +2742,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +				remote-endpoint = <&mipi1_sensor_ep>;
 +			};
 +		};
-+	};
++	};*/
 +};
 +
 +&iomuxc {
@@ -3103,7 +3103,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	status = "okay";
 +};
 +
-+&mipi_csi_1 {
++/*&mipi_csi_1 {
 +	#address-cells = <1>;
 +	#size-cells = <0>;
 +	status = "okay";
@@ -3120,9 +3120,9 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			remote-endpoint = <&csi1_ep>;
 +		};
 +	};
-+};
++};*/
 +
-+&mipi_dsi {
++/*&mipi_dsi {
 +	status = "okay";
 +
 +	port@1 {
@@ -3131,7 +3131,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			attach-bridge;
 +		};
 +	};
-+};
++};*/
 +
 +&vpu_g1 {
 +	status = "okay";
