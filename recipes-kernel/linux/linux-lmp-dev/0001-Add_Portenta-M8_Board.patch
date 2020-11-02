@@ -2441,7 +2441,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
-@@ -0,0 +1,897 @@
+@@ -0,0 +1,913 @@
 +/**
 + * Copyright 2020
 + */
@@ -3288,6 +3288,22 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		spi-max-frequency = <20000000>;
 +		reg = <1>;
 +	};
++};
++
++&pwm1 {
++	status = "okay";
++};
++
++&pwm2 {
++	status = "okay";
++};
++
++&pwm3 {
++	status = "okay";
++};
++
++&pwm4 {
++	status = "okay";
 +};
 +
 +&lcdif {
