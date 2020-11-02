@@ -2,9 +2,9 @@ Index: git/arch/arm/dts/portenta-m8.dts
 ===================================================================
 --- /dev/null
 +++ git/arch/arm/dts/portenta-m8.dts
-@@ -0,0 +1,536 @@
-+/*
-+ * Copyright 2018 NXP
+@@ -0,0 +1,473 @@
++/**
++ * Copyright 2020
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
@@ -80,26 +80,12 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +      >;
 +    };
 +
-+/*
-+    pinctrl_flexspi: flexspigrp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_NAND_ALE_QSPI_A_SCLK     0x1c4
-+        MX8MM_IOMUXC_NAND_CE0_B_QSPI_A_SS0_B  0x84
-+
-+        MX8MM_IOMUXC_NAND_DATA00_QSPI_A_DATA0 0x84
-+        MX8MM_IOMUXC_NAND_DATA01_QSPI_A_DATA1 0x84
-+        MX8MM_IOMUXC_NAND_DATA02_QSPI_A_DATA2 0x84
-+        MX8MM_IOMUXC_NAND_DATA03_QSPI_A_DATA3 0x84
-+      >;
-+    };
-+*/
-+
 +		pinctrl_i2c1: i2c1grp {
 +			fsl,pins = <
-+        MX8MM_IOMUXC_I2C1_SCL_I2C1_SCL      0x400001c3
-+        MX8MM_IOMUXC_I2C1_SDA_I2C1_SDA      0x400001c3
-+      >;
-+    };
++				MX8MM_IOMUXC_I2C1_SCL_I2C1_SCL      0x400001c3
++				MX8MM_IOMUXC_I2C1_SDA_I2C1_SDA      0x400001c3
++			>;
++			};
 +
 +    pinctrl_i2c2: i2c2grp {
 +      fsl,pins = <
@@ -144,8 +130,8 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +
 +		pinctrl_uart3: uart3grp {
 +			fsl,pins = <
-+        MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX 0x49
-+        MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX 0x49
++				MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX 0x49
++				MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX 0x49
 +			>;
 +		};
 +
@@ -414,33 +400,6 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +	scl-gpios = <&gpio5 16 GPIO_ACTIVE_HIGH>;
 +	sda-gpios = <&gpio5 17 GPIO_ACTIVE_HIGH>;
 +	status = "okay";
-+/*
-+	typec_ptn5110_1: ptn5110@50 {
-+		compatible = "usb,tcpci";
-+		reg = <0x50>;
-+		src-pdos = <0x380190c8>;
-+		snk-pdos = <0x380190c8 0x3802d0c8>;
-+		max-snk-mv = <9000>;
-+		max-snk-ma = <2000>;
-+		op-snk-mw = <9000>;
-+		max-snk-mw = <18000>;
-+		port-type = "drp";
-+		default-role = "sink";
-+	};
-+
-+	typec_ptn5110_2: ptn5110@52 {
-+		compatible = "usb,tcpci";
-+		reg = <0x52>;
-+		src-pdos = <0x380190c8>;
-+		snk-pdos = <0x380190c8 0x3802d0c8>;
-+		max-snk-mv = <9000>;
-+		max-snk-ma = <2000>;
-+		op-snk-mw = <9000>;
-+		max-snk-mw = <18000>;
-+		port-type = "drp";
-+		default-role = "sink";
-+	};
-+*/
 +};
 +
 +&i2c3 {
@@ -452,22 +411,7 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +	sda-gpios = <&gpio5 19 GPIO_ACTIVE_HIGH>;
 +	status = "okay";
 +};
-+/*
-+&flexspi {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_flexspi>;
-+	status = "okay";
 +
-+	flash0: n25q256a@0 {
-+		reg = <0>;
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		compatible = "spi-flash";
-+		spi-max-frequency = <29000000>;
-+		spi-nor,ddr-quad-read-dummy = <8>;
-+	};
-+};
-+*/
 +&fec1 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_fec1>;
@@ -527,17 +471,10 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +
 +&usbotg1 {
 +	status = "okay";
-+/*
-+	extcon = <&typec_ptn5110_1>;
-+*/
 +};
 +
 +&usbotg2 {
 +	status = "disabled";
-+/*
-+	status = "okay";
-+	extcon = <&typec_ptn5110_2>;
-+*/
 +};
 Index: git/board/arduino/portenta-m8/Kconfig
 ===================================================================
@@ -2495,7 +2432,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 ===================================================================
 --- /dev/null
 +++ git/board/arduino/portenta-m8/portenta-m8.c
-@@ -0,0 +1,726 @@
+@@ -0,0 +1,724 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright 2018-2019 NXP
@@ -2636,8 +2573,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +	return 0;
 +}
 +
-+#if 0
-+//#ifdef CONFIG_FEC_MXC
++#ifdef CONFIG_FEC_MXC
 +
 +#define FEC_RST_PAD       IMX_GPIO_NR(3, 6)
 +
@@ -2885,8 +2821,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +#endif
 +#endif
 +
-+#if 0
-+//#ifdef CONFIG_FEC_MXC
++#ifdef CONFIG_FEC_MXC
 +	setup_fec();
 +#endif
 +
