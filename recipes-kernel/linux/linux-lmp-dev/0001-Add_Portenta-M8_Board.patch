@@ -1,3 +1,320 @@
+Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
+===================================================================
+--- /dev/null
++++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
+@@ -0,0 +1,312 @@
++/**
++ */
++
++/ {
++  bat: battery {
++    compatible = "simple-battery";
++    precharge-current-microamp = <256000>;
++    charge-term-current-microamp = <128000>;
++    // etc.
++    /*
++    compatible = "simple-battery";
++    voltage-min-design-microvolt = <3200000>;
++    energy-full-design-microwatt-hours = <5290000>;
++    charge-full-design-microamp-hours = <1430000>;
++    precharge-current-microamp = <256000>;
++    charge-term-current-microamp = <128000>;
++    constant-charge-current-max-microamp = <900000>;
++    constant-charge-voltage-max-microvolt = <4200000>;
++     */
++  };
++
++  sound-spdif {
++    compatible = "fsl,imx-audio-spdif";
++    model = "imx-spdif";
++    spdif-controller = <&spdif1>;
++    spdif-out;
++    spdif-in;
++  };
++
++  sound-micfil {
++    compatible = "fsl,imx-audio-micfil";
++    model = "imx-audio-micfil";
++    cpu-dai = <&micfil>;
++  };
++};
++
++&iomuxc {
++  imx8mm-evk {
++/*
++    pinctrl_gpio1: gpio1grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7     0xC0000041
++        MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8     0xC0000041
++        MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9     0xC0000041
++        MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10    0xC0000041
++        MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11    0xC0000041
++      >;
++    };
++
++    pinctrl_gpio3: gpio3grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SAI5_RXFS_GPIO3_IO19     0xC0000041
++        MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20      0xC0000041
++      >;
++    };
++*/
++/*
++    pinctrl_hog: hoggrp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SAI5_RXFS_GPIO3_IO19      0x130b1 // default pulldown
++      >;
++    };
++*/
++/**/
++    pinctrl_i2c2: i2c2grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_I2C2_SCL_I2C2_SCL      0x400001c3
++        MX8MM_IOMUXC_I2C2_SDA_I2C2_SDA      0x400001c3
++      >;
++    };
++
++    pinctrl_i2c3: i2c3grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_I2C3_SCL_I2C3_SCL      0x400001c3
++        MX8MM_IOMUXC_I2C3_SDA_I2C3_SDA      0x400001c3
++      >;
++    };
++
++    pinctrl_i2c4: i2c4grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_I2C4_SCL_I2C4_SCL      0x400001c3
++        MX8MM_IOMUXC_I2C4_SDA_I2C4_SDA      0x400001c3
++      >;
++    };
++
++    pinctrl_pdm: pdmgrp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SAI1_MCLK_PDM_CLK      0xd6
++        MX8MM_IOMUXC_SAI1_RXD2_PDM_DATA2    0xd6
++      >;
++    };
++
++/*
++    pinctrl_pwm pwmgrp {
++      fsl,pins = <
++        MX8MM_IOMUXC_GPIO1_IO01_PWM1_OUT
++        MX8MM_IOMUXC_GPIO1_IO13_PWM2_OUT
++        MX8MM_IOMUXC_GPIO1_IO14_PWM3_OUT
++        MX8MM_IOMUXC_GPIO1_IO15_PWM4_OUT
++      >;
++    };
++*/
++
++    pinctrl_sai3: sai3grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SAI3_TXFS_SAI3_TX_SYNC     0xd6
++        MX8MM_IOMUXC_SAI3_TXC_SAI3_TX_BCLK      0xd6
++        MX8MM_IOMUXC_SAI3_TXD_SAI3_TX_DATA0     0xd6
++        MX8MM_IOMUXC_SAI3_RXD_SAI3_RX_DATA0     0xd6
++      >;
++    };
++
++    pinctrl_sai5: sai5grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0    0xd6
++        MX8MM_IOMUXC_SAI5_RXD1_SAI5_TX_SYNC     0xd6
++        MX8MM_IOMUXC_SAI5_RXD2_SAI1_TX_SYNC     0xd6
++        MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0    0xd6
++      >;
++    };
++
++    pinctrl_spdif1: spdif1grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SPDIF_TX_SPDIF1_OUT        0xd6
++        MX8MM_IOMUXC_SPDIF_RX_SPDIF1_IN         0xd6
++      >;
++    };
++
++    pinctrl_uart2: uart2grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_UART2_RXD_UART2_DCE_RX       0x140
++        MX8MM_IOMUXC_UART2_TXD_UART2_DCE_TX       0x140
++      >;
++    };
++
++    pinctrl_uart3: uart3grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX     0x140
++        MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX     0x140
++        MX8MM_IOMUXC_ECSPI1_SS0_UART3_DCE_RTS_B   0x140
++        MX8MM_IOMUXC_ECSPI1_MISO_UART3_DCE_CTS_B  0x140
++      >;
++    };
++
++    pinctrl_uart4: uart4grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX       0x140
++        MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX       0x140
++      >;
++    };
++
++  };
++};
++
++/* TODO devo capire come impostare due CS
++&ecspi2 {
++su CS MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13
++CMWX1ZZABZ-093
++};
++*/
++
++/* TODO non so se sono necessari
++&gpio1 {
++  pinctrl-name = "default";
++  pinctrl-0 = <&pinctrl_gpio1>;
++};
++*/
++&gpio3 {
++  //pinctrl-name = "default";
++  //pinctrl-0 = <&pinctrl_gpio3>;
++  sd_pon {
++    gpio-hog;
++    //gpios = <&gpio3 19 GPIO_ACTIVE_HIGH>;
++    gpios = <19 0>;
++#if 1
++    output-low;
++#else
++    output-high;
++#endif
++    line-name = "SD_PON-gpio";
++  };
++};
++
++
++&i2c2 {
++  clock-frequency = <400000>;
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_i2c2>;
++  status = "okay";
++};
++
++&i2c3 {
++  clock-frequency = <100000>;
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_i2c3>;
++  status = "okay";
++
++  bq24195: charger@6a {
++    compatible = "ti,bq24195";
++    reg = <0x6a>;
++    //interrupts-extended = <&gpiochip 10 IRQ_TYPE_EDGE_FALLING>;
++    monitored-battery = <&bat>;
++    ti,system-minimum-microvolt = <3200000>;
++  };
++
++  codec: codec@4a {
++    compatible = "cirrus,cs42l52";
++    reg = <0x4a>;
++    cirrus,reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
++    cirrus,chgfreq-divisor = <0x05>;
++    cirrus.mica-differential-cfg;
++    cirrus,micbias-lvl = <5>;
++  };
++
++};
++
++&i2c4 {
++  clock-frequency = <100000>;
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_i2c4>;
++  status = "okay";
++};
++
++&pwm1 {
++  status = "okay";
++};
++
++&pwm2 {
++  status = "okay";
++};
++
++&pwm3 {
++  status = "okay";
++};
++
++&pwm4 {
++  status = "okay";
++};
++
++&sai3 {
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_sai3>;
++  assigned-clocks = <&clk IMX8MM_CLK_SAI3>;
++  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
++  assigned-clock-rates = <24576000>;
++  status = "okay";
++};
++
++&sai5 {
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_sai5>;
++  assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
++  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
++  assigned-clock-rates = <49152000>;
++  clocks = <&clk IMX8MM_CLK_SAI5_IPG>, <&clk IMX8MM_CLK_DUMMY>,
++    <&clk IMX8MM_CLK_SAI5_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
++    <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
++    <&clk IMX8MM_AUDIO_PLL2_OUT>;
++  clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
++  fsl,sai-asynchronous;
++  status = "disabled";
++};
++
++&spdif1 {
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_spdif1>;
++  assigned-clocks = <&clk IMX8MM_CLK_SPDIF1>;
++  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
++  assigned-clock-rates = <24576000>;
++  clocks = <&clk IMX8MM_CLK_AUDIO_AHB>, <&clk IMX8MM_CLK_24M>,
++    <&clk IMX8MM_CLK_SPDIF1>, <&clk IMX8MM_CLK_DUMMY>,
++    <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_CLK_DUMMY>,
++    <&clk IMX8MM_CLK_AUDIO_AHB>, <&clk IMX8MM_CLK_DUMMY>,
++    <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_CLK_DUMMY>,
++    <&clk IMX8MM_AUDIO_PLL1_OUT>, <&clk IMX8MM_AUDIO_PLL2_OUT>;
++  clock-names = "core", "rxtx0", "rxtx1", "rxtx2", "rxtx3",
++    "rxtx4", "rxtx5", "rxtx6", "rxtx7", "spba", "pll8k", "pll11k";
++  status = "okay";
++};
++
++&uart3 {
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_uart3>;
++  assigned-clocks = <&clk IMX8MM_CLK_UART3>;
++  assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
++  fsl,uart-has-rtscts;
++  status = "okay";
++};
++
++&uart2 {
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_uart2>;
++  status = "okay";
++};
++
++&usbotg2 {
++  dr_mode = "otg";
++/*  extcon = <0>, <&typec2_ptn5110>;*/
++  picophy,pre-emp-curr-control = <3>;
++  picophy,dc-vol-level-adjust = <7>;
++  status = "disabled";
++};
++
++// collegato su connettore CSI
++&micfil {
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_pdm>;
++  assigned-clocks = <&clk IMX8MM_CLK_PDM>;
++  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
++  assigned-clock-rates = <196608000>;
++  status = "okay";
++};
 Index: kernel-source/arch/arm64/boot/dts/arduino/imx8mm-pinfunc.h
 ===================================================================
 --- /dev/null
@@ -2124,8 +2441,8 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
-@@ -0,0 +1,1023 @@
-+/*
+@@ -0,0 +1,897 @@
++/**
 + * Copyright 2020
 + */
 +
@@ -2141,13 +2458,13 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +//#include "envie_enuc_carrier.dtsi"
 +
 +/ {
-+  model = "Arduino i.MX8MM Portenta board";
-+  compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
++	model = "Arduino i.MX8MM Portenta board";
++	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 +
-+  chosen {
-+    bootargs = "console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200";
-+    stdout-path = &uart3;
-+  };
++	chosen {
++		bootargs = "console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200";
++		stdout-path = &uart3;
++	};
 +
 +	reserved-memory {
 +		#address-cells = <2>;
@@ -2157,19 +2474,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		rpmsg_reserved: rpmsg@0xb8000000 {
 +			no-map;
 +			reg = <0 0xb8000000 0 0x400000>;
-+		};
-+	};
-+
-+
-+	leds {
-+		compatible = "gpio-leds";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_gpio_led>;
-+
-+		status {
-+			label = "status";
-+			gpios = <&gpio3 16 GPIO_ACTIVE_HIGH>;
-+			default-state = "on";
 +		};
 +	};
 +
@@ -2253,30 +2557,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		};
 +	};*/
 +
-+	/*sound-ak4458 {
-+		compatible = "fsl,imx-audio-ak4458";
-+		model = "ak4458-audio";
-+		audio-cpu = <&sai1>;
-+		audio-codec = <&ak4458_1>, <&ak4458_2>;
-+		ak4458,pdn-gpio = <&pca6416 4 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	sound-ak5558 {
-+		compatible = "fsl,imx-audio-ak5558";
-+		model = "ak5558-audio";
-+		audio-cpu = <&sai5>;
-+		audio-codec = <&ak5558>;
-+		status = "disabled";
-+	};
-+
-+	sound-ak4497 {
-+		compatible = "fsl,imx-audio-ak4497";
-+		model = "ak4497-audio";
-+		audio-cpu = <&sai1>;
-+		audio-codec = <&ak4497>;
-+		status = "disabled";
-+	};*/
-+
 +	sound-spdif {
 +		compatible = "fsl,imx-audio-spdif";
 +		model = "imx-spdif";
@@ -2321,8 +2601,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		ethphy0: ethernet-phy@0 {
 +			compatible = "ethernet-phy-ieee802.3-c22";
 +			reg = <1>;
-+			/*at803x,eee-disabled;
-+			at803x,vddio-1p8v;*/
 +		};
 +	};
 +};
@@ -2330,8 +2608,8 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +&pcie0{
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_pcie0>;
-+	disable-gpio = <&gpio1 5 GPIO_ACTIVE_LOW>;
-+	reset-gpio = <&gpio4 21 GPIO_ACTIVE_LOW>;
++	/*disable-gpio = <&gpio1 5 GPIO_ACTIVE_LOW>;*/
++	reset-gpio = <&gpio3 25 GPIO_ACTIVE_LOW>;
 +	clocks = <&clk IMX8MM_CLK_PCIE1_ROOT>,
 +		 <&clk IMX8MM_CLK_PCIE1_AUX>,
 +		 <&clk IMX8MM_CLK_PCIE1_PHY>,
@@ -2495,22 +2773,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	status = "okay";
 +};
 +
-+&flexspi {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_flexspi0>;
-+	status = "okay";
-+
-+	flash0: mt25qu256aba@0 {
-+		reg = <0>;
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		compatible = "jedec,spi-nor";
-+		spi-max-frequency = <80000000>;
-+		spi-tx-bus-width = <4>;
-+		spi-rx-bus-width = <4>;
-+	};
-+};
-+
 +&i2c1 {
 +	clock-frequency = <400000>;
 +	pinctrl-names = "default";
@@ -2614,6 +2876,15 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +				regulator-always-on;
 +			};
 +
++			ldo5_reg: LDO5 {
++				reg = <10>;
++				regulator-compatible = "LDO5";
++				regulator-min-microvolt = <3000000>;
++				regulator-max-microvolt = <3000000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
 +			ldo6_reg: LDO6 {
 +				regulator-name = "LDO6";
 +				regulator-min-microvolt = <900000>;
@@ -2623,6 +2894,13 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			};
 +		};
 +	};
++
++	pcf8563: pcf8563@51 {
++		compatible = "nxp,pcf8563";
++		reg = <0x51>;
++		#clock-cells = <0>;
++	};
++
 +};
 +
 +&i2c2 {
@@ -2631,52 +2909,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	pinctrl-0 = <&pinctrl_i2c2>;
 +	status = "okay";
 +
-+	/*adv_bridge: adv7535@3d {
-+		compatible = "adi,adv7533";
-+		reg = <0x3d>;
-+		adi,addr-cec = <0x3b>;
-+		adi,dsi-lanes = <4>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_i2c2_synaptics_dsx_io>;
-+		interrupt-parent = <&gpio1>;
-+		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
-+		status = "okay";
-+
-+		port {
-+			adv7535_from_dsim: endpoint {
-+				remote-endpoint = <&dsim_to_adv7535>;
-+			};
-+		};
-+	};*/
-+
-+	/*ptn5110: tcpc@50 {
-+		compatible = "nxp,ptn5110";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_typec1>;
-+		reg = <0x50>;
-+		interrupt-parent = <&gpio2>;
-+		interrupts = <11 8>;
-+		status = "okay";
-+
-+		port {
-+			typec1_dr_sw: endpoint {
-+				remote-endpoint = <&usb1_drd_sw>;
-+			};
-+		};
-+
-+		typec1_con: connector {
-+			compatible = "usb-c-connector";
-+			label = "USB-C";
-+			power-role = "dual";
-+			data-role = "dual";
-+			try-power-role = "sink";
-+			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
-+			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
-+				     PDO_VAR(5000, 20000, 3000)>;
-+			op-sink-microwatt = <15000000>;
-+			self-powered;
-+		};
-+	};*/
 +};
 +
 +&i2c3 {
@@ -2684,70 +2916,11 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_i2c3>;
 +	status = "okay";
-+
-+	/*pca6416: gpio@20 {
-+		compatible = "ti,tca6416";
-+		reg = <0x20>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+	};
-+
-+	ak4458_1: ak4458@10 {
-+		compatible = "asahi-kasei,ak4458";
-+		reg = <0x10>;
-+		AVDD-supply = <&reg_audio_board>;
-+		DVDD-supply = <&reg_audio_board>;
-+	};
-+
-+	ak4458_2: ak4458@12 {
-+		compatible = "asahi-kasei,ak4458";
-+		reg = <0x12>;
-+		AVDD-supply = <&reg_audio_board>;
-+		DVDD-supply = <&reg_audio_board>;
-+	};
-+
-+	ak5558: ak5558@13 {
-+		compatible = "asahi-kasei,ak5558";
-+		reg = <0x13>;
-+		ak5558,pdn-gpio = <&pca6416 3 GPIO_ACTIVE_HIGH>;
-+		AVDD-supply = <&reg_audio_board>;
-+		DVDD-supply = <&reg_audio_board>;
-+	};
-+
-+	ak4497: ak4497@11 {
-+		compatible = "asahi-kasei,ak4497";
-+		reg = <0x11>;
-+		ak4497,pdn-gpio = <&pca6416 5 GPIO_ACTIVE_HIGH>;
-+		AVDD-supply = <&reg_audio_board>;
-+		DVDD-supply = <&reg_audio_board>;
-+	};
-+
-+	ov5640_mipi: ov5640_mipi@3c {
-+		compatible = "ovti,ov5640_mipi";
-+		reg = <0x3c>;
-+		status = "okay";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_csi_pwn>, <&pinctrl_csi_rst>;
-+		clocks = <&clk IMX8MM_CLK_CLKO1>;
-+		clock-names = "csi_mclk";
-+		assigned-clocks = <&clk IMX8MM_CLK_CLKO1>;
-+		assigned-clock-parents = <&clk IMX8MM_CLK_24M>;
-+		assigned-clock-rates = <24000000>;
-+		csi_id = <0>;
-+		pwn-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
-+		mclk = <24000000>;
-+		mclk_source = <0>;
-+		port {
-+			ov5640_mipi1_ep: endpoint {
-+				remote-endpoint = <&mipi1_sensor_ep>;
-+			};
-+		};
-+	};*/
 +};
 +
 +&iomuxc {
 +	pinctrl-names = "default";
-+
++/*
 +	pinctrl_csi_pwn: csi_pwn_grp {
 +		fsl,pins = <
 +			MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19
@@ -2760,7 +2933,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			MX8MM_IOMUXC_GPIO1_IO14_CCMSRCGPCMIX_CLKO1	0x59
 +		>;
 +	};
-+
++*/
 +	pinctrl_fec1: fec1grp {
 +		fsl,pins = <
 +			MX8MM_IOMUXC_ENET_MDC_ENET1_MDC			0x3
@@ -2777,30 +2950,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			MX8MM_IOMUXC_ENET_RXC_ENET1_RGMII_RXC		0x91
 +			MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL	0x91
 +			MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL	0x1f
-+			MX8MM_IOMUXC_SAI2_RXC_GPIO4_IO22		0x19
-+		>;
-+	};
-+
-+	pinctrl_flexspi0: flexspi0grp {
-+		fsl,pins = <
-+			MX8MM_IOMUXC_NAND_ALE_QSPI_A_SCLK               0x1c2
-+			MX8MM_IOMUXC_NAND_CE0_B_QSPI_A_SS0_B            0x82
-+			MX8MM_IOMUXC_NAND_DATA00_QSPI_A_DATA0           0x82
-+			MX8MM_IOMUXC_NAND_DATA01_QSPI_A_DATA1           0x82
-+			MX8MM_IOMUXC_NAND_DATA02_QSPI_A_DATA2           0x82
-+			MX8MM_IOMUXC_NAND_DATA03_QSPI_A_DATA3           0x82
-+		>;
-+	};
-+
-+	pinctrl_gpio_led: gpioledgrp {
-+		fsl,pins = <
-+			MX8MM_IOMUXC_NAND_READY_B_GPIO3_IO16	0x19
-+		>;
-+	};
-+
-+	pinctrl_gpio_wlf: gpiowlfgrp {
-+		fsl,pins = <
-+			MX8MM_IOMUXC_I2C4_SDA_GPIO5_IO21	0xd6
 +		>;
 +	};
 +
@@ -2824,7 +2973,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			MX8MM_IOMUXC_I2C3_SDA_I2C3_SDA			0x400001c3
 +		>;
 +	};
-+
++/*
 +	pinctrl_mipi_dsi_en: mipi_dsi_en {
 +		fsl,pins = <
 +			MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x16
@@ -2833,21 +2982,19 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +
 +	pinctrl_i2c2_synaptics_dsx_io: synaptics_dsx_iogrp {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9               0x19    /* Touch int */
++			MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9               0x19    // Touch int
 +		>;
 +	};
-+
++*/
 +	pinctrl_pcie0: pcie0grp {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_I2C4_SCL_PCIE1_CLKREQ_B	0x61 /* open drain, pull up */
-+			MX8MM_IOMUXC_GPIO1_IO05_GPIO1_IO5	0x41
-+			MX8MM_IOMUXC_SAI2_RXFS_GPIO4_IO21	0x41
++			MX8MM_IOMUXC_SAI5_MCLK_GPIO3_IO25     0x41  // PCIE_nRST
 +		>;
 +	};
 +
 +	pinctrl_pmic: pmicirq {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_GPIO1_IO03_GPIO1_IO3		0x41
++			MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x41
 +		>;
 +	};
 +
@@ -2943,7 +3090,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
 +			MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140
 +			MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140
-+			MX8MM_IOMUXC_SD1_DATA4_GPIO2_IO6	0x19
++			MX8MM_IOMUXC_SD1_DATA4_GPIO2_IO6	0x19      // BT_REG_ON
 +		>;
 +	};
 +
@@ -2965,10 +3112,10 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +
 +	pinctrl_usdhc1_gpio: usdhc1grpgpio {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_SD1_RESET_B_GPIO2_IO10	0x41
++			MX8MM_IOMUXC_SD1_RESET_B_GPIO2_IO10         0x41    // WL_REG_ON
++			MX8MM_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K  0x141   // REF_CLK_32K
 +		>;
 +	};
-+
 +	pinctrl_usdhc1: usdhc1grp {
 +		fsl,pins = <
 +			MX8MM_IOMUXC_SD1_CLK_USDHC1_CLK		0x190
@@ -3092,10 +3239,54 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		>;
 +	};
 +
++	pinctrl_ecspi2: ecspi2grp {
++		fsl,pins = <
++		MX8MM_IOMUXC_ECSPI2_SCLK_ECSPI2_SCLK        0x82
++		MX8MM_IOMUXC_ECSPI2_MOSI_ECSPI2_MOSI        0x82
++		MX8MM_IOMUXC_ECSPI2_MISO_ECSPI2_MISO        0x82
++		>;
++	};
++	pinctrl_ecspi2_cs: ecspi2cs {
++		fsl,pins = <
++		MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13          0x40000
++		>;
++	};
++	pinctrl_ecspi2_cs_adc: ecspi2csadc {
++		fsl,pins = <
++		MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12          0x40000
++		>;
++	};
++
 +	pinctrl_wdog: wdoggrp {
 +		fsl,pins = <
 +			MX8MM_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B	0xc6
 +		>;
++	};
++};
++
++&ecspi2 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	fsl,spi-num-chipselects = <2>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs_adc &pinctrl_ecspi2_cs>;
++	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>, <&gpio5 13 GPIO_ACTIVE_LOW>;
++	status = "okay";
++
++	ads7959: ads7959@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "ti,ads7959";
++		spi-max-frequency = <20000000>;
++		reg = <0>;
++	};
++
++	spidev_cb: spidev@1 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "spidev";
++		spi-max-frequency = <20000000>;
++		reg = <1>;
 +	};
 +};
 +
@@ -3147,321 +3338,4 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +
 +&gpu {
 +	status = "okay";
-+};
-Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
-===================================================================
---- /dev/null
-+++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
-@@ -0,0 +1,312 @@
-+/**
-+ */
-+
-+/ {
-+  bat: battery {
-+    compatible = "simple-battery";
-+    precharge-current-microamp = <256000>;
-+    charge-term-current-microamp = <128000>;
-+    // etc.
-+    /*
-+    compatible = "simple-battery";
-+    voltage-min-design-microvolt = <3200000>;
-+    energy-full-design-microwatt-hours = <5290000>;
-+    charge-full-design-microamp-hours = <1430000>;
-+    precharge-current-microamp = <256000>;
-+    charge-term-current-microamp = <128000>;
-+    constant-charge-current-max-microamp = <900000>;
-+    constant-charge-voltage-max-microvolt = <4200000>;
-+     */
-+  };
-+
-+  sound-spdif {
-+    compatible = "fsl,imx-audio-spdif";
-+    model = "imx-spdif";
-+    spdif-controller = <&spdif1>;
-+    spdif-out;
-+    spdif-in;
-+  };
-+
-+  sound-micfil {
-+    compatible = "fsl,imx-audio-micfil";
-+    model = "imx-audio-micfil";
-+    cpu-dai = <&micfil>;
-+  };
-+};
-+
-+&iomuxc {
-+  imx8mm-evk {
-+/*
-+    pinctrl_gpio1: gpio1grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7     0xC0000041
-+        MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8     0xC0000041
-+        MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9     0xC0000041
-+        MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10    0xC0000041
-+        MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11    0xC0000041
-+      >;
-+    };
-+
-+    pinctrl_gpio3: gpio3grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_SAI5_RXFS_GPIO3_IO19     0xC0000041
-+        MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20      0xC0000041
-+      >;
-+    };
-+*/
-+/*
-+    pinctrl_hog: hoggrp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_SAI5_RXFS_GPIO3_IO19      0x130b1 // default pulldown
-+      >;
-+    };
-+*/
-+/**/
-+    pinctrl_i2c2: i2c2grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_I2C2_SCL_I2C2_SCL      0x400001c3
-+        MX8MM_IOMUXC_I2C2_SDA_I2C2_SDA      0x400001c3
-+      >;
-+    };
-+
-+    pinctrl_i2c3: i2c3grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_I2C3_SCL_I2C3_SCL      0x400001c3
-+        MX8MM_IOMUXC_I2C3_SDA_I2C3_SDA      0x400001c3
-+      >;
-+    };
-+
-+    pinctrl_i2c4: i2c4grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_I2C4_SCL_I2C4_SCL      0x400001c3
-+        MX8MM_IOMUXC_I2C4_SDA_I2C4_SDA      0x400001c3
-+      >;
-+    };
-+
-+    pinctrl_pdm: pdmgrp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_SAI1_MCLK_PDM_CLK      0xd6
-+        MX8MM_IOMUXC_SAI1_RXD2_PDM_DATA2    0xd6
-+      >;
-+    };
-+
-+/*
-+    pinctrl_pwm pwmgrp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_GPIO1_IO01_PWM1_OUT
-+        MX8MM_IOMUXC_GPIO1_IO13_PWM2_OUT
-+        MX8MM_IOMUXC_GPIO1_IO14_PWM3_OUT
-+        MX8MM_IOMUXC_GPIO1_IO15_PWM4_OUT
-+      >;
-+    };
-+*/
-+
-+    pinctrl_sai3: sai3grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_SAI3_TXFS_SAI3_TX_SYNC     0xd6
-+        MX8MM_IOMUXC_SAI3_TXC_SAI3_TX_BCLK      0xd6
-+        MX8MM_IOMUXC_SAI3_TXD_SAI3_TX_DATA0     0xd6
-+        MX8MM_IOMUXC_SAI3_RXD_SAI3_RX_DATA0     0xd6
-+      >;
-+    };
-+
-+    pinctrl_sai5: sai5grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0    0xd6
-+        MX8MM_IOMUXC_SAI5_RXD1_SAI5_TX_SYNC     0xd6
-+        MX8MM_IOMUXC_SAI5_RXD2_SAI1_TX_SYNC     0xd6
-+        MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0    0xd6
-+      >;
-+    };
-+
-+    pinctrl_spdif1: spdif1grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_SPDIF_TX_SPDIF1_OUT        0xd6
-+        MX8MM_IOMUXC_SPDIF_RX_SPDIF1_IN         0xd6
-+      >;
-+    };
-+
-+    pinctrl_uart2: uart2grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_UART2_RXD_UART2_DCE_RX       0x140
-+        MX8MM_IOMUXC_UART2_TXD_UART2_DCE_TX       0x140
-+      >;
-+    };
-+
-+    pinctrl_uart3: uart3grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX     0x140
-+        MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX     0x140
-+        MX8MM_IOMUXC_ECSPI1_SS0_UART3_DCE_RTS_B   0x140
-+        MX8MM_IOMUXC_ECSPI1_MISO_UART3_DCE_CTS_B  0x140
-+      >;
-+    };
-+
-+    pinctrl_uart4: uart4grp {
-+      fsl,pins = <
-+        MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX       0x140
-+        MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX       0x140
-+      >;
-+    };
-+
-+  };
-+};
-+
-+/* TODO devo capire come impostare due CS
-+&ecspi2 {
-+su CS MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13
-+CMWX1ZZABZ-093
-+};
-+*/
-+
-+/* TODO non so se sono necessari
-+&gpio1 {
-+  pinctrl-name = "default";
-+  pinctrl-0 = <&pinctrl_gpio1>;
-+};
-+*/
-+&gpio3 {
-+  //pinctrl-name = "default";
-+  //pinctrl-0 = <&pinctrl_gpio3>;
-+  sd_pon {
-+    gpio-hog;
-+    //gpios = <&gpio3 19 GPIO_ACTIVE_HIGH>;
-+    gpios = <19 0>;
-+#if 1
-+    output-low;
-+#else
-+    output-high;
-+#endif
-+    line-name = "SD_PON-gpio";
-+  };
-+};
-+
-+
-+&i2c2 {
-+  clock-frequency = <400000>;
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_i2c2>;
-+  status = "okay";
-+};
-+
-+&i2c3 {
-+  clock-frequency = <100000>;
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_i2c3>;
-+  status = "okay";
-+
-+  bq24195: charger@6a {
-+    compatible = "ti,bq24195";
-+    reg = <0x6a>;
-+    //interrupts-extended = <&gpiochip 10 IRQ_TYPE_EDGE_FALLING>;
-+    monitored-battery = <&bat>;
-+    ti,system-minimum-microvolt = <3200000>;
-+  };
-+
-+  codec: codec@4a {
-+    compatible = "cirrus,cs42l52";
-+    reg = <0x4a>;
-+    cirrus,reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
-+    cirrus,chgfreq-divisor = <0x05>;
-+    cirrus.mica-differential-cfg;
-+    cirrus,micbias-lvl = <5>;
-+  };
-+
-+};
-+
-+&i2c4 {
-+  clock-frequency = <100000>;
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_i2c4>;
-+  status = "okay";
-+};
-+
-+&pwm1 {
-+  status = "okay";
-+};
-+
-+&pwm2 {
-+  status = "okay";
-+};
-+
-+&pwm3 {
-+  status = "okay";
-+};
-+
-+&pwm4 {
-+  status = "okay";
-+};
-+
-+&sai3 {
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_sai3>;
-+  assigned-clocks = <&clk IMX8MM_CLK_SAI3>;
-+  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-+  assigned-clock-rates = <24576000>;
-+  status = "okay";
-+};
-+
-+&sai5 {
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_sai5>;
-+  assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
-+  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-+  assigned-clock-rates = <49152000>;
-+  clocks = <&clk IMX8MM_CLK_SAI5_IPG>, <&clk IMX8MM_CLK_DUMMY>,
-+    <&clk IMX8MM_CLK_SAI5_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
-+    <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
-+    <&clk IMX8MM_AUDIO_PLL2_OUT>;
-+  clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
-+  fsl,sai-asynchronous;
-+  status = "disabled";
-+};
-+
-+&spdif1 {
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_spdif1>;
-+  assigned-clocks = <&clk IMX8MM_CLK_SPDIF1>;
-+  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-+  assigned-clock-rates = <24576000>;
-+  clocks = <&clk IMX8MM_CLK_AUDIO_AHB>, <&clk IMX8MM_CLK_24M>,
-+    <&clk IMX8MM_CLK_SPDIF1>, <&clk IMX8MM_CLK_DUMMY>,
-+    <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_CLK_DUMMY>,
-+    <&clk IMX8MM_CLK_AUDIO_AHB>, <&clk IMX8MM_CLK_DUMMY>,
-+    <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_CLK_DUMMY>,
-+    <&clk IMX8MM_AUDIO_PLL1_OUT>, <&clk IMX8MM_AUDIO_PLL2_OUT>;
-+  clock-names = "core", "rxtx0", "rxtx1", "rxtx2", "rxtx3",
-+    "rxtx4", "rxtx5", "rxtx6", "rxtx7", "spba", "pll8k", "pll11k";
-+  status = "okay";
-+};
-+
-+&uart3 {
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_uart3>;
-+  assigned-clocks = <&clk IMX8MM_CLK_UART3>;
-+  assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
-+  fsl,uart-has-rtscts;
-+  status = "okay";
-+};
-+
-+&uart2 {
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_uart2>;
-+  status = "okay";
-+};
-+
-+&usbotg2 {
-+  dr_mode = "otg";
-+/*  extcon = <0>, <&typec2_ptn5110>;*/
-+  picophy,pre-emp-curr-control = <3>;
-+  picophy,dc-vol-level-adjust = <7>;
-+  status = "disabled";
-+};
-+
-+// collegato su connettore CSI
-+&micfil {
-+  pinctrl-names = "default";
-+  pinctrl-0 = <&pinctrl_pdm>;
-+  assigned-clocks = <&clk IMX8MM_CLK_PDM>;
-+  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-+  assigned-clock-rates = <196608000>;
-+  status = "okay";
 +};
