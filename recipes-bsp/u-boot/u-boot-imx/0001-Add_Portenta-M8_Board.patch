@@ -2432,7 +2432,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 ===================================================================
 --- /dev/null
 +++ git/board/arduino/portenta-m8/portenta-m8.c
-@@ -0,0 +1,724 @@
+@@ -0,0 +1,727 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright 2018-2019 NXP
@@ -2578,16 +2578,16 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +#define FEC_RST_PAD       IMX_GPIO_NR(3, 6)
 +
 +
-+static iomux_v3_cfg_t const fec1_rst_pads[] = {
-+	IMX8MM_PAD_NAND_DATA00_GPIO3_IO6 | MUX_PAD_CTRL(NO_PAD_CTRL),
-+};
++//static iomux_v3_cfg_t const fec1_rst_pads[] = {
++//	IMX8MM_PAD_NAND_DATA00_GPIO3_IO6 | MUX_PAD_CTRL(NO_PAD_CTRL),
++//};
 +
 +static void setup_iomux_fec(void)
 +{
 +printf("setup_iomux_fec\n");
 +
 +  // reset PHY and ensure RX_DV/CLK125_EN is pulled high to enable TX_REF_CLK
-+	imx_iomux_v3_setup_multiple_pads(fec1_rst_pads, ARRAY_SIZE(fec1_rst_pads));
++//	imx_iomux_v3_setup_multiple_pads(fec1_rst_pads, ARRAY_SIZE(fec1_rst_pads));
 +/*
 +  gpio_request(FEC_CLK125_EN, "KSZ9031 CLK125_EN");
 +  gpio_direction_output(FEC_CLK125_EN, 1);
@@ -2597,6 +2597,9 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +	gpio_direction_output(FEC_RST_PAD, 0);
 +	udelay(500);
 +	gpio_direction_output(FEC_RST_PAD, 1);
++	udelay(100000);
++	gpio_free(FEC_RST_PAD);
++
 +/*
 +  udelay(500);
 +  gpio_free(FEC_CLK125_EN);
@@ -3517,10 +3520,10 @@ Index: git/configs/portenta-m8_defconfig
 +CONFIG_VIDEO=y
 +CONFIG_IMX_SEC_MIPI_DSI=y
 +
-+# CONFIG_PHYLIB is not set
-+# CONFIG_PHY_MICREL is not set
-+# CONFIG_PHY_MICREL_KSZ9031 is not set
-+# CONFIG_PHY_MICREL_KSZ90X1 is not set
++CONFIG_PHYLIB=y
++CONFIG_PHY_MICREL=y
++CONFIG_PHY_MICREL_KSZ9031=y
++CONFIG_PHY_MICREL_KSZ90X1=y
 +
 Index: git/include/configs/portenta-m8.h
 ===================================================================
