@@ -2432,7 +2432,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 ===================================================================
 --- /dev/null
 +++ git/board/arduino/portenta-m8/portenta-m8.c
-@@ -0,0 +1,727 @@
+@@ -0,0 +1,631 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright 2018-2019 NXP
@@ -2465,6 +2465,74 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +#ifdef CONFIG_USB_TCPC
 +#include "tcpc.h"
 +#endif
++
++/**
++ * External USB Hub configuration
++ */
++#define EXT_USB_HUB
++#define EXT_USB_HUB_I2C_BUS  2
++#define EXT_USB_HUB_I2C_ADR  0x2C
++/**
++ * USB2514B/M2 configuration data
++ */
++static unsigned char ext_usb_hub_cfg_1[] = {
++	0x11,	//data size
++	0x24,	//VID LSB
++	0x04,	//VID_MSB
++	0x14,	//PID LSB
++	0x25,	//PID MSB
++	0x00,	//DID LSB
++	0x00,	//DID MSB
++	0x8D,	//CFG1
++	0x10,	//CFG2
++	0x00,	//CFG3
++	0x00,	//NRD
++	0x00,	//PDS
++	0x00,	//PDB
++	0x01,	//MAXPS
++	0x32,	//MAXPB
++	0x01,	//HCMS
++	0x32,	//HCMB
++	0x32	//PWRT
++};
++static unsigned char ext_usb_hub_cfg_2[] = {
++	0x01,
++	0x01
++};
++/**
++ * 4 port External USB HUB initialization
++ */
++void ext_usb_hub_init(void)
++{
++	struct udevice *bus;
++	struct udevice *dev;
++	int ret;
++
++	printf("ext_usb_hub_init\n");
++	ret = uclass_get_device_by_seq(UCLASS_I2C, EXT_USB_HUB_I2C_BUS, &bus);
++	if (ret) {
++		printf("%s: No bus %d\n", __func__, EXT_USB_HUB_I2C_BUS);
++		return;
++	}
++	ret = dm_i2c_probe(bus, EXT_USB_HUB_I2C_ADR, 0, &dev);
++	if (ret) {
++		printf("%s: Can't find device id=0x%x, on bus %d\n",
++			   __func__, EXT_USB_HUB_I2C_ADR, EXT_USB_HUB_I2C_BUS);
++		return;
++	}
++
++	ret = dm_i2c_write(dev, 0x00, ext_usb_hub_cfg_1, sizeof(ext_usb_hub_cfg_1));
++	if (ret) {
++		printf("%s: Fail to write first configuration\n");
++		return;
++	}
++
++	ret = dm_i2c_write(dev, 0xFF, ext_usb_hub_cfg_2, sizeof(ext_usb_hub_cfg_2));
++	if (ret) {
++		printf("%s: Fail to write second configuration\n");
++		return;
++	}
++}
 +
 +DECLARE_GLOBAL_DATA_PTR;
 +
@@ -2642,85 +2710,8 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +
 +#if 0
 +#ifdef CONFIG_USB_TCPC
-+struct tcpc_port port1;
-+struct tcpc_port port2;
 +
-+static int setup_pd_switch(uint8_t i2c_bus, uint8_t addr)
-+{
-+	struct udevice *bus;
-+	struct udevice *i2c_dev = NULL;
-+	int ret;
-+	uint8_t valb;
 +
-+	ret = uclass_get_device_by_seq(UCLASS_I2C, i2c_bus, &bus);
-+	if (ret) {
-+		printf("%s: Can't find bus\n", __func__);
-+		return -EINVAL;
-+	}
-+
-+	ret = dm_i2c_probe(bus, addr, 0, &i2c_dev);
-+	if (ret) {
-+		printf("%s: Can't find device id=0x%x\n",
-+			__func__, addr);
-+		return -ENODEV;
-+	}
-+
-+	ret = dm_i2c_read(i2c_dev, 0xB, &valb, 1);
-+	if (ret) {
-+		printf("%s dm_i2c_read failed, err %d\n", __func__, ret);
-+		return -EIO;
-+	}
-+	valb |= 0x4; /* Set DB_EXIT to exit dead battery mode */
-+	ret = dm_i2c_write(i2c_dev, 0xB, (const uint8_t *)&valb, 1);
-+	if (ret) {
-+		printf("%s dm_i2c_write failed, err %d\n", __func__, ret);
-+		return -EIO;
-+	}
-+
-+	/* Set OVP threshold to 23V */
-+	valb = 0x6;
-+	ret = dm_i2c_write(i2c_dev, 0x8, (const uint8_t *)&valb, 1);
-+	if (ret) {
-+		printf("%s dm_i2c_write failed, err %d\n", __func__, ret);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+int pd_switch_snk_enable(struct tcpc_port *port)
-+{
-+	if (port == &port1) {
-+		debug("Setup pd switch on port 1\n");
-+		return setup_pd_switch(1, 0x72);
-+	} else if (port == &port2) {
-+		debug("Setup pd switch on port 2\n");
-+		return setup_pd_switch(1, 0x73);
-+	} else
-+		return -EINVAL;
-+}
-+
-+struct tcpc_port_config port1_config = {
-+	.i2c_bus = 1, /*i2c2*/
-+	.addr = 0x50,
-+	.port_type = TYPEC_PORT_UFP,
-+	.max_snk_mv = 5000,
-+	.max_snk_ma = 3000,
-+	.max_snk_mw = 40000,
-+	.op_snk_mv = 9000,
-+	.switch_setup_func = &pd_switch_snk_enable,
-+};
-+
-+struct tcpc_port_config port2_config = {
-+	.i2c_bus = 1, /*i2c2*/
-+	.addr = 0x52,
-+	.port_type = TYPEC_PORT_UFP,
-+	.max_snk_mv = 5000,
-+	.max_snk_ma = 3000,
-+	.max_snk_mw = 40000,
-+	.op_snk_mv = 9000,
-+	.switch_setup_func = &pd_switch_snk_enable,
-+};
 +
 +static int setup_typec(void)
 +{
@@ -2828,6 +2819,10 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +	setup_fec();
 +#endif
 +
++#ifdef EXT_USB_HUB
++	ext_usb_hub_init();
++#endif
++
 +#ifdef CONFIG_FSL_FSPI
 +	board_qspi_init();
 +#endif
@@ -2836,11 +2831,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +}
 +
 +#ifdef CONFIG_VIDEO_MXS
-+// TODO mettere impostazioni del ??????
-+#if 0
-+#define ADV7535_MAIN    0x3d
-+#define ADV7535_DSI_CEC 0x3c
-+#endif
++// TODO insert ANX settings
 +
 +static const struct sec_mipi_dsim_plat_data imx8mm_mipi_dsim_plat_data = {
 +	.version        = 0x1060200,
@@ -2888,16 +2879,6 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +
 +static void adv7535_init(void)
 +{
-+	struct udevice *bus, *main_dev, *cec_dev;
-+	int i2c_bus = 1;
-+	int ret;
-+	uint8_t val;
-+
-+	ret = uclass_get_device_by_seq(UCLASS_I2C, i2c_bus, &bus);
-+	if (ret) {
-+		printf("%s: No bus %d\n", __func__, i2c_bus);
-+		return;
-+	}
 +
 +	ret = dm_i2c_probe(bus, ADV7535_MAIN, 0, &main_dev);
 +	if (ret) {
@@ -2906,84 +2887,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +		return;
 +	}
 +
-+	ret = dm_i2c_probe(bus, ADV7535_DSI_CEC, 0, &cec_dev);
-+	if (ret) {
-+		printf("%s: Can't find device id=0x%x, on bus %d\n",
-+			__func__, ADV7535_MAIN, i2c_bus);
-+		return;
-+	}
 +
-+	adv7535_i2c_reg_read(main_dev, 0x00, &val);
-+	debug("Chip revision: 0x%x (expected: 0x14)\n", val);
-+	adv7535_i2c_reg_read(cec_dev, 0x00, &val);
-+	debug("Chip ID MSB: 0x%x (expected: 0x75)\n", val);
-+	adv7535_i2c_reg_read(cec_dev, 0x01, &val);
-+	debug("Chip ID LSB: 0x%x (expected: 0x33)\n", val);
-+
-+	/* Power */
-+	adv7535_i2c_reg_write(main_dev, 0x41, 0xff, 0x10);
-+	/* Initialisation (Fixed) Registers */
-+	adv7535_i2c_reg_write(main_dev, 0x16, 0xff, 0x20);
-+	adv7535_i2c_reg_write(main_dev, 0x9A, 0xff, 0xE0);
-+	adv7535_i2c_reg_write(main_dev, 0xBA, 0xff, 0x70);
-+	adv7535_i2c_reg_write(main_dev, 0xDE, 0xff, 0x82);
-+	adv7535_i2c_reg_write(main_dev, 0xE4, 0xff, 0x40);
-+	adv7535_i2c_reg_write(main_dev, 0xE5, 0xff, 0x80);
-+	adv7535_i2c_reg_write(cec_dev, 0x15, 0xff, 0xD0);
-+	adv7535_i2c_reg_write(cec_dev, 0x17, 0xff, 0xD0);
-+	adv7535_i2c_reg_write(cec_dev, 0x24, 0xff, 0x20);
-+	adv7535_i2c_reg_write(cec_dev, 0x57, 0xff, 0x11);
-+	/* 4 x DSI Lanes */
-+	adv7535_i2c_reg_write(cec_dev, 0x1C, 0xff, 0x40);
-+
-+	/* DSI Pixel Clock Divider */
-+	adv7535_i2c_reg_write(cec_dev, 0x16, 0xff, 0x18);
-+
-+	/* Enable Internal Timing Generator */
-+	adv7535_i2c_reg_write(cec_dev, 0x27, 0xff, 0xCB);
-+	/* 1920 x 1080p 60Hz */
-+	adv7535_i2c_reg_write(cec_dev, 0x28, 0xff, 0x89); /* total width */
-+	adv7535_i2c_reg_write(cec_dev, 0x29, 0xff, 0x80); /* total width */
-+	adv7535_i2c_reg_write(cec_dev, 0x2A, 0xff, 0x02); /* hsync */
-+	adv7535_i2c_reg_write(cec_dev, 0x2B, 0xff, 0xC0); /* hsync */
-+	adv7535_i2c_reg_write(cec_dev, 0x2C, 0xff, 0x05); /* hfp */
-+	adv7535_i2c_reg_write(cec_dev, 0x2D, 0xff, 0x80); /* hfp */
-+	adv7535_i2c_reg_write(cec_dev, 0x2E, 0xff, 0x09); /* hbp */
-+	adv7535_i2c_reg_write(cec_dev, 0x2F, 0xff, 0x40); /* hbp */
-+
-+	adv7535_i2c_reg_write(cec_dev, 0x30, 0xff, 0x46); /* total height */
-+	adv7535_i2c_reg_write(cec_dev, 0x31, 0xff, 0x50); /* total height */
-+	adv7535_i2c_reg_write(cec_dev, 0x32, 0xff, 0x00); /* vsync */
-+	adv7535_i2c_reg_write(cec_dev, 0x33, 0xff, 0x50); /* vsync */
-+	adv7535_i2c_reg_write(cec_dev, 0x34, 0xff, 0x00); /* vfp */
-+	adv7535_i2c_reg_write(cec_dev, 0x35, 0xff, 0x40); /* vfp */
-+	adv7535_i2c_reg_write(cec_dev, 0x36, 0xff, 0x02); /* vbp */
-+	adv7535_i2c_reg_write(cec_dev, 0x37, 0xff, 0x40); /* vbp */
-+
-+	/* Reset Internal Timing Generator */
-+	adv7535_i2c_reg_write(cec_dev, 0x27, 0xff, 0xCB);
-+	adv7535_i2c_reg_write(cec_dev, 0x27, 0xff, 0x8B);
-+	adv7535_i2c_reg_write(cec_dev, 0x27, 0xff, 0xCB);
-+
-+	/* HDMI Output */
-+	adv7535_i2c_reg_write(main_dev, 0xAF, 0xff, 0x16);
-+	/* AVI Infoframe - RGB - 16-9 Aspect Ratio */
-+	adv7535_i2c_reg_write(main_dev, 0x55, 0xff, 0x02);
-+	adv7535_i2c_reg_write(main_dev, 0x56, 0xff, 0x0);
-+
-+	/*  GC Packet Enable */
-+	adv7535_i2c_reg_write(main_dev, 0x40, 0xff, 0x0);
-+	/*  GC Colour Depth - 24 Bit */
-+	adv7535_i2c_reg_write(main_dev, 0x4C, 0xff, 0x0);
-+	/*  Down Dither Output Colour Depth - 8 Bit (default) */
-+	adv7535_i2c_reg_write(main_dev, 0x49, 0xff, 0x00);
-+
-+	/* set low refresh 1080p30 */
-+	adv7535_i2c_reg_write(main_dev, 0x4A, 0xff, 0x80); /*should be 0x80 for 1080p60 and 0x8c for 1080p30*/
-+
-+	/* HDMI Output Enable */
-+	adv7535_i2c_reg_write(cec_dev, 0xbe, 0xff, 0x3c);
-+	adv7535_i2c_reg_write(cec_dev, 0x03, 0xff, 0x89);
 +}
 +#endif
 +
