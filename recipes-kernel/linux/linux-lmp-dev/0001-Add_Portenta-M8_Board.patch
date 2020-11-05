@@ -2,7 +2,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,308 @@
 +/**
 + */
 +
@@ -23,6 +23,29 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +    constant-charge-voltage-max-microvolt = <4200000>;
 +     */
 +  };
++  
++	sound-cs42l52 {
++		compatible = "simple-audio-card";
++		simple-audio-card,name = "cs42l52-audio";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,frame-master = <&cpudai>;
++		simple-audio-card,bitclock-master = <&cpudai>;
++		simple-audio-card,widgets =
++			"Line", "Line In Jack";
++		simple-audio-card,routing =
++			"LINE_IN", "Line In Jack";
++
++		cpudai: simple-audio-card,cpu {
++			sound-dai = <&sai3>;
++			dai-tdm-slot-num = <2>;
++			dai-tdm-slot-width = <32>;
++		};
++
++		simple-audio-card,codec {
++			sound-dai = <&cs42l52>;
++			clocks = <&clk IMX8MM_CLK_SAI3_ROOT>;
++		};
++	};
 +
 +  sound-spdif {
 +    compatible = "fsl,imx-audio-spdif";
@@ -107,10 +130,10 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +
 +    pinctrl_sai5: sai5grp {
 +      fsl,pins = <
-+        MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0    0xd6
 +        MX8MM_IOMUXC_SAI5_RXD1_SAI5_TX_SYNC     0xd6
-+        MX8MM_IOMUXC_SAI5_RXD2_SAI1_TX_SYNC     0xd6
++        MX8MM_IOMUXC_SAI5_RXD2_SAI5_TX_BCLK     0xd6
 +        MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0    0xd6
++        MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0    0xd6
 +      >;
 +    };
 +
@@ -181,22 +204,23 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +  pinctrl-0 = <&pinctrl_i2c3>;
 +  status = "okay";
 +
-+  bq24195: charger@6a {
++  bq24195: charger@6b {
 +    compatible = "ti,bq24195";
-+    reg = <0x6a>;
++    reg = <0x6b>;
 +    //interrupts-extended = <&gpiochip 10 IRQ_TYPE_EDGE_FALLING>;
 +    monitored-battery = <&bat>;
 +    ti,system-minimum-microvolt = <3200000>;
 +  };
 +
-+  codec: codec@4a {
-+    compatible = "cirrus,cs42l52";
-+    reg = <0x4a>;
-+    cirrus,reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
-+    cirrus,chgfreq-divisor = <0x05>;
-+    cirrus.mica-differential-cfg;
-+    cirrus,micbias-lvl = <5>;
-+  };
++	cs42l52: cs42l52@4a {
++		#sound-dai-cells = <0>;
++		compatible = "cirrus,cs42l52";
++		reg = <0x4a>;
++		cirrus,reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
++		cirrus,chgfreq-divisor = <0x05>;
++		cirrus.mica-differential-cfg;
++		cirrus,micbias-lvl = <5>;
++	};
 +
 +};
 +
@@ -2437,7 +2461,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		bootargs = "console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200";
 +		stdout-path = &uart3;
 +	};
-+	
++
 +	reserved-memory {
 +		#address-cells = <2>;
 +		#size-cells = <2>;
@@ -2966,7 +2990,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			MX8MM_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0  0xd6
 +		>;
 +	};
-+	
++
 +	pinctrl_uart1: uart1grp {
 +		fsl,pins = <
 +			MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
