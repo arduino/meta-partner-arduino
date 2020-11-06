@@ -3192,82 +3192,56 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,160 @@
 +/**
 + */
 +
-+
-+/ {
-+/*
-+  dp_cable: extcon_video_cable {
-+    compatible = "linux,extcon-usb-gpio";
-+    id-gpio = <&gpio4 22 GPIO_ACTIVE_HIGH>;
-+  };
-+*/
-+  dp_cable: extcon-gpio-0 {
-+    compatible = "extcon-gpio";
-+    //extcon-id = <EXTCON_DISP_DP>; // Display Port 44 ADD #include <dt-bindings/___.h>
-+    extcon-id = <44>;                         // 44 Display Port
-+    gpios = <&gpio4 22 GPIO_ACTIVE_HIGH>;     // VIDEO_CABLE
-+    //wakeup-source;
-+    debounce-ms = <50>;                       // 50 millisecond
-+  };
-+};
-+
 +&i2c1 {
 +
-+  anx7625: analogix_i2c@58{
-+    compatible ="analogix,anx7625";
-+    reg = <0x58>;
-+    status = "okay";
-+    panel-flags = <1>;
-+#if 0
++  analogix_i2c@2c{
++    compatible = "analogix,anx7625";
++    reg = <0x2C>;
 +    interrupt-parent = <&gpio4>;
 +    interrupts = <23 IRQ_TYPE_LEVEL_LOW>;   // VIDEO_ALT
-+#else
-+    alert-intp-gpios = <&gpio4 23 0x00>;    // VIDEO_ALT
-+#endif
-+    enable-gpios = <&gpio4 21 0x0>;         // VIDEO_EN
-+    reset-gpios = <&gpio4 27 0x0>;          // VIDEO_RSTN
-+//    hpd-gpios = <&gpio4 22 0x0>;          // VIDEO_CABLE
-+    extcon = <&dp_cable>;
-+/*
-+    // TODO is it useful?
++//    interrupts = <22 IRQ_TYPE_LEVEL_LOW>;                  // VIDEO_CABLE
++    power_en-gpios = <&gpio4 21 0x0>;       // VIDEO_EN
++    reset_n-gpios = <&gpio4 27 0x0>;        // VIDEO_RSTN
++    cbl_det-gpios = <&gpio4 22 0x0>;        // VIDEO_CABLE
++    status = "okay";
++
 +    display-timings {
 +      lvds {
-+        clock-frequency = <74000000>;
-+        hactive = <1920>;
-+        vactive = <1080>;
-+        hback-porch = <148>;
-+        hfront-porch = <88>;
-+        vback-porch = <36>;
-+        vfront-porch = <4>;
-+        hsync-len = <44>;
-+        vsync-len = <5>;
++        clock-frequency = <33000000>;
++        hactive = <800>;
++        vactive = <480>;
++        hback-porch = <40>;
++        hfront-porch = <40>;
++        vback-porch = <29>;
++        vfront-porch = <13>;
++        hsync-len = <48>;
++        vsync-len = <3>;
 +        hsync-active = <0>;
 +        vsync-active = <0>;
 +        de-active = <1>;
 +        pixelclk-active = <0>;
 +      };
 +    };
-+*/
++
++    ports {
++      #address-cells = <1>;
++      #size-cells = <0>;
++
 +    port@0 {
 +      reg = <0>;
 +      anx_in: endpoint {
 +        remote-endpoint = <&dsi_to_anx>;
 +      };
 +    };
++
++    };
 +/*
 +    port@2 {
 +      reg = <2>;
-+      anx_out: endpoint {
-+        remote-endpoint = <&panel_in>;
-+      };
-+    };
-+*/
-+/*
-+    port@3 {
-+      reg = <3>;
 +      anx_out: endpoint {
 +        remote-endpoint = <&panel_in>;
 +      };
@@ -3307,7 +3281,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +&lcdif {
 +  status = "okay";
-+/*
++  /*
 +  display = <&display0>;
 +
 +  display0: display {
@@ -3351,7 +3325,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +    };
 +  };
-+*/
++  */
 +};
 +
 +/*

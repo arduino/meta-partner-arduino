@@ -1252,8 +1252,8 @@ out:
 }
 
 static void anx7625_bridge_mode_set(struct drm_bridge *bridge,
-				    struct drm_display_mode *mode,
-				    struct drm_display_mode *adjusted_mode)
+				    const struct drm_display_mode *mode,
+				    const struct drm_display_mode *adjusted_mode)
 {
 	struct anx7625 *anx7625 = bridge_to_anx7625(bridge);
 	int mode_idx;
