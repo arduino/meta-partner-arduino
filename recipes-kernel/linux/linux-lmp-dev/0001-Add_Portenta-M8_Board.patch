@@ -2,7 +2,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
-@@ -0,0 +1,290 @@
+@@ -0,0 +1,289 @@
 +/**
 + */
 +
@@ -117,7 +117,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +				MX8MM_IOMUXC_SAI1_RXD2_PDM_DATA2    0xd6
 +			>;
 +		};
-+
 +
 +		pinctrl_sai3: sai3grp {
 +			fsl,pins = <
