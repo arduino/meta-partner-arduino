@@ -2799,7 +2799,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
 +	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
 +#else
-+	pinctrl-names = "default"
++	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_usdhc3>;
 +#endif
 +	bus-width = <8>;
