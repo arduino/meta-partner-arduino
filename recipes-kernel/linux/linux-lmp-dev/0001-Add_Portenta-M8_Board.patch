@@ -2418,7 +2418,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
-@@ -0,0 +1,769 @@
+@@ -0,0 +1,652 @@
 +/**
 + * Copyright 2020
 + */
@@ -2513,17 +2513,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		enable-active-high;
 +	};
 +
-+	/*reg_audio_board: regulator-audio-board {
-+		compatible = "regulator-fixed";
-+		regulator-name = "EXT_PWREN";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		enable-active-high;
-+		startup-delay-us = <300000>;
-+		gpio = <&pca6416 1 GPIO_ACTIVE_HIGH>;
-+	};*/
-+
-+
 +	sound-spdif {
 +		compatible = "fsl,imx-audio-spdif";
 +		model = "imx-spdif";
@@ -2542,16 +2531,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +&A53_0 {
 +	cpu-supply = <&buck2_reg>;
 +};
-+
-+/*&csi1_bridge {
-+	fsl,mipi-mode;
-+	status = "okay";
-+	port {
-+		csi1_ep: endpoint {
-+			remote-endpoint = <&csi1_mipi_ep>;
-+		};
-+	};
-+};*/
 +
 +&fec1 {
 +	pinctrl-names = "default";
@@ -2717,23 +2696,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	status = "disabled";
 +};
 +
-+&sai2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_sai2>;
-+	assigned-clocks = <&clk IMX8MM_CLK_SAI2>;
-+	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-+	assigned-clock-rates = <49152000>;
-+	clocks = <&clk IMX8MM_CLK_SAI2_IPG>, <&clk IMX8MM_CLK_DUMMY>,
-+		<&clk IMX8MM_CLK_SAI2_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
-+		<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
-+		<&clk IMX8MM_AUDIO_PLL2_OUT>;
-+	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
-+	fsl,sai-multi-lane;
-+	fsl,dataline,dsd = <0 0xff 0xff 2 0xff 0x11>;
-+	dmas = <&sdma2 0 26 0>, <&sdma2 1 26 0>;
-+	status = "okay";
-+};
-+
 +&spdif1 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_spdif1>;
@@ -2831,10 +2793,15 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +};
 +
 +&usdhc3 {
-+	pinctrl-names = "default"; /* pinctrl-names = "default", "state_100mhz", "state_200mhz"; */
++#if 0
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 +	pinctrl-0 = <&pinctrl_usdhc3>;
-+	/*pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
-+	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;*/
++	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
++	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
++#else
++	pinctrl-names = "default"
++	pinctrl-0 = <&pinctrl_usdhc3>;
++#endif
 +	bus-width = <8>;
 +	non-removable;
 +	status = "okay";
@@ -2851,21 +2818,8 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +&iomuxc {
 +	pinctrl-names = "default";
 +	imx8mm {
-+/*
-+		pinctrl_csi_pwn: csi_pwn_grp {
-+			fsl,pins = <
-+				MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19
-+			>;
-+		};
 +
-+		pinctrl_csi_rst: csi_rst_grp {
-+			fsl,pins = <
-+				MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6		0x19
-+				MX8MM_IOMUXC_GPIO1_IO14_CCMSRCGPCMIX_CLKO1	0x59
-+			>;
-+		};
-+*/
-+		pinctrl_fec1: fec1grp {
++	pinctrl_fec1: fec1grp {
 +			fsl,pins = <
 +				MX8MM_IOMUXC_ENET_MDC_ENET1_MDC			0x3
 +				MX8MM_IOMUXC_ENET_MDIO_ENET1_MDIO		0x3
@@ -2899,19 +2853,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			>;
 +		};
 +
-+/*
-+		pinctrl_mipi_dsi_en: mipi_dsi_en {
-+			fsl,pins = <
-+				MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x16
-+			>;
-+		};
-+
-+		pinctrl_i2c2_synaptics_dsx_io: synaptics_dsx_iogrp {
-+			fsl,pins = <
-+				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9               0x19    // Touch int
-+			>;
-+		};
-+*/
 +		pinctrl_pcie0: pcie0grp {
 +			fsl,pins = <
 +				MX8MM_IOMUXC_SAI5_MCLK_GPIO3_IO25     0x41  // PCIE_nRST
@@ -2921,14 +2862,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +		pinctrl_pmic: pmicirq {
 +			fsl,pins = <
 +				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x41
-+			>;
-+		};
-+
-+		pinctrl_sai2: sai2grp {
-+			fsl,pins = <
-+				MX8MM_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC   0xd6
-+				MX8MM_IOMUXC_SAI2_TXC_SAI2_TX_BCLK    0xd6
-+				MX8MM_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0  0xd6
 +			>;
 +		};
 +
@@ -3138,63 +3071,29 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +	};
 +*/
 +};
-+
-+&lcdif {
-+	status = "okay";
-+};
-+
-+/*&mipi_csi_1 {
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	status = "okay";
-+	port {
-+		mipi1_sensor_ep: endpoint@1 {
-+			remote-endpoint = <&ov5640_mipi1_ep>;
-+			data-lanes = <2>;
-+			csis-hs-settle = <13>;
-+			csis-clk-settle = <2>;
-+			csis-wclk;
-+		};
-+
-+		csi1_mipi_ep: endpoint@2 {
-+			remote-endpoint = <&csi1_ep>;
-+		};
-+	};
-+};*/
-+
-+/*&mipi_dsi {
-+	status = "okay";
-+
-+	port@1 {
-+		dsim_to_adv7535: endpoint {
-+			remote-endpoint = <&adv7535_from_dsim>;
-+			attach-bridge;
-+		};
-+	};
-+};*/
-+
-+&vpu_g1 {
-+	status = "okay";
-+};
-+
-+&vpu_g2 {
-+	status = "okay";
-+};
-+
-+&vpu_h1 {
-+	status = "okay";
-+};
-+
-+&gpu {
-+	status = "okay";
-+};
 Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,193 @@
 +/**
 + */
++&iomuxc {
++	imx8mm {
++		pinctrl_sai2: sai2grp {
++			fsl,pins = <
++				MX8MM_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC   0xd6
++				MX8MM_IOMUXC_SAI2_TXC_SAI2_TX_BCLK    0xd6
++				MX8MM_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0  0xd6
++
++				MX8MM_IOMUXC_SAI2_RXFS_GPIO4_IO21     0x19
++				MX8MM_IOMUXC_SAI2_RXC_GPIO4_IO22      0x19
++				MX8MM_IOMUXC_SAI2_RXD0_GPIO4_IO23     0x19
++				MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27     0x19
++			>;
++		};
++	};
++};
 +
 +&i2c1 {
 +
@@ -3203,7 +3102,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +    reg = <0x2C>;
 +    interrupt-parent = <&gpio4>;
 +    interrupts = <23 IRQ_TYPE_LEVEL_LOW>;   // VIDEO_ALT
-+//    interrupts = <22 IRQ_TYPE_LEVEL_LOW>;                  // VIDEO_CABLE
 +    power_en-gpios = <&gpio4 21 0x0>;       // VIDEO_EN
 +    reset_n-gpios = <&gpio4 27 0x0>;        // VIDEO_RSTN
 +    cbl_det-gpios = <&gpio4 22 0x0>;        // VIDEO_CABLE
@@ -3255,6 +3153,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +  port@1 {
 +    dsi_to_anx: endpoint {
 +      remote-endpoint = <&anx_in>;
++      attach-bridge;
 +    };
 +  };
 +/*
@@ -3337,6 +3236,23 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +  status = "okay";
 +};
 +*/
++
++&sai2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_sai2>;
++	assigned-clocks = <&clk IMX8MM_CLK_SAI2>;
++	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
++	assigned-clock-rates = <49152000>;
++	clocks = <&clk IMX8MM_CLK_SAI2_IPG>, <&clk IMX8MM_CLK_DUMMY>,
++		<&clk IMX8MM_CLK_SAI2_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
++		<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
++		<&clk IMX8MM_AUDIO_PLL2_OUT>;
++	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
++	fsl,sai-multi-lane;
++	fsl,dataline,dsd = <0 0xff 0xff 2 0xff 0x11>;
++	dmas = <&sdma2 0 26 0>, <&sdma2 1 26 0>;
++	status = "okay";
++};
 +
 +&gpu {
 +  status = "okay";
