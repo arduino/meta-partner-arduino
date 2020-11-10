@@ -36,6 +36,17 @@
 
 #include "analogix-anx7625.h"
 
+
+#ifdef TRACE
+#undef TRACE
+#define TRACE(fmt, ...) printk(KERN_ERR "%s:"fmt, __func__, ##__VA_ARGS__)
+#endif
+
+#ifdef TRACE1
+#undef TRACE1
+#define TRACE1(fmt, ...) printk(KERN_ERR "%s:"fmt, __func__, ##__VA_ARGS__)
+#endif
+
 #define TX_P0			0x70
 #define TX_P1			0x7A
 #define TX_P2			0x72
@@ -702,7 +713,7 @@ static int anx7625_poweroff(struct anx7625 *anx7625)
 static int anx7625_poweron(struct anx7625 *anx7625)
 {
 	struct anx7625_platform_data *pdata = &anx7625->pdata;
-
+TRACE("\n");
 	if (anx7625->powered)
 		return 0;
 
@@ -734,6 +745,7 @@ static int anx7625_poweron(struct anx7625 *anx7625)
 static void DSI_Video_Timing_Configuration(struct anx7625 *anx7625)
 {
 	int table_id = anx7625->mode_idx;
+TRACE("\n");
 
 	/*configure clock*/
 	WriteReg(RX_P0, PIXEL_CLOCK_L,
@@ -1152,6 +1164,10 @@ static int anx7625_init_pdata(struct anx7625 *anx7625)
 
 	/* GPIO for chip reset */
 	pdata->gpiod_reset = devm_gpiod_get(dev, "reset_n", gpio_state);
+TRACE("low power mode, cdet %d, p_on %d, reset %d.\n",
+              desc_to_gpio(pdata->gpiod_cdet),
+              desc_to_gpio(pdata->gpiod_p_on),
+              desc_to_gpio(pdata->gpiod_reset));
 
 	return PTR_ERR_OR_ZERO(pdata->gpiod_reset);
 }
@@ -1235,7 +1251,7 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 static void anx7625_bridge_disable(struct drm_bridge *bridge)
 {
 	struct anx7625 *anx7625 = bridge_to_anx7625(bridge);
-
+TRACE("\n");
 	mutex_lock(&anx7625->lock);
 
 	anx7625->enabled = false;
@@ -1257,6 +1273,7 @@ static void anx7625_bridge_mode_set(struct drm_bridge *bridge,
 {
 	struct anx7625 *anx7625 = bridge_to_anx7625(bridge);
 	int mode_idx;
+TRACE("\n");
 
 	mode_idx = anx7625_get_mode_idx(adjusted_mode);
 
@@ -1275,6 +1292,7 @@ static void anx7625_bridge_enable(struct drm_bridge *bridge)
 {
 	struct anx7625 *anx7625 = bridge_to_anx7625(bridge);
 	int err;
+TRACE("\n");
 
 	mutex_lock(&anx7625->lock);
 
@@ -1316,6 +1334,7 @@ static irqreturn_t anx7625_cdet_threaded_handler(int irq, void *data)
 {
 	struct anx7625 *anx7625 = data;
 	int connected;
+TRACE("\n");
 
 	mutex_lock(&anx7625->lock);
 
@@ -1335,6 +1354,7 @@ static irqreturn_t anx7625_intp_threaded_handler(int unused, void *data)
 {
 	struct anx7625 *anx7625 = data;
 	unsigned char c;
+TRACE("\n");
 
 	mutex_lock(&anx7625->lock);
 
@@ -1487,6 +1507,10 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	anx7625->sys_sta_bak = ReadReg(RX_P0, SYSTEM_STSTUS);
 	anx7625->hpd_status = (anx7625->sys_sta_bak & HPD_STATUS) ?
 		true : false;
+TRACE("connected: %d, sys_sta_bak: %02X, hpd_status: %d\n",
+       anx7625->connected,
+       anx7625->sys_sta_bak,
+       anx7625->hpd_status);
 
 	return 0;
 
