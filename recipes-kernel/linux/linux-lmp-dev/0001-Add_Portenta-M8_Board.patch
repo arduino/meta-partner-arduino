@@ -31,7 +31,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +		simple-audio-card,bitclock-master = <&cpudai>;
 +		simple-audio-card,widgets =
 +			"HPOUTA", "HPOUTB", "SPKOUTA", "SPKOUTB";
-+			
++
 +		simple-audio-card,routing =
 +			"ADC Left Mux", "ADC Right Mux";
 +
@@ -3075,7 +3075,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,163 @@
 +/**
 + */
 +&iomuxc {
@@ -3097,62 +3097,33 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +&i2c1 {
 +
-+  analogix_i2c@2c{
-+    compatible = "analogix,anx7625";
-+    reg = <0x2C>;
-+    interrupt-parent = <&gpio4>;
-+    interrupts = <23 IRQ_TYPE_LEVEL_LOW>;   // VIDEO_ALT
-+    power_en-gpios = <&gpio4 21 0x0>;       // VIDEO_EN
-+    reset_n-gpios = <&gpio4 27 0x0>;        // VIDEO_RSTN
-+    cbl_det-gpios = <&gpio4 22 0x0>;        // VIDEO_CABLE
++  analogix_i2c@58{
++    compatible ="analogix,anx7625";
 +    status = "okay";
++    reg = <0x58>;
 +
-+    display-timings {
-+      lvds {
-+        clock-frequency = <33000000>;
-+        hactive = <800>;
-+        vactive = <480>;
-+        hback-porch = <40>;
-+        hfront-porch = <40>;
-+        vback-porch = <29>;
-+        vfront-porch = <13>;
-+        hsync-len = <48>;
-+        vsync-len = <3>;
-+        hsync-active = <0>;
-+        vsync-active = <0>;
-+        de-active = <1>;
-+        pixelclk-active = <0>;
++    interrupt-parent = <&gpio4>;
++    interrupts = <23 0>, <22 0>; // cable_det gpio is interrupt pin
++    p_on-gpios = <&gpio4 21 0x0>;       // VIDEO_EN
++    reset-gpios = <&gpio4 27 0x0>;      // VIDEO_RSTN
++    //v33_ctrl-gpios = <&gpio4 51 0x0>; // could be LDO5 enable
++    intr_comm-gpios = <&gpio4 23 0x0>;  // VIDEO_ALT
++    cbl_det-gpios = <&gpio4 22 0x0>;    // VIDEO_CABLE
++    analogix.external-ldo-control = <0>;
++    analogix,i2c-pull-up = <0>;
++    port {
++      lvds_from_dsi: endpoint {
++        remote-endpoint = <&dsi_to_lvds>;
 +      };
 +    };
-+
-+    ports {
-+      #address-cells = <1>;
-+      #size-cells = <0>;
-+
-+    port@0 {
-+      reg = <0>;
-+      anx_in: endpoint {
-+        remote-endpoint = <&dsi_to_anx>;
-+      };
-+    };
-+
-+    };
-+/*
-+    port@2 {
-+      reg = <2>;
-+      anx_out: endpoint {
-+        remote-endpoint = <&panel_in>;
-+      };
-+    };
-+*/
 +  };
 +};
 +
 +&mipi_dsi {
 +  status = "okay";
 +  port@1 {
-+    dsi_to_anx: endpoint {
-+      remote-endpoint = <&anx_in>;
++    dsi_to_lvds: endpoint {
++      remote-endpoint = <&lvds_from_dsi>;
 +      attach-bridge;
 +    };
 +  };
@@ -3180,7 +3151,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +&lcdif {
 +  status = "okay";
-+  /*
 +  display = <&display0>;
 +
 +  display0: display {
@@ -3224,7 +3194,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +    };
 +  };
-+  */
++
 +};
 +
 +/*
