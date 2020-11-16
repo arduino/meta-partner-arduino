@@ -33,6 +33,7 @@
 #include <drm/drm_crtc_helper.h>
 #include <drm/drm_dp_helper.h>
 #include <drm/drm_edid.h>
+#include <drm/drm_probe_helper.h>
 
 #include "analogix-anx7625.h"
 
@@ -46,6 +47,8 @@
 #undef TRACE1
 #define TRACE1(fmt, ...) printk(KERN_ERR "%s:"fmt, __func__, ##__VA_ARGS__)
 #endif
+
+#define DRM_TEST_CONNECTOR
 
 #define TX_P0			0x70
 #define TX_P1			0x7A
@@ -135,9 +138,32 @@ struct MIPI_Video_Format {
 	} MIPI_inputl[2];
 };
 
+
+#ifdef DRM_TEST_CONNECTOR
+
+#define MAX_DPCD_BUFFER_SIZE	16
+
+#define ONE_BLOCK_SIZE      128
+#define FOUR_BLOCK_SIZE     (128 * 4)
+
+#define MAX_EDID_BLOCK        3
+#define EDID_TRY_CNT          3
+#define SUPPORT_PIXEL_CLOCK  300000
+
+#endif
+
+struct s_edid_data {
+ int edid_block_num;
+ u8 edid_raw_data[FOUR_BLOCK_SIZE];
+};
+
 struct anx7625 {
 	struct drm_dp_aux aux;
 	struct drm_bridge bridge;
+#ifdef DRM_TEST_CONNECTOR
+  struct drm_connector          connector;
+  struct s_edid_data            slimport_edid_p;
+#endif
 	struct i2c_client *client;
 	struct edid *edid;
 	struct drm_dp_link link;
@@ -504,6 +530,13 @@ static struct MIPI_Video_Format mipi_video_timing_table[] = {
 		}
 	},
 };
+
+#ifdef DRM_TEST_CONNECTOR
+static inline struct anx7625 *connector_to_anx7625(struct drm_connector *c)
+{
+  return container_of(c, struct anx7625, connector);
+}
+#endif
 
 static inline struct anx7625 *bridge_to_anx7625(struct drm_bridge *bridge)
 {
@@ -1084,6 +1117,7 @@ static void DSI_DSC_Configuration(struct anx7625 *anx7625,
 
 static int anx7625_start(struct anx7625 *anx7625)
 {
+TRACE("mode_idx: %d\n", anx7625->mode_idx);
 	/*not support HDCP*/
 	sp_write_reg_and(RX_P1, 0xee, 0x9f);
 
@@ -1212,15 +1246,385 @@ static int anx7625_get_mode_idx(const struct drm_display_mode *mode)
 	return mode_idx;
 }
 
+#ifdef DRM_TEST_CONNECTOR
+
+static enum drm_connector_status anx7625_detect(struct drm_connector *connector,
+           bool force)
+{
+TRACE("\n");
+  /*
+  struct anx7625 *ctx = connector_to_anx7625(connector);
+  struct device  *dev = &ctx->client->dev;
+
+  DRM_DEV_DEBUG_DRIVER(dev, "drm detect\n");
+
+  if (ctx->pdata.internal_panel)
+    return connector_status_connected;
+
+  if (!ctx->hpd_status)
+    return connector_status_disconnected;
+*/
+  return connector_status_connected;
+}
+
+static const struct drm_connector_funcs anx7625_connector_funcs = {
+  .fill_modes             = drm_helper_probe_single_connector_modes,
+  .detect                 = anx7625_detect,
+  .destroy                = drm_connector_cleanup,
+  .reset                  = drm_atomic_helper_connector_reset,
+  .atomic_duplicate_state = drm_atomic_helper_connector_duplicate_state,
+  .atomic_destroy_state   = drm_atomic_helper_connector_destroy_state,
+};
+
+/*
+// TODO aggiunto per test, da togliere
+static int anx7625_reg_read(struct anx7625 *anx7625,
+         int addr, u8 reg_addr)
+{
+  int ret;
+
+  //i2c_access_workaround(anx7625, client);
+  Reg_Access_Conflict_Workaround(anx7625, addr);
+  ret = i2c_smbus_read_byte_data(anx7625->client, reg_addr);
+  if (ret < 0)
+    DRM_ERROR("read i2c failed id=%x:%x\n", addr, reg_addr);
+
+  return ret;
+}
+*/
+static int sp_tx_get_edid_block(struct anx7625 *anx7625)
+{
+  int c = 0;
+// struct device *dev = &anx7625->client->dev;
+
+  sp_tx_aux_wr(anx7625, 0x7E);
+  sp_tx_aux_rd(anx7625, 0x01);
+  //c = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, AP_AUX_BUFF_START);
+  //c = anx7625_reg_read(anx7625, RX_P0, AP_AUX_BUFF_START);
+  c = ReadReg(RX_P0, AP_AUX_BUFF_START);
+
+  if (c < 0) {
+    DRM_ERROR("IO error : access AUX BUFF.\n");
+    return -EIO;
+  }
+
+  TRACE("EDID Block = %d\n", c + 1);
+
+  if (c > MAX_EDID_BLOCK)
+    c = 1;
+
+  return c;
+}
+
+static int sp_tx_rst_aux(struct anx7625 *anx7625)
+{
+  sp_write_reg_or(TX_P2, RST_CTRL2, AUX_RST);
+  sp_write_reg_and(TX_P2, RST_CTRL2, ~AUX_RST);
+  return 0;
+}
+
+static int edid_read(struct anx7625 *anx7625, u8 offset, u8 *pblock_buf)
+{
+  int ret, cnt;
+
+  for (cnt = 0; cnt <= EDID_TRY_CNT; cnt++) {
+    sp_tx_aux_wr(anx7625, offset);
+    /* set I2C read com 0x01 mot = 0 and read 16 bytes */
+    ret = sp_tx_aux_rd(anx7625, 0xf1);
+    if (ret) {
+      sp_tx_rst_aux(anx7625);
+      TRACE("edid read failed, reset!\n");
+    } else {
+/*
+      ret = anx7625_reg_block_read(ctx, ctx->i2c.rx_p0_client,
+                  AP_AUX_BUFF_START,
+                  MAX_DPCD_BUFFER_SIZE,
+                  pblock_buf);
+*/
+      ret = reg_read_block(anx7625, RX_P0,
+                           AP_AUX_BUFF_START, pblock_buf, MAX_DPCD_BUFFER_SIZE);
+      if (ret > 0)
+        break;
+    }
+  }
+
+  if (cnt > EDID_TRY_CNT) {
+    DRM_ERROR("edid_read ERROR: retry.\n");
+    return -EIO;
+  }
+  return 0;
+}
+
+static int segments_edid_read(struct anx7625 *anx7625,
+                              u8 segment, u8 *buf, u8 offset)
+{
+  u8  cnt;
+  unchar c;
+  int ret;
+  //struct device *dev = &ctx->client->dev;
+ret = 0;
+  /* write address only */
+/*
+  ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, AP_AUX_ADDR_7_0, 0x30);
+  ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, AP_AUX_COMMAND, 0x04);
+  ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, AP_AUX_CTRL_STATUS,
+                           AP_AUX_CTRL_ADDRONLY | AP_AUX_CTRL_OP_EN);
+*/
+  WriteReg(RX_P0, AP_AUX_ADDR_7_0, 0x30);
+  WriteReg(RX_P0, AP_AUX_COMMAND, 0x04);
+  WriteReg(RX_P0, AP_AUX_CTRL_STATUS, AP_AUX_CTRL_ADDRONLY | AP_AUX_CTRL_OP_EN);
+
+  //ret |=
+  wait_aux_op_finish(anx7625, &c);
+
+  /* write segment address */
+  ret |= sp_tx_aux_wr(anx7625, segment);
+
+  /* data read */
+/*
+  ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, AP_AUX_ADDR_7_0, 0x50);
+  if (ret) {
+    DRM_ERROR("IO error : aux initial failed.\n");
+    return ret;
+  }
+*/
+  WriteReg(RX_P0, AP_AUX_ADDR_7_0, 0x50);
+
+  for (cnt = 0; cnt <= EDID_TRY_CNT; cnt++) {
+    sp_tx_aux_wr(anx7625, offset);
+    /* set I2C read com 0x01 mot = 0 and read 16 bytes */
+    ret = sp_tx_aux_rd(anx7625, 0xf1);
+
+    if (ret) {
+      ret = sp_tx_rst_aux(anx7625);
+      DRM_ERROR("segment read failed, reset!\n");
+    } else {
+/*
+      ret = anx7625_reg_block_read(ctx, ctx->i2c.rx_p0_client,
+                  AP_AUX_BUFF_START,
+                  MAX_DPCD_BUFFER_SIZE, buf);
+*/
+      ret = reg_read_block(anx7625, RX_P0,
+                           AP_AUX_BUFF_START, buf, MAX_DPCD_BUFFER_SIZE);
+      if (ret > 0)
+        break;
+    }
+  }
+
+  if (cnt > EDID_TRY_CNT) {
+    DRM_ERROR("segments_edid_read ERROR retry!\n");
+    return -EIO;
+  }
+
+  return 0;
+}
+
+static int  sp_tx_edid_read(struct anx7625 *anx7625, u8 *pedid_blocks_buf)
+{
+  // TODO copiare da driver patch
+  u8 offset, edid_pos;
+  int count, blocks_num;
+  u8 pblock_buf[MAX_DPCD_BUFFER_SIZE];
+  u8 i, j;
+  u8 g_edid_break = 0;
+//  int ret;
+//  struct device *dev = &anx7625->client->dev;
+TRACE("\n");
+
+  /* address initial */
+  WriteReg(RX_P0, AP_AUX_ADDR_7_0, 0x50);
+  WriteReg(RX_P0, AP_AUX_ADDR_15_8, 0);
+  sp_write_reg_and(RX_P0, AP_AUX_ADDR_19_16, 0xF0);
+
+  blocks_num = sp_tx_get_edid_block(anx7625);
+  if (blocks_num < 0) {
+    DRM_ERROR("ERROR: sp_tx_get_edid_block().\n");
+    return blocks_num;
+  }
+  count = 0;
+
+  do {
+    switch (count) {
+    case 0:
+    case 1:
+      for (i = 0; i < 8; i++) {
+        offset = (i + count * 8) * MAX_DPCD_BUFFER_SIZE;
+        g_edid_break = edid_read(anx7625, offset, pblock_buf);
+
+        if (g_edid_break)
+          break;
+
+        memcpy(&pedid_blocks_buf[offset], pblock_buf, MAX_DPCD_BUFFER_SIZE);
+      }
+
+      break;
+    case 2:
+      offset = 0x00;
+
+      for (j = 0; j < 8; j++) {
+        edid_pos = (j + count * 8) * MAX_DPCD_BUFFER_SIZE;
+
+        if (g_edid_break == 1)
+          break;
+
+        segments_edid_read(anx7625, count / 2, pblock_buf, offset);
+        memcpy(&pedid_blocks_buf[edid_pos], pblock_buf, MAX_DPCD_BUFFER_SIZE);
+        offset = offset + 0x10;
+      }
+
+      break;
+    case 3:
+      offset = 0x80;
+
+      for (j = 0; j < 8; j++) {
+        edid_pos = (j + count * 8) * MAX_DPCD_BUFFER_SIZE;
+        if (g_edid_break == 1)
+          break;
+
+        segments_edid_read(anx7625, count / 2, pblock_buf, offset);
+        memcpy(&pedid_blocks_buf[edid_pos], pblock_buf, MAX_DPCD_BUFFER_SIZE);
+        offset = offset + 0x10;
+      }
+
+      break;
+    default:
+      break;
+    }
+
+    count++;
+
+  } while (blocks_num >= count);
+
+  /* check edid data */
+  if (!drm_edid_is_valid((struct edid *)pedid_blocks_buf)) {
+    DRM_ERROR("WARNING! edid check failed!\n");
+    return -EINVAL;
+  }
+
+  /* reset aux channel */
+  sp_tx_rst_aux(anx7625);
+TRACE("Done\n");
+  return (blocks_num + 1);
+}
+
+static int anx7625_get_modes(struct drm_connector *connector)
+{
+  struct anx7625     *anx7625 = connector_to_anx7625(connector);
+  int                 err, num_modes = 0;
+  int                 turn_off_flag = 0;
+  struct s_edid_data *p_edid = &anx7625->slimport_edid_p;
+//  struct device      *dev = &anx7625->client->dev;
+
+  TRACE("\n");
+/*
+  if (ctx->slimport_edid_p.edid_block_num > 0)
+    goto out;
+*/
+  mutex_lock(&anx7625->lock);
+
+/*
+  if (ctx->pdata.panel && atomic_read(&ctx->panel_power) == 0) {
+    turn_off_flag = 1;
+    anx7625_pre_enable(&ctx->bridge);
+  }
+
+  anx7625_low_power_mode_check(anx7625, 1);
+*/
+  p_edid->edid_block_num = sp_tx_edid_read(anx7625, p_edid->edid_raw_data);
+
+  err = -EIO;
+  if (p_edid->edid_block_num < 0) {
+    DRM_ERROR("Failed to read EDID.\n");
+    goto fail;
+  }
+
+  err = drm_connector_update_edid_property(connector,
+                                    (struct edid *)&p_edid->edid_raw_data);
+  if (err)
+    DRM_ERROR("Failed to update EDID property: %d\n", err);
+
+fail:
+  mutex_unlock(&anx7625->lock);
+  /*
+  anx7625_low_power_mode_check(ctx, 0);
+  if (ctx->pdata.panel && turn_off_flag == 1)
+    anx7625_post_disable(&ctx->bridge);
+*/
+  if (err)
+    return err;
+
+out:
+  num_modes = drm_add_edid_modes(connector,
+              (struct edid *)&p_edid->edid_raw_data);
+  TRACE("num_modes(%d)\n", num_modes);
+
+  return num_modes;
+}
+
+static enum drm_mode_status
+anx7625_connector_mode_valid(struct drm_connector *connector,
+          struct drm_display_mode *mode)
+{
+printk("anx7625_connector_mode_valid\n");
+  /*
+  struct anx7625 *ctx = connector_to_anx7625(connector);
+  struct device *dev = &ctx->client->dev;
+
+  DRM_DEV_DEBUG_DRIVER(dev, "drm modes valid verify\n");
+
+  if (mode->clock > SUPPORT_PIXEL_CLOCK)
+    return MODE_CLOCK_HIGH;
+*/
+  return MODE_OK;
+}
+
+static struct drm_connector_helper_funcs anx7625_connector_helper_funcs = {
+  .get_modes  = anx7625_get_modes,
+  .mode_valid = anx7625_connector_mode_valid,
+};
+
+#endif
+
 static int anx7625_bridge_attach(struct drm_bridge *bridge)
 {
 	struct anx7625 *anx7625 = bridge_to_anx7625(bridge);
 	int err;
-
+TRACE("\n");
 	if (!bridge->encoder) {
 		DRM_ERROR("Parent encoder object not found");
 		return -ENODEV;
 	}
+
+#ifdef DRM_TEST_CONNECTOR
+
+TRACE("connector init\n");
+
+ err = drm_connector_init(bridge->dev, &anx7625->connector,
+                          &anx7625_connector_funcs,
+                          DRM_MODE_CONNECTOR_DisplayPort);
+
+ if (err) {
+   DRM_ERROR("Failed to initialize connector: %d\n", err);
+   return err;
+ }
+
+ drm_connector_helper_add(&anx7625->connector, &anx7625_connector_helper_funcs);
+
+ err = drm_connector_register(&anx7625->connector);
+ if (err) {
+   DRM_ERROR("Failed to register connector: %d\n", err);
+   return err;
+ }
+
+ anx7625->connector.polled = DRM_CONNECTOR_POLL_HPD;
+
+ err = drm_connector_attach_encoder(&anx7625->connector, bridge->encoder);
+ if (err) {
+   DRM_ERROR("Failed to link up connector to encoder: %d\n", err);
+   drm_connector_unregister(&anx7625->connector);
+   return err;
+ }
+#endif
 
 	/* Register aux channel */
 	anx7625->aux.name = "DP-AUX";
@@ -1232,6 +1636,7 @@ static int anx7625_bridge_attach(struct drm_bridge *bridge)
 		DRM_ERROR("Failed to register aux channel: %d\n", err);
 		return err;
 	}
+TRACE("Aux channel Registerd\n");
 
 	return 0;
 }
@@ -1240,6 +1645,7 @@ static enum drm_mode_status
 anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 			  const struct drm_display_mode *mode)
 {
+TRACE("\n");
 	if (anx7625_get_mode_idx(mode) < 0) {
 		pr_err("failed to find valid index\n");
 		return MODE_NOMODE;
