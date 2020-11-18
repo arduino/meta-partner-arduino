@@ -1192,16 +1192,16 @@ static int adx7625_get_edid_block(void *data, u8 *buf, unsigned int block,
   unsigned char blocks_num;
   //struct s_edid_data *p_edid = (struct s_edid_data *)slimport_edid_p;
   
-  //DBG_PRINT("block %d, len %d\n", block, len);
+  DBG_PRINT("block %d, len %d\n", block, len);
   blocks_num = sp_tx_edid_read(edid_blocks);
-  //DBG_PRINT("blocks_num %d\n", blocks_num);
-  //log_dump(edid_blocks, (blocks_num + 1)*128);
+  DBG_PRINT("blocks_num %d\n", blocks_num);
+  log_dump(edid_blocks, (blocks_num + 1)*128);
   //if (slimport_edid_p) {
   //  log_dump(p_edid->EDID_block_data, (blocks_num + 1)*128);
   //} else {
   //  DBG_PRINT("p_edid is NULL\n");
   //}
-  if (block & 0x1 == 0) {
+  if ((block & 0x1) == 0) {
     memcpy(buf, edid_blocks, len);
   } else {
     memcpy(buf, edid_blocks + 128, len);
@@ -1235,6 +1235,7 @@ static int anx7625_get_modes(struct drm_connector *connector)
   }
 
   edid = drm_do_get_edid(connector, adx7625_get_edid_block, the_chip_anx7625);
+  DBG_PRINT("edid %p\n", (void*)edid);
 
   drm_edid_get_monitor_name(edid, name, 16);
   DBG_PRINT("Monitor name: %s\n", name);
