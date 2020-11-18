@@ -697,7 +697,7 @@ void anx7625_start_dp(void)
   TRACE("anx7625_start_dp: mute_flag: %d\n", (unsigned int)mute_video_flag);
 
   if (hpd_status >= 2) {
-    TRACE("anx7625 filter useless HPD\n");
+    TRACE("anx7625 filter useless HPD,  %d\n", hpd_status);
     return;
   }
 
@@ -720,13 +720,16 @@ void anx7625_start_dp(void)
   }
 #endif    // ENABLE_DRM
   if (delay_tab_id == 0) {
-    if (default_dpi_config < 0x20)
+    if (default_dpi_config < 0x20) {
+      DBG_PRINT("command_DPI_Configuration\n");
       command_DPI_Configuration(default_dpi_config);
-    else if (default_dsi_config < 0x20)
+    } else if (default_dsi_config < 0x20) {
+      DBG_PRINT("command_DSI_Configuration\n");
       command_DSI_Configuration(default_dsi_config);
-
-    if (default_audio_config < 0x20)
+    }
+    if (default_audio_config < 0x20) {
       API_Configure_Audio_Input(default_audio_config);
+    }
   }
 #endif
 }
@@ -1192,10 +1195,10 @@ static int adx7625_get_edid_block(void *data, u8 *buf, unsigned int block,
   unsigned char blocks_num;
   //struct s_edid_data *p_edid = (struct s_edid_data *)slimport_edid_p;
   
-  DBG_PRINT("block %d, len %d\n", block, len);
+  //DBG_PRINT("block %d, len %d\n", block, len);
   blocks_num = sp_tx_edid_read(edid_blocks);
-  DBG_PRINT("blocks_num %d\n", blocks_num);
-  log_dump(edid_blocks, (blocks_num + 1)*128);
+  //DBG_PRINT("blocks_num %d\n", blocks_num);
+  //log_dump(edid_blocks, (blocks_num + 1)*128);
   //if (slimport_edid_p) {
   //  log_dump(p_edid->EDID_block_data, (blocks_num + 1)*128);
   //} else {
@@ -1320,11 +1323,12 @@ static enum drm_mode_status anx7625_mode_valid(struct drm_connector *connector,
 {
   struct device        *dev = &anx7625_client->dev;
 
-  DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid verify. clock %d\n", mode->clock);
+  //DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid verify. clock %d\n", mode->clock);
 
-  if (mode->clock > SUPPORT_PIXEL_CLOCK)
+  if (mode->clock > SUPPORT_PIXEL_CLOCK) {
+    DBG_ERROR("mode->clock > SUPPORT_PIXEL_CLOCK %d, %d\n", mode->clock, SUPPORT_PIXEL_CLOCK);
     return MODE_CLOCK_HIGH;
-
+  }
   return MODE_OK;
 }
 
@@ -1492,15 +1496,16 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 {
   struct device *dev = &anx7625_client->dev;
 
-  DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking. Clock %d\n", mode->clock);
+  //DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking. Clock %d\n", mode->clock);
 
   /* Max 1200p at 5.4 Ghz, one lane, pixel clock 300M */
   if (mode->clock > SUPPORT_PIXEL_CLOCK) {
-    DRM_DEV_DEBUG_DRIVER(dev, "drm mode invalid, pixelclock too high.\n");
+    DRM_DEV_DEBUG_DRIVER(dev, "drm mode invalid, pixelclock too high (%d > %d).\n",
+                         mode->clock, SUPPORT_PIXEL_CLOCK);
     return MODE_CLOCK_HIGH;
   }
 
-  DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
+  //DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
 
   return MODE_OK;
 }
@@ -1568,7 +1573,7 @@ static void anx7625_bridge_enable(struct drm_bridge *bridge)
   //if (WARN_ON(!atomic_read(&anx7625_power_status)))
   //  return;
 
-#if 0
+#if 1
 //  mutex_lock(&ctx->lock);
 //  anx7625_dp_start(ctx);
 //  mutex_unlock(&ctx->lock);
@@ -1589,7 +1594,7 @@ static void anx7625_bridge_disable(struct drm_bridge *bridge)
 
 
   mutex_lock(&ctx->lock);
-#if 0
+#if 1
   //anx7625_dp_stop(ctx);
   anx7625_stop_dp_work();
 #endif
