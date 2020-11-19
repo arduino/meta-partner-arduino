@@ -19,8 +19,6 @@
 #include <linux/types.h>
 #include <linux/kernel.h>
 
-
-
 #define DEBUG_LOG_OUTPUT
 
 #include "display.h"

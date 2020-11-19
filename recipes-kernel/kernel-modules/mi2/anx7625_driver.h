@@ -134,8 +134,8 @@ void anx7625_stop_dp_work(void);
 void anx7625_handle_intr_comm(void);
 
 #ifdef DYNAMIC_CONFIG_MIPI
-//#include "../msm_dba/msm_dba_internal.h"
-//#include <video/msm_dba.h>
+#include "../msm_dba/msm_dba_internal.h"
+#include <video/msm_dba.h>
 int anx7625_mipi_timing_setting(
 	void *client, bool on, struct msm_dba_video_cfg *cfg,
 	    u32 flags);

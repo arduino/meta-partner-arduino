@@ -153,6 +153,7 @@ void DP_Process_Start(void)
 	unsigned char  blocks_num, c;
 
 	/*Read EDID*/
+	TRACE("DP_Process_Start: mute_video_flag:%d, delay_video_cfg:%p\n", mute_video_flag, delay_video_cfg);
 	if ((mute_video_flag == 0) || (delay_video_cfg == 0)) {
 
 		TRACE("DP_Process_Start HPD high, and create context\n");
@@ -750,10 +751,10 @@ static char  cal_ODFC_PLL_settings_DSI(unsigned long pixel_frequency,
 	/* 730MHz/520MHz = 1.404
 	  The impact of "patch to improve the accuracy":
 	  In the worst case, e.g.
-	    pixel_frequency == PLL_OUT_FREQ_MIN / (6+¦Ä) or
-	    pixel_frequency == PLL_OUT_FREQ_ABS_MIN / (6+¦Ä)
-	  0<¦Ä<<1, "¦Ä<<1" means ¦Ä is much less than 1, say 1/1000.
-	  After such "patch to improve the accuracy", (6+¦Ä)
+	    pixel_frequency == PLL_OUT_FREQ_MIN / (6+[]) or
+	    pixel_frequency == PLL_OUT_FREQ_ABS_MIN / (6+[])
+	  0<[]<<1, "[]<<1" means [] is much less than 1, say 1/1000.
+	  After such "patch to improve the accuracy", (6+[])
 	  will be corrected to 8.
 	    8/(7-1) = 1.333
 	    12/(11-1) = 1.2
