@@ -1168,7 +1168,7 @@ static int anx7625_get_modes(struct drm_connector *connector)
 #if 1
 	struct anx7625_data *ctx = connector_to_anx7625(connector);
 	int num_modes = 0;
-	struct device *dev = &ctx->client->dev;
+	struct device *dev = &anx7625_client->dev;
 	struct s_edid_data *p_edid =
 		(struct s_edid_data *)slimport_edid_p;
 
@@ -1463,7 +1463,7 @@ static void anx7625_bridge_mode_set(struct drm_bridge *bridge,
 
 static void anx7625_bridge_enable(struct drm_bridge *bridge)
 {
-	struct anx7625_data  *ctx = bridge_to_anx7625(bridge);
+	//struct anx7625_data  *ctx = bridge_to_anx7625(bridge);
 	struct device        *dev = &anx7625_client->dev;
 
 	DRM_DEV_DEBUG_DRIVER(dev, "drm bridge enable\n");
