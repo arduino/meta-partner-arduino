@@ -2,7 +2,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
-@@ -0,0 +1,289 @@
+@@ -0,0 +1,298 @@
 +/**
 + */
 +
@@ -30,10 +30,18 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +		simple-audio-card,frame-master = <&cpudai>;
 +		simple-audio-card,bitclock-master = <&cpudai>;
 +		simple-audio-card,widgets =
-+			"HPOUTA", "HPOUTB", "SPKOUTA", "SPKOUTB";
-+
++			"Headphone", "Headphone Jack";
 +		simple-audio-card,routing =
-+			"ADC Left Mux", "ADC Right Mux";
++			"ADC Left Mux" , "AIN1L",
++			"ADC Right Mux", "AIN1R",
++			"ADC Left Mux" , "AIN2L",
++			"ADC Right Mux", "AIN2R",
++			"ADC Left Mux" , "AIN3L",
++			"ADC Right Mux", "AIN3R",
++			"ADC Left Mux" , "AIN4L",
++			"ADC Right Mux", "AIN4R",
++			"ADC Left Mux" , "PGA Left",
++			"ADC Right Mux", "PGA Right";
 +
 +		cpudai: simple-audio-card,cpu {
 +			sound-dai = <&sai3>;
@@ -197,6 +205,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +	};
 +
 +	cs42l52: cs42l52@4a {
++		#sound-dai-cells = <0>;
 +		compatible = "cirrus,cs42l52";
 +		reg = <0x4a>;
 +		cirrus,reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
@@ -280,7 +289,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +	dr_mode = "otg";
 +	picophy,pre-emp-curr-control = <3>;
 +	picophy,dc-vol-level-adjust = <7>;
-+	status = "disabled";
++	status = "okay";
 +};
 +
 +// connect on CSI connector
@@ -2418,7 +2427,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
-@@ -0,0 +1,652 @@
+@@ -0,0 +1,651 @@
 +/**
 + * Copyright 2020
 + */
@@ -2655,8 +2664,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +			};
 +
 +			ldo5_reg: LDO5 {
-+				reg = <10>;
-+				regulator-compatible = "LDO5";
++				regulator-name = "LDO5";
 +				regulator-min-microvolt = <3000000>;
 +				regulator-max-microvolt = <3000000>;
 +				regulator-boot-on;
@@ -3075,24 +3083,24 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
-@@ -0,0 +1,163 @@
+@@ -0,0 +1,133 @@
 +/**
 + */
 +&iomuxc {
-+	imx8mm {
-+		pinctrl_sai2: sai2grp {
-+			fsl,pins = <
-+				MX8MM_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC   0xd6
-+				MX8MM_IOMUXC_SAI2_TXC_SAI2_TX_BCLK    0xd6
-+				MX8MM_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0  0xd6
++  imx8mm {
++    pinctrl_sai2: sai2grp {
++      fsl,pins = <
++        MX8MM_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC   0xd6
++        MX8MM_IOMUXC_SAI2_TXC_SAI2_TX_BCLK    0xd6
++        MX8MM_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0  0xd6
 +
-+				MX8MM_IOMUXC_SAI2_RXFS_GPIO4_IO21     0x19
-+				MX8MM_IOMUXC_SAI2_RXC_GPIO4_IO22      0x19
-+				MX8MM_IOMUXC_SAI2_RXD0_GPIO4_IO23     0x19
-+				MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27     0x19
-+			>;
-+		};
-+	};
++        MX8MM_IOMUXC_SAI2_RXFS_GPIO4_IO21     0x19
++        MX8MM_IOMUXC_SAI2_RXC_GPIO4_IO22      0x19
++        MX8MM_IOMUXC_SAI2_RXD0_GPIO4_IO23     0x19
++        MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27     0x19
++      >;
++    };
++  };
 +};
 +
 +&i2c1 {
@@ -3127,26 +3135,6 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +      attach-bridge;
 +    };
 +  };
-+/*
-+  panel@0 {
-+    compatible = "raydium,rm67191";
-+    reg = <0>;
-+    //pinctrl-0 = <&pinctrl_mipi_dsi_en>;
-+    //reset-gpio = <&gpio1 8 GPIO_ACTIVE_HIGH>;
-+    dsi-lanes = <4>;
-+    video-mode = <2>; // 0: burst mode
-+                      // 1: non-burst mode with sync event
-+                      // 2: non-burst mode with sync pulse
-+    panel-width-mm = <68>;
-+    panel-height-mm = <121>;
-+    status = "okay";
-+    port {
-+      panel_in: endpoint {
-+        remote-endpoint = <&anx_out>;
-+      };
-+    };
-+  };
-+*/
 +};
 +
 +&lcdif {
@@ -3197,31 +3185,21 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +};
 +
-+/*
-+&usbotg1 {
-+  dr_mode = "otg";
-+//	extcon = <0>, <&typec1_ptn5110>;
-+  picophy,pre-emp-curr-control = <3>;
-+  picophy,dc-vol-level-adjust = <7>;
-+  status = "okay";
-+};
-+*/
-+
 +&sai2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_sai2>;
-+	assigned-clocks = <&clk IMX8MM_CLK_SAI2>;
-+	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-+	assigned-clock-rates = <49152000>;
-+	clocks = <&clk IMX8MM_CLK_SAI2_IPG>, <&clk IMX8MM_CLK_DUMMY>,
-+		<&clk IMX8MM_CLK_SAI2_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
-+		<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
-+		<&clk IMX8MM_AUDIO_PLL2_OUT>;
-+	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
-+	fsl,sai-multi-lane;
-+	fsl,dataline,dsd = <0 0xff 0xff 2 0xff 0x11>;
-+	dmas = <&sdma2 0 26 0>, <&sdma2 1 26 0>;
-+	status = "okay";
++  pinctrl-names = "default";
++  pinctrl-0 = <&pinctrl_sai2>;
++  assigned-clocks = <&clk IMX8MM_CLK_SAI2>;
++  assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
++  assigned-clock-rates = <49152000>;
++  clocks = <&clk IMX8MM_CLK_SAI2_IPG>, <&clk IMX8MM_CLK_DUMMY>,
++           <&clk IMX8MM_CLK_SAI2_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
++           <&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
++           <&clk IMX8MM_AUDIO_PLL2_OUT>;
++  clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
++  fsl,sai-multi-lane;
++  fsl,dataline,dsd = <0 0xff 0xff 2 0xff 0x11>;
++  dmas = <&sdma2 0 26 0>, <&sdma2 1 26 0>;
++  status = "okay";
 +};
 +
 +&gpu {
