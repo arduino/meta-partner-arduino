@@ -799,7 +799,7 @@ static int anx7625_parse_dt(struct device *dev,
 	struct device_node *np = dev->of_node;
 
 	pdata->gpio_p_on =
-		devm_gpiod_get_optional(dev, "enable", GPIOD_OUT_LOW);
+		devm_gpiod_get_optional(dev, "p_on", GPIOD_OUT_LOW);
 	if (pdata->gpio_p_on) {
 		DBG_PRINT("p_on %d.\n", desc_to_gpio(pdata->gpio_p_on));
 	} else {
@@ -1091,7 +1091,7 @@ anx7625_connector_mode_valid(struct drm_connector *connector,
 	struct anx7625_data *ctx = connector_to_anx7625(connector);
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm modes valid verify\n");
+	//DRM_DEV_DEBUG_DRIVER(dev, "drm modes valid verify\n");
 
 	if (mode->clock > SUPPORT_PIXEL_CLOCK)
 		return MODE_CLOCK_HIGH;
@@ -1254,7 +1254,7 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking\n");
+	//DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking\n");
 
 	/* Max 1200p at 5.4 Ghz, one lane, pixel clock 300M */
 	if (mode->clock > SUPPORT_PIXEL_CLOCK) {
@@ -1263,7 +1263,7 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 		return MODE_CLOCK_HIGH;
 	}
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
+	//DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
 
 	return MODE_OK;
 }

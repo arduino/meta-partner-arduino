@@ -1,4 +1,4 @@
-mi2-objs := anx7625_driver.o \
+mi2-scott-objs := anx7625_driver.o \
             anx7625_private_interface.o \
             anx7625_public_interface.o \
             Flash.o \
@@ -11,7 +11,7 @@ mi2-objs := anx7625_driver.o \
 #For other platform, parse EDID.
 #mi2-objs += display_drv.o display_platform.o display_edid_3d.o
 
-obj-m += mi2.o
+obj-m += mi2-scott.o
 
 
 

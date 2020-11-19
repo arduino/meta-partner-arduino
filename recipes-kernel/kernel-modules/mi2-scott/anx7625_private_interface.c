@@ -629,7 +629,7 @@ void handle_intr_vector(void)
 		TRACE("DATA_ROLE_CHANGE 0x%x\n", status & DATA_ROLE);
 	}
 
-#if 0
+#if 1
 	if ((~INTR_MASK_SETTING) &
 		((intr_vector & HPD_STATUS_CHANGE) | STS_HPD_CHANGE)) {
 		status = ReadReg(OCM_SLAVE_I2C_ADDR, SYSTEM_STSTUS);
