@@ -155,6 +155,7 @@ static int __init displaytimer_init(void)
 #endif  // DYNAMIC_CONFIG_MIPI
 
 #ifdef ENABLE_DRM
+/*
 static void delay_drm_init(struct timer_list *ptmr);
 
 DEFINE_TIMER(drm_timer, delay_drm_init);
@@ -163,7 +164,7 @@ static void delay_drm_init(struct timer_list *ptmr)
 {
 	TRACE("Delay Display Triggered!\n");
 	the_chip_anx7625->init_done = 1;
-	/*trigger chip restart*/
+	// trigger chip restart
 	anx7625_restart_work(10);
 }
 
@@ -172,6 +173,7 @@ static void drm_init(void)
 	TRACE("drm_init: Starting timer to fire in 20s (%ld)\n", jiffies);
 	mod_timer(&drm_timer, jiffies + msecs_to_jiffies(20000));
 }
+*/
 #endif  // ENABLE_DRM
 
 /* software workaround for silicon bug MIS2-124 */
@@ -524,7 +526,7 @@ void anx7625_main_process(void)
 		displaytimer_init();
 #else
 	#ifdef ENABLE_DRM
-		drm_init();//TODO MX1
+		//drm_init();//TODO MX1
 		the_chip_anx7625->init_done = 1;
 	#else
 		/* dongle already inserted, trigger cable-det isr to check. */
@@ -1142,40 +1144,56 @@ void log_dump(void *buf, size_t len)
 static int adx7625_get_edid_block(void *data, u8 *buf, unsigned int block,
                                   size_t len)
 {
+#if 0
   unsigned char edid_blocks[FOUR_BLOCK_SIZE];
   unsigned char blocks_num;
-  //struct s_edid_data *p_edid = (struct s_edid_data *)slimport_edid_p;
   
   //DBG_PRINT("block %d, len %d\n", block, len);
   blocks_num = sp_tx_edid_read(edid_blocks);
   //DBG_PRINT("blocks_num %d\n", blocks_num);
   //log_dump(edid_blocks, (blocks_num + 1)*128);
-  //if (slimport_edid_p) {
-  //  log_dump(p_edid->EDID_block_data, (blocks_num + 1)*128);
-  //} else {
-  //  DBG_PRINT("p_edid is NULL\n");
-  //}
   if ((block & 0x1) == 0) {
     memcpy(buf, edid_blocks, len);
   } else {
     memcpy(buf, edid_blocks + 128, len);
   }
+#else
+  struct s_edid_data *p_edid = (struct s_edid_data *)slimport_edid_p;
+  
+  if (!slimport_edid_p) {
+    DBG_ERROR("p_edid is NULL\n");
+		return -EINVAL;
+  }
+//	log_dump(p_edid->EDID_block_data, (blocks_num + 1)*128);
+	if ((block & 0x1) == 0) {
+		memcpy(buf, p_edid->EDID_block_data, len);
+	} else {
+		memcpy(buf, p_edid->EDID_block_data + 128, len);
+	}
+
+#endif
   return 0;
 }
 
 static int anx7625_get_modes(struct drm_connector *connector)
 {
-#if 1
+#if 0
 	struct anx7625_data *ctx = connector_to_anx7625(connector);
 	int num_modes = 0;
 	struct device *dev = &anx7625_client->dev;
-	struct s_edid_data *p_edid =
-		(struct s_edid_data *)slimport_edid_p;
+	struct s_edid_data *p_edid = (struct s_edid_data *)slimport_edid_p;
+	int ret;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm get modes\n");
+	DBG_PRINT("drm get modes\n");
+
+	ret = drm_connector_update_edid_property(connector, (struct edid *)&p_edid->EDID_block_data);
+	if (ret) {
+		DBG_ERROR("drm_connector_update_edid_property return %d\n", ret);
+	}
+
 	num_modes = drm_add_edid_modes(connector,
 				       (struct edid *)&p_edid->EDID_block_data);
-	DRM_DEV_DEBUG_DRIVER(dev, "num_modes(%d)\n", num_modes);
+	DBG_PRINT("num_modes(%d)\n", num_modes);
 
 	return num_modes;
 #else
