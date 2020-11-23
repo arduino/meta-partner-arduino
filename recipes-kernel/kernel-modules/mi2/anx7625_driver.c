@@ -657,7 +657,52 @@ static unsigned char confirmed_cable_det(void *data)
 #endif
 #endif
 
-int anx7625_mipi_timing_setting(void);
+int get_dsi_config(void)
+{
+  struct anx7625_data *ctx = the_chip_anx7625;
+
+  if (cable_connected == 0) {
+    DBG_PRINT("Cable is not connected\n");
+    return 0;
+  }
+
+  DBG_PRINT("v_active=%d, h_active=%d, pclk=%d\n",
+            ctx->dt.vactive.min, ctx->dt.hactive.min, ctx->dt.pixelclock.min);
+
+  DBG_PRINT("ctx->dt.pixelclock.min h=%04x, l=%04x\n",
+            ((ctx->dt.pixelclock.min)>>16)&0xffff,
+            ((ctx->dt.pixelclock.min))&0xffff);
+
+  DBG_PRINT("h_active = %d, hfp = %d, hpw = %d, hbp = %d\n",
+            ctx->dt.hactive.min, ctx->dt.hfront_porch.min,
+            ctx->dt.hsync_len.min, ctx->dt.hback_porch.min);
+
+  DBG_PRINT("v_active = %d, vfp = %d, vpw = %d, vbp = %d\n",
+            ctx->dt.vactive.min, ctx->dt.vfront_porch.min,
+            ctx->dt.vsync_len.min, ctx->dt.vback_porch.min);
+
+  if (ctx->dt.vactive.min <= 480) {
+    DBG_PRINT("480P\n");
+    default_dsi_config = RESOLUTION_480P_DSI;
+  } else if ((ctx->dt.vactive.min > 480) && ((ctx->dt.vactive.min <= 720))) {
+    DBG_PRINT("720P\n");
+    default_dsi_config = RESOLUTION_720P_DSI;
+  } else if ((ctx->dt.vactive.min > 720) && ((ctx->dt.vactive.min <= 1080))) {
+    default_dsi_config = RESOLUTION_QCOM820_1080P60_DSI;
+    DBG_PRINT("1080P\n");
+  } else if (ctx->dt.vactive.min > 1080) {
+    default_dsi_config = RESOLUTION_QCOM820_1080P60_DSI;
+    DBG_PRINT("Out max support, set to 1080P\n");
+  } else {
+    DBG_PRINT("unknown resolution\n");
+    default_dsi_config = RESOLUTION_480P_DSI;
+  }
+  /*command_DSI_Configuration(default_dsi_config);*/
+  DSI_Configuration(default_dsi_config);
+  hpd_status = 1;
+
+  return default_dsi_config;
+}
 
 void anx7625_start_dp(void)
 {
@@ -682,6 +727,7 @@ void anx7625_start_dp(void)
 	}
 #else
 	if (delay_tab_id == 0) {
+		default_dsi_config = get_dsi_config();
 		if (default_dpi_config < 0x20) {
 			DBG_PRINT("command_DPI_Configuration\n");
 			command_DPI_Configuration(default_dpi_config);
@@ -1062,61 +1108,6 @@ static inline struct anx7625_data *bridge_to_anx7625(struct drm_bridge *bridge)
 {
 	return container_of(bridge, struct anx7625_data, bridge);
 }
-
-int anx7625_mipi_timing_setting(void)
-{
-  struct anx7625_data *ctx = the_chip_anx7625;
-
-  if (cable_connected == 0) {
-    DBG_PRINT("Cable is not connected\n");
-    return 0;
-  }
-
-  //if (!client || !cfg) {
-  //  pr_err("%s: invalid platform data\n", __func__);
-  //  command_Mute_Video(1);
-  //  return 0;
-  //}
-
-  DBG_PRINT("v_active=%d, h_active=%d, pclk=%d\n",
-            ctx->dt.vactive.min, ctx->dt.hactive.min, ctx->dt.pixelclock.min);
-  //DBG_PRINT("vic=%d, hdmi_mode=%d, num_of_input_lanes=%d, scaninfo=%d\n",
-  //          cfg->vic, cfg->hdmi_mode, cfg->num_of_input_lanes, cfg->scaninfo);
-
-  DBG_PRINT("ctx->dt.pixelclock.min h=%04x, l=%04x\n",
-            ((ctx->dt.pixelclock.min)>>16)&0xffff,
-            ((ctx->dt.pixelclock.min))&0xffff);
-
-  DBG_PRINT("h_active = %d, hfp = %d, hpw = %d, hbp = %d\n",
-            ctx->dt.hactive.min, ctx->dt.hfront_porch.min,
-            ctx->dt.hsync_len.min, ctx->dt.hback_porch.min);
-
-  DBG_PRINT("v_active = %d, vfp = %d, vpw = %d, vbp = %d\n",
-            ctx->dt.vactive.min, ctx->dt.vfront_porch.min,
-            ctx->dt.vsync_len.min, ctx->dt.vback_porch.min);
-
-  if (ctx->dt.vactive.min <= 480) {
-    DBG_PRINT("480P\n");
-    default_dsi_config = RESOLUTION_480P_DSI;
-  } else if ((ctx->dt.vactive.min > 480) && ((ctx->dt.vactive.min <= 720))) {
-    DBG_PRINT("720P\n");
-    default_dsi_config = RESOLUTION_720P_DSI;
-  } else if ((ctx->dt.vactive.min > 720) && ((ctx->dt.vactive.min <= 1080))) {
-    default_dsi_config = RESOLUTION_QCOM820_1080P60_DSI;
-    DBG_PRINT("1080P\n");
-  } else if (ctx->dt.vactive.min > 1080) {
-    default_dsi_config = RESOLUTION_QCOM820_1080P60_DSI;
-    DBG_PRINT("Out max support, set to 1080P\n");
-  } else {
-    DBG_PRINT("unknown resolution\n");
-    default_dsi_config = RESOLUTION_480P_DSI;
-  }
-  /*command_DSI_Configuration(default_dsi_config);*/
-  DSI_Configuration(default_dsi_config);
-  hpd_status = 1;
-  return 0;
-}
-
 
 void log_dump(void *buf, size_t len)
 {
