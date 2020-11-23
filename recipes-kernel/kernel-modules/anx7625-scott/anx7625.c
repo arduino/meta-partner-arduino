@@ -33,6 +33,16 @@
 
 #include "anx7625.h"
 
+#ifdef DRM_DEV_DEBUG_DRIVER
+#undef DRM_DEV_DEBUG_DRIVER
+#define DRM_DEV_DEBUG_DRIVER(dev, fmt, ...) dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
+#endif
+
+#ifdef DRM_DEV_ERROR
+#undef DRM_DEV_ERROR
+#define DRM_DEV_ERROR(dev, fmt, ...) dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
+#endif
+
 // #define DBG_I2C
 
 static int create_sysfs_interfaces(struct device *dev);
@@ -1292,6 +1302,7 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 static void anx7625_power_on_init(struct anx7625_data *ctx)
 {
 	int retry_count, i;
+	struct device *dev = &ctx->client->dev;
 
 	for (retry_count = 0; retry_count < 3; retry_count++) {
 		anx7625_power_on(ctx);
@@ -1304,6 +1315,7 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 		}
 		anx7625_power_standby(ctx);
 	}
+	DRM_DEV_ERROR(dev, "anx7625_power_on_init Failed.\n");
 }
 
 static void anx7625_chip_control(struct anx7625_data *ctx, int state)
@@ -1448,7 +1460,7 @@ static void anx7625_hpd_polling(struct anx7625_data *ctx)
 				 ((val & P0_HPD_STATUS) || (val < 0)),
 				 5000,
 				 5000 * 100);
-	pr_err(">>>> %s: ret: %d", __func__, ret);
+	pr_err(">>>> %s: ret: %d, val: %d", __func__, ret, val);
 	if (ret) {
 		DRM_DEV_ERROR(dev, "HPD polling timeout!\n");
 	} else {
@@ -1486,7 +1498,7 @@ static void anx7625_low_power_mode_check(struct anx7625_data *ctx,
 	}
 }
 
-#if 0
+#if 1
 static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
 {
 	struct device *dev = &ctx->client->dev;
@@ -1516,6 +1528,7 @@ static irqreturn_t anx7625_cbl_det_isr(int irq, void *data)
 		   gpiod_get_value(ctx->pdata.gpio_cbl_det));
 
 	if (atomic_read(&ctx->power_status) != atomic_read(&ctx->cable_connected)) {
+pr_err(">>>> %s start work  <<<<", __func__);
 		queue_delayed_work(ctx->workqueue, &ctx->work, msecs_to_jiffies(1));
 	}
 
@@ -1578,10 +1591,12 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 	int ret = 0;
 	struct device *dev = &ctx->client->dev;
 
+pr_err(">>>> %s <<<<", __func__);
 	DRM_DEV_DEBUG_DRIVER(dev, "power_status=%d\n",
 			     (u32)atomic_read(&ctx->power_status));
 
 	if (atomic_read(&ctx->auto_start) == 1) {
+pr_err(">>>> %s auto_start <<<<", __func__);
 		atomic_set(&ctx->auto_start, 0);
 		anx7625_power_on(ctx);
 		anx7625_drp_toggle_enable(ctx);
@@ -1611,7 +1626,7 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 		}
 	}
 
-#if 0
+#if 1
 	if (atomic_read(&ctx->power_status) == 1) {
 		ret = anx7625_read_hpd_status_p0(ctx);
 		if (ret < 0) {
@@ -1621,7 +1636,7 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 
 		pr_err(">> %s: 5 SYSTEM_STSTUS=%x", __func__, ret);
 		DRM_DEV_DEBUG_DRIVER(dev, "0x7e:0x45=%x\n", ret);
-		dp_hpd_change_handler(ctx, ret & HPD_STATUS);
+		dp_hpd_change_handler(ctx, ret & P0_HPD_STATUS);
 	}
 #endif
 
@@ -1639,6 +1654,7 @@ static void anx7625_work_func(struct work_struct *work)
 	struct anx7625_data *ctx = container_of(work, struct anx7625_data,
 						work.work);
 
+pr_err(">>>> %s <<<<", __func__);
 	mutex_lock(&ctx->lock);
 	event = anx7625_hpd_change_detect(ctx);
 	mutex_unlock(&ctx->lock);

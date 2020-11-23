@@ -1,6 +1,6 @@
-# anx7625-objs := analogix-anx7625.o
+anx7625-scott-objs := anx7625.o
 
-obj-m += anx7625.o
+obj-m += anx7625-scott.o
 
 SRC := $(shell pwd)
 
