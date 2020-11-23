@@ -43,6 +43,12 @@
 #define DRM_DEV_ERROR(dev, fmt, ...) dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #endif
 
+/*S/W do deglitch on cable-detect pin.*/
+#define CABLE_DET_PIN_HAS_GLITCH
+
+/*Cable-Detect logic status*/
+#define DONGLE_CABLE_INSERT  1
+
 // #define DBG_I2C
 
 static int create_sysfs_interfaces(struct device *dev);
@@ -1249,6 +1255,7 @@ static void anx7625_chip_register_init(struct anx7625_data *ctx)
 
 static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 {
+#if 1
 	struct device *dev = &ctx->client->dev;
 	int ret;
 
@@ -1266,6 +1273,7 @@ static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature failed.\n");
 	else
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature succeeded.\n");
+#endif
 }
 
 static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
@@ -1519,13 +1527,41 @@ static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
 }
 #endif
 
+#ifdef CABLE_DET_PIN_HAS_GLITCH
+static unsigned char confirmed_cable_det(void *data)
+{
+	struct anx7625_data *ctx = data;
+
+	unsigned int count = 10;
+	unsigned int cable_det_count = 0;
+	u8 val = 0;
+
+	do {
+		val = gpiod_get_value(ctx->pdata.gpio_cbl_det);
+		if (val == DONGLE_CABLE_INSERT)
+			cable_det_count++;
+		usleep_range(1000, 1100);
+	} while (count--);
+
+	if (cable_det_count > 7)
+		return 1;
+	else if (cable_det_count < 2)
+		return 0;
+	else
+		return atomic_read(&ctx->power_status);
+}
+#endif
+
 static irqreturn_t anx7625_cbl_det_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 
 	pr_err(">>>> %s <<<<", __func__);
-	atomic_set(&ctx->cable_connected,
-		   gpiod_get_value(ctx->pdata.gpio_cbl_det));
+#ifdef CABLE_DET_PIN_HAS_GLITCH
+	atomic_set(&ctx->cable_connected, confirmed_cable_det((void*)ctx));
+#else
+	atomic_set(&ctx->cable_connected, gpiod_get_value(ctx->pdata.gpio_cbl_det));
+#endif
 
 	if (atomic_read(&ctx->power_status) != atomic_read(&ctx->cable_connected)) {
 pr_err(">>>> %s start work  <<<<", __func__);
