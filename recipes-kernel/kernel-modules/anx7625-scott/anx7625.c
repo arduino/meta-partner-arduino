@@ -601,7 +601,6 @@ static int anx7625_swap_dsi_lane3(struct anx7625_data *ctx)
 }
 
 static int anx7625_api_dsi_config(struct anx7625_data *ctx)
-
 {
 	int val, ret;
 
@@ -1841,7 +1840,7 @@ static int anx7625_get_modes(struct drm_connector *connector)
 
 	anx7625_low_power_mode_check(ctx, 1);
 	p_edid->edid_block_num = sp_tx_edid_read(ctx, p_edid->edid_raw_data);
-	anx7625_low_power_mode_check(ctx, 0);
+//MX	anx7625_low_power_mode_check(ctx, 0);
 
 	pr_err(">> %s: 2 edid_block_num: %d", __func__, p_edid->edid_block_num);
 	err = -EIO;

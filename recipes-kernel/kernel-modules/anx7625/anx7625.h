@@ -13,40 +13,40 @@
 #define OCM_LOADING_TIME 10
 
 /*********  ANX7625 Register  **********/
-#define TX_P0_ADDR				0x70
-#define TX_P1_ADDR				0x7A
-#define TX_P2_ADDR				0x72
+#define TX_P0_ADDR			0x70
+#define TX_P1_ADDR			0x7A
+#define TX_P2_ADDR			0x72
 
-#define RX_P0_ADDR				0x7e
-#define RX_P1_ADDR				0x84
-#define RX_P2_ADDR				0x54
+#define RX_P0_ADDR			0x7e
+#define RX_P1_ADDR			0x84
+#define RX_P2_ADDR			0x54
 
-#define RSVD_00_ADDR				0x00
-#define RSVD_D1_ADDR				0xD1
-#define RSVD_60_ADDR				0x60
-#define RSVD_39_ADDR				0x39
-#define RSVD_7F_ADDR				0x7F
+#define RSVD_00_ADDR			0x00
+#define RSVD_D1_ADDR			0xD1
+#define RSVD_60_ADDR			0x60
+#define RSVD_39_ADDR			0x39
+#define RSVD_7F_ADDR			0x7F
 
-#define TCPC_INTERFACE_ADDR			0x58
+#define TCPC_INTERFACE_ADDR		0x58
 
 /* Clock frequency in Hz */
-#define XTAL_FRQ        (27 * 1000000)
+#define XTAL_FRQ			(27 * 1000000)
 
-#define  POST_DIVIDER_MIN	1
-#define  POST_DIVIDER_MAX	16
-#define  PLL_OUT_FREQ_MIN	520000000UL
-#define  PLL_OUT_FREQ_MAX	730000000UL
-#define  PLL_OUT_FREQ_ABS_MIN	300000000UL
-#define  PLL_OUT_FREQ_ABS_MAX	800000000UL
-#define  MAX_UNSIGNED_24BIT	16777215UL
+#define POST_DIVIDER_MIN		1
+#define POST_DIVIDER_MAX		16
+#define PLL_OUT_FREQ_MIN		520000000UL
+#define PLL_OUT_FREQ_MAX		730000000UL
+#define PLL_OUT_FREQ_ABS_MIN		300000000UL
+#define PLL_OUT_FREQ_ABS_MAX		800000000UL
+#define MAX_UNSIGNED_24BIT		16777215UL
 
 /***************************************************************/
 /* Register definition of device address 0x58 */
 
-#define PRODUCT_ID_L 0x02
-#define PRODUCT_ID_H 0x03
+#define PRODUCT_ID_L		0x02
+#define PRODUCT_ID_H		0x03
 
-#define INTR_ALERT_1  0xCC
+#define INTR_ALERT_1		0xCC
 #define INTR_SOFTWARE_INT BIT(3)
 #define INTR_RECEIVED_MSG BIT(5)
 
@@ -302,7 +302,7 @@
 
 /*********  ANX7625 Register End  **********/
 
-/***************** Display *****************/
+/*****************  Display *****************/
 enum audio_fs {
 	AUDIO_FS_441K  = 0x00,
 	AUDIO_FS_48K   = 0x02,
@@ -345,7 +345,7 @@ struct s_edid_data {
 	u8 edid_raw_data[FOUR_BLOCK_SIZE];
 };
 
-/***************** Display End *****************/
+/*****************  Display End *****************/
 
 struct anx7625_platform_data {
 	struct gpio_desc *gpio_p_on;
