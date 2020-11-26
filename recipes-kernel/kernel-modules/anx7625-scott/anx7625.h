@@ -157,54 +157,54 @@
 
 #define I2C_ADDR_7E_FLASH_CONTROLLER	0x7E
 
-#define P0_FLASH_LOAD_STA		0x05
-#define P0_FLASH_LOAD_STA_CHK	BIT(7)
+#define FLASH_LOAD_STA			0x05
+#define FLASH_LOAD_STA_CHK	BIT(7)
 
-#define P0_AP_AUX_ADDR_7_0		0x11
-#define P0_AP_AUX_ADDR_15_8		0x12
-#define P0_AP_AUX_ADDR_19_16		0x13
-#define P0_AP_AUX_CTRL_STATUS		0x14
+#define AP_AUX_ADDR_7_0			0x11
+#define AP_AUX_ADDR_15_8		0x12
+#define AP_AUX_ADDR_19_16		0x13
+#define AP_AUX_CTRL_STATUS		0x14
 /* note: bit[0:3] AUX status, bit 4 op_en, bit 5 address only */
-#define P0_AP_AUX_CTRL_OP_EN	BIT(4)
-#define P0_AP_AUX_CTRL_ADDRONLY	BIT(5)
-#define P0_AP_AUX_BUFF_START		0x15
-#define P0_PIXEL_CLOCK_L		0x25
-#define P0_PIXEL_CLOCK_H		0x26
-#define P0_AP_AUX_COMMAND		0x27 /* com+len */
+#define AP_AUX_CTRL_OP_EN	BIT(4)
+#define AP_AUX_CTRL_ADDRONLY	BIT(5)
+#define AP_AUX_BUFF_START		0x15
+#define PIXEL_CLOCK_L			0x25
+#define PIXEL_CLOCK_H			0x26
+#define AP_AUX_COMMAND			0x27 /* com+len */
 /* bit 0&1: 3D video structure */
 /* 0x01: frame packing,  0x02:Line alternative, 0x03:Side-by-side(full) */
-#define P0_AP_AV_STATUS			0x28
-#define P0_AP_VIDEO_CHG		BIT(2)
-#define P0_AP_AUDIO_CHG		BIT(3)
-#define P0_AP_MIPI_MUTE		BIT(4) /* 1: MIPI input mute, 0: ummute */
-#define P0_AP_MIPI_RX_EN	BIT(5) /* 1: MIPI RX input in  0: no RX in */
-#define P0_AP_DISABLE_PD	BIT(6)
-#define P0_AP_DISABLE_DISPLAY	BIT(7)
-#define P0_MAX_VOLTAGE_SETTING		0x29 /*0xd0*/
-#define P0_MAX_POWER_SETTING		0x2A /*0xd1*/
-#define P0_MIN_POWER_SETTING		0x2B /*0xd2*/
-#define P0_AUTO_PD_MODE			0x2F /*0x6e*/
-#define P0_AUTO_PD_ENABLE	BIT(1)
-#define P0_OCM_FW_VERSION		0x31
-#define P0_OCM_FW_REVERSION		0x32
-#define P0_XTAL_FRQ_SEL			0x3F
+#define AP_AV_STATUS			0x28
+#define AP_VIDEO_CHG		BIT(2)
+#define AP_AUDIO_CHG		BIT(3)
+#define AP_MIPI_MUTE		BIT(4) /* 1: MIPI input mute, 0: ummute */
+#define AP_MIPI_RX_EN		BIT(5) /* 1: MIPI RX input in  0: no RX in */
+#define AP_DISABLE_PD		BIT(6)
+#define AP_DISABLE_DISPLAY	BIT(7)
+#define MAX_VOLTAGE_SETTING		0x29 /*0xd0*/
+#define MAX_POWER_SETTING		0x2A /*0xd1*/
+#define MIN_POWER_SETTING		0x2B /*0xd2*/
+#define AUTO_PD_MODE			0x2F /*0x6e*/
+#define AUTO_PD_ENABLE		BIT(1)
+#define OCM_FW_VERSION			0x31
+#define OCM_FW_REVERSION		0x32
+#define XTAL_FRQ_SEL			0x3F
 /* bit field positions */
-#define P0_XTAL_FRQ_SEL_POS	5
+#define XTAL_FRQ_SEL_POS	5
 /* bit field values */
-#define P0_XTAL_FRQ_19M2	(0 << P0_XTAL_FRQ_SEL_POS)
-#define P0_XTAL_FRQ_27M		(4 << P0_XTAL_FRQ_SEL_POS)
-#define P0_R_DSC_CTRL_0			0x40
+#define XTAL_FRQ_19M2		(0 << XTAL_FRQ_SEL_POS)
+#define XTAL_FRQ_27M		(4 << XTAL_FRQ_SEL_POS)
+#define R_DSC_CTRL_0			0x40
 /* 1=DSC enabled, 0=DSC disabled */
-#define P0_R_DSC_EN		BIT(0)
-#define P0_GPIO_2_MAP			0x43
-#define P0_GPIO_INTR_MASK	0
-#define P0_GPIO_3_MAP			0x44
-#define P0_HPD_STATUS_CHANGE	BIT(7)
-#define P0_GPIO_4_MAP			0x45
-#define P0_HPD_STATUS		BIT(7)
-#define P0_OCM_DEBUG_REG_8		0x88
-#define P0_OCM_MAIN_RELEASE	0
-#define P0_OCM_MAIN_RESET	BIT(6)
+#define R_DSC_EN		BIT(0)
+#define GPIO_2_MAP			0x43
+#define GPIO_INTR_MASK		0
+#define GPIO_3_MAP			0x44
+#define HPD_STATUS_CHANGE	BIT(7)
+#define GPIO_4_MAP			0x45
+#define HPD_STATUS		BIT(7)
+#define OCM_DEBUG_REG_8			0x88
+#define OCM_MAIN_RELEASE	0
+#define OCM_MAIN_RESET		BIT(6)
 
 /******** END of I2C Address 0x7e *********/
 

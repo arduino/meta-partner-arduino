@@ -49,8 +49,6 @@
 /*Cable-Detect logic status*/
 #define DONGLE_CABLE_INSERT  1
 
-// #define DBG_I2C
-
 static int create_sysfs_interfaces(struct device *dev);
 static int destory_sysfs_interfaces(struct device *dev);
 
@@ -102,9 +100,6 @@ static int anx7625_reg_read(struct anx7625_data *ctx,
 	i2c_access_workaround(ctx, client);
 
 	ret = i2c_smbus_read_byte_data(client, reg_addr);
-#ifdef DBG_I2C
-	pr_err("#### RR [0x%x:0x%x/1] << 0x%x (ret:%d)", client->addr << 1, reg_addr, ret, ret);
-#endif
 	if (ret < 0)
 		DRM_DEV_ERROR(dev, "read i2c failed id=%x:%x\n",
 			      client->addr, reg_addr);
@@ -122,18 +117,6 @@ static int anx7625_reg_block_read(struct anx7625_data *ctx,
 	i2c_access_workaround(ctx, client);
 
 	ret = i2c_smbus_read_i2c_block_data(client, reg_addr, len, buf);
-#ifdef DBG_I2C
-	{
-		char ds[32*3+1];
-		int i, l;
-
-		l = 0;
-		for (i=0; i<len; i++) {
-			l += sprintf(ds + l, " %02X", buf[i]);
-		}
-		pr_err("#### RB [0x%x:0x%x/%d] << %s (ret:%d)", client->addr << 1, reg_addr, len, ds, ret);
-	}
-#endif
 	if (ret < 0)
 		DRM_DEV_ERROR(dev, "read i2c block failed id=%x:%x\n",
 			      client->addr, reg_addr);
@@ -151,9 +134,7 @@ static int anx7625_reg_write(struct anx7625_data *ctx,
 	i2c_access_workaround(ctx, client);
 
 	ret = i2c_smbus_write_byte_data(client, reg_addr, reg_val);
-#ifdef DBG_I2C
-	pr_err("#### WR [0x%x:0x%x/1] >> 0x%x (ret:%d)", client->addr << 1, reg_addr, reg_val, ret);
-#endif
+
 	if (ret < 0)
 		DRM_DEV_ERROR(dev, "failed to write i2c id=%x\n:%x",
 			      client->addr, reg_addr);
@@ -217,18 +198,18 @@ static int anx7625_config_bit_matrix(struct anx7625_data *ctx)
 
 static int anx7625_read_ctrl_status_p0(struct anx7625_data *ctx)
 {
-	return anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_CTRL_STATUS);
+	return anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, AP_AUX_CTRL_STATUS);
 }
 
 static int wait_aux_op_finish(struct anx7625_data *ctx)
 {
-	int ret, val;
+	int val;
+	int ret;
 	struct device *dev = &ctx->client->dev;
 
 	ret = readx_poll_timeout(anx7625_read_ctrl_status_p0,
 				 ctx, val,
-				 (!(val & P0_AP_AUX_CTRL_OP_EN) || (val < 0)),
+				 (!(val & AP_AUX_CTRL_OP_EN) || (val < 0)),
 				 2000,
 				 2000 * 150);
 	if (ret) {
@@ -251,11 +232,11 @@ static int write_dpcd_addr(struct anx7625_data *ctx,
 	int ret;
 
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_ADDR_7_0, (u8)addrl);
+				AP_AUX_ADDR_7_0, (u8)addrl);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_ADDR_15_8, (u8)addrm);
+				 AP_AUX_ADDR_15_8, (u8)addrm);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_ADDR_19_16, (u8)addrh);
+				 AP_AUX_ADDR_19_16, (u8)addrh);
 
 	return ret;
 }
@@ -274,13 +255,12 @@ static int sp_tx_aux_dpcdread_bytes(struct anx7625_data *ctx,
 
 	/* command and length */
 	c = ((count - 1) << 4) | 0x09;
-	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_COMMAND, c);
+	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, AP_AUX_COMMAND, c);
 	/* address */
 	ret |= write_dpcd_addr(ctx, addrh, addrm, addrl);
 	/* aux en */
-	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_CTRL_STATUS, P0_AP_AUX_CTRL_OP_EN);
+	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client, AP_AUX_CTRL_STATUS,
+				AP_AUX_CTRL_OP_EN);
 	if (ret < 0) {
 		DRM_DEV_ERROR(dev, "aux enable failed.\n");
 		return ret;
@@ -295,7 +275,7 @@ static int sp_tx_aux_dpcdread_bytes(struct anx7625_data *ctx,
 	}
 
 	return anx7625_reg_block_read(ctx, ctx->i2c.rx_p0_client,
-				      P0_AP_AUX_BUFF_START, count, buf);
+				      AP_AUX_BUFF_START, count, buf);
 }
 
 static int anx7625_video_mute_control(struct anx7625_data *ctx,
@@ -306,19 +286,17 @@ static int anx7625_video_mute_control(struct anx7625_data *ctx,
 	if (status) { /* mute on */
 		/* set mute flag */
 		ret = anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-				       P0_AP_AV_STATUS, P0_AP_MIPI_MUTE);
+				       AP_AV_STATUS, AP_MIPI_MUTE);
 		/* clear mipi RX en */
 		ret |= anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-					 P0_AP_AV_STATUS,
-					 (u8)~P0_AP_MIPI_RX_EN);
+					 AP_AV_STATUS, (u8)~AP_MIPI_RX_EN);
 	} else { /* mute off */
 		/* clear mute flag */
 		ret = anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-					P0_AP_AV_STATUS,
-					(u8)~P0_AP_MIPI_MUTE);
+					AP_AV_STATUS, (u8)~AP_MIPI_MUTE);
 		/* set MIPI RX EN */
 		ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-					P0_AP_AV_STATUS, P0_AP_MIPI_RX_EN);
+					AP_AV_STATUS, AP_MIPI_RX_EN);
 	}
 
 	return ret;
@@ -349,7 +327,7 @@ static int anx7625_config_audio_input(struct anx7625_data *ctx)
 				 AUDIO_CONTROL_REGISTER, ~TDM_TIMING_MODE);
 	/* audio change flag */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AV_STATUS, P0_AP_AUDIO_CHG);
+				AP_AV_STATUS, AP_AUDIO_CHG);
 
 	if (ret < 0)
 		DRM_ERROR("failed to config audio.\n");
@@ -507,9 +485,9 @@ static int anx7625_dsi_video_timing_config(struct anx7625_data *ctx)
 			     m, n, post_divider);
 
 	/* configure pixel clock */
-	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, P0_PIXEL_CLOCK_L,
+	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, PIXEL_CLOCK_L,
 				(ctx->dt.pixelclock.min / 1000) & 0xFF);
-	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, P0_PIXEL_CLOCK_H,
+	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client, PIXEL_CLOCK_H,
 				 (ctx->dt.pixelclock.min / 1000) >> 8);
 	/* lane count */
 	ret |= anx7625_write_and(ctx, ctx->i2c.rx_p1_client,
@@ -601,6 +579,7 @@ static int anx7625_swap_dsi_lane3(struct anx7625_data *ctx)
 }
 
 static int anx7625_api_dsi_config(struct anx7625_data *ctx)
+
 {
 	int val, ret;
 
@@ -674,7 +653,7 @@ static int anx7625_dsi_config(struct anx7625_data *ctx)
 
 	/* DSC disable */
 	ret = anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-				P0_R_DSC_CTRL_0, ~(u8)P0_R_DSC_EN);
+				R_DSC_CTRL_0, ~(u8)R_DSC_EN);
 
 	ret |= anx7625_api_dsi_config(ctx);
 
@@ -685,10 +664,10 @@ static int anx7625_dsi_config(struct anx7625_data *ctx)
 
 	/* set MIPI RX EN */
 	ret = anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-			       P0_AP_AV_STATUS, P0_AP_MIPI_RX_EN);
+			       AP_AV_STATUS, AP_MIPI_RX_EN);
 	/* clear mute flag */
 	ret |= anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AV_STATUS, ~(u8)P0_AP_MIPI_MUTE);
+				 AP_AV_STATUS, ~(u8)AP_MIPI_MUTE);
 	if (ret < 0)
 		DRM_ERROR("IO error : enable mipi rx failed.\n");
 	else
@@ -704,9 +683,9 @@ static int anx7625_api_dpi_config(struct anx7625_data *ctx)
 
 	/* configure pixel clock */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_PIXEL_CLOCK_L, freq & 0xFF);
+				PIXEL_CLOCK_L, freq & 0xFF);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_PIXEL_CLOCK_H, (freq >> 8));
+				 PIXEL_CLOCK_H, (freq >> 8));
 
 	/* set DPI mode */
 	/* set to DPI PLL module sel */
@@ -736,7 +715,7 @@ static int anx7625_dpi_config(struct anx7625_data *ctx)
 
 	/* DSC disable */
 	ret = anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-				P0_R_DSC_CTRL_0, ~(u8)P0_R_DSC_EN);
+				R_DSC_CTRL_0, ~(u8)R_DSC_EN);
 	if (ret < 0) {
 		DRM_ERROR("IO error : disable dsc failed.\n");
 		return ret;
@@ -756,10 +735,10 @@ static int anx7625_dpi_config(struct anx7625_data *ctx)
 
 	/* set MIPI RX EN */
 	ret = anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-			       P0_AP_AV_STATUS, P0_AP_MIPI_RX_EN);
+			       AP_AV_STATUS, AP_MIPI_RX_EN);
 	/* clear mute flag */
 	ret |= anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AV_STATUS, ~(u8)P0_AP_MIPI_MUTE);
+				 AP_AV_STATUS, ~(u8)AP_MIPI_MUTE);
 	if (ret < 0)
 		DRM_ERROR("IO error : enable mipi rx failed.\n");
 
@@ -865,11 +844,11 @@ static int sp_tx_aux_wr(struct anx7625_data *ctx, u8 offset)
 	int ret;
 
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_BUFF_START, offset);
+				AP_AUX_BUFF_START, offset);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_COMMAND, 0x04);
+				 AP_AUX_COMMAND, 0x04);
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_CTRL_STATUS, P0_AP_AUX_CTRL_OP_EN);
+				AP_AUX_CTRL_STATUS, AP_AUX_CTRL_OP_EN);
 	return (ret | wait_aux_op_finish(ctx));
 }
 
@@ -878,9 +857,9 @@ static int sp_tx_aux_rd(struct anx7625_data *ctx, u8 len_cmd)
 	int ret;
 
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_COMMAND, len_cmd);
+				AP_AUX_COMMAND, len_cmd);
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_CTRL_STATUS, P0_AP_AUX_CTRL_OP_EN);
+				AP_AUX_CTRL_STATUS, AP_AUX_CTRL_OP_EN);
 	return (ret | wait_aux_op_finish(ctx));
 }
 
@@ -891,7 +870,7 @@ static int sp_tx_get_edid_block(struct anx7625_data *ctx)
 
 	sp_tx_aux_wr(ctx, 0x7e);
 	sp_tx_aux_rd(ctx, 0x01);
-	c = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, P0_AP_AUX_BUFF_START);
+	c = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, AP_AUX_BUFF_START);
 	if (c < 0) {
 		DRM_ERROR("IO error : access AUX BUFF.\n");
 		return -EIO;
@@ -922,7 +901,7 @@ static int edid_read(struct anx7625_data *ctx,
 			cnt++;
 		} else {
 			ret = anx7625_reg_block_read(ctx, ctx->i2c.rx_p0_client,
-						     P0_AP_AUX_BUFF_START,
+						     AP_AUX_BUFF_START,
 						     MAX_DPCD_BUFFER_SIZE,
 						     pblock_buf);
 			if (ret > 0)
@@ -945,20 +924,19 @@ static int segments_edid_read(struct anx7625_data *ctx,
 
 	/* write address only */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_ADDR_7_0, 0x30);
+				AP_AUX_ADDR_7_0, 0x30);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_COMMAND, 0x04);
+				 AP_AUX_COMMAND, 0x04);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_CTRL_STATUS,
-				 P0_AP_AUX_CTRL_ADDRONLY |
-					P0_AP_AUX_CTRL_OP_EN);
+				 AP_AUX_CTRL_STATUS,
+				 AP_AUX_CTRL_ADDRONLY | AP_AUX_CTRL_OP_EN);
 
 	ret |= wait_aux_op_finish(ctx);
 	/* write segment address */
 	ret |= sp_tx_aux_wr(ctx, segment);
 	/* data read */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_ADDR_7_0, 0x50);
+				 AP_AUX_ADDR_7_0, 0x50);
 	if (ret) {
 		DRM_ERROR("IO error : aux initial failed.\n");
 		return ret;
@@ -975,7 +953,7 @@ static int segments_edid_read(struct anx7625_data *ctx,
 			cnt++;
 		} else {
 			ret = anx7625_reg_block_read(ctx, ctx->i2c.rx_p0_client,
-						     P0_AP_AUX_BUFF_START,
+						     AP_AUX_BUFF_START,
 						     MAX_DPCD_BUFFER_SIZE, buf);
 			if (!ret)
 				break;
@@ -1001,11 +979,11 @@ static int sp_tx_edid_read(struct anx7625_data *ctx,
 
 	/* address initial */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_AP_AUX_ADDR_7_0, 0x50);
+				AP_AUX_ADDR_7_0, 0x50);
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_ADDR_15_8, 0);
+				 AP_AUX_ADDR_15_8, 0);
 	ret |= anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AUX_ADDR_19_16, 0xf0);
+				 AP_AUX_ADDR_19_16, 0xf0);
 	if (ret < 0) {
 		DRM_ERROR("access aux channel IO error.\n");
 		return -EIO;
@@ -1108,7 +1086,7 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 	gpiod_set_value(ctx->pdata.gpio_reset, 1);
 	usleep_range(10000, 11000);
 
-	DRM_DEV_INFO(dev, "Anx7625 power on !\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "Anx7625 power on !\n");
 }
 
 static void anx7625_power_standby(struct anx7625_data *ctx)
@@ -1124,8 +1102,7 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
 	usleep_range(1000, 1100);
 	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 	usleep_range(1000, 1100);
-
-	DRM_DEV_INFO(dev, "anx7625 power down\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx7625 power down\n");
 }
 
 static void anx7625_drp_toggle_enable(struct anx7625_data *ctx)
@@ -1135,7 +1112,7 @@ static void anx7625_drp_toggle_enable(struct anx7625_data *ctx)
 
 	/* reset main OCM */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_OCM_DEBUG_REG_8, P0_OCM_MAIN_RESET);
+				OCM_DEBUG_REG_8, OCM_MAIN_RESET);
 
 	/* config toggle */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
@@ -1157,7 +1134,7 @@ static void anx7625_drp_toggle_enable(struct anx7625_data *ctx)
 static void anx7625_config(struct anx7625_data *ctx)
 {
 	anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-			  P0_XTAL_FRQ_SEL, P0_XTAL_FRQ_27M);
+			  XTAL_FRQ_SEL, XTAL_FRQ_27M);
 }
 
 #if 0
@@ -1230,19 +1207,19 @@ static void anx7625_chip_register_init(struct anx7625_data *ctx)
 
 	/* set interrupt vector mask bit as platform needed  0: enable 1: disable*/
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_GPIO_2_MAP, P0_GPIO_INTR_MASK);
+				GPIO_2_MAP, GPIO_INTR_MASK);
 	/* AUTO_RDO_ENABLE */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
-				P0_AUTO_PD_MODE, P0_AUTO_PD_ENABLE);
+				AUTO_PD_MODE, AUTO_PD_ENABLE);
 	/* Maximum Voltage in 100mV units: 5V */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_MAX_VOLTAGE_SETTING, 0x32);
+				 MAX_VOLTAGE_SETTING, 0x32);
 	/* Maximum Power in 500mW units: 60W */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_MAX_POWER_SETTING, 0x78);
+				 MAX_POWER_SETTING, 0x78);
 	/* Minimum Power in 500mW units: 1W */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_MIN_POWER_SETTING, 0x02);
+				 MIN_POWER_SETTING, 0x02);
 
 	if (ret < 0)
 		DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
@@ -1254,25 +1231,23 @@ static void anx7625_chip_register_init(struct anx7625_data *ctx)
 
 static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 {
-#if 1
 	struct device *dev = &ctx->client->dev;
 	int ret;
 
 	/* reset main ocm */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_OCM_DEBUG_REG_8, P0_OCM_MAIN_RESET);
+				OCM_DEBUG_REG_8, OCM_MAIN_RESET);
 	/* Disable PD */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_AP_AV_STATUS, P0_AP_DISABLE_PD);
+				 AP_AV_STATUS, AP_DISABLE_PD);
 	/* release main ocm */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				 P0_OCM_DEBUG_REG_8, P0_OCM_MAIN_RELEASE);
+				 OCM_DEBUG_REG_8, OCM_MAIN_RELEASE);
 
 	if (ret < 0)
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature failed.\n");
 	else
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature succeeded.\n");
-#endif
 }
 
 static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
@@ -1282,15 +1257,15 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 
 	/* Check interface workable */
 	ret = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-			       P0_FLASH_LOAD_STA);
+			       FLASH_LOAD_STA);
 	if (ret < 0) {
 		DRM_DEV_ERROR(dev, "IO error : access flash load.\n");
 		return ret;
 	}
-	if ((ret & P0_FLASH_LOAD_STA_CHK) != P0_FLASH_LOAD_STA_CHK)
+	if ((ret & FLASH_LOAD_STA_CHK) != FLASH_LOAD_STA_CHK)
 		return -ENODEV;
 
-#if 1
+#if 0
 	anx7625_disable_pd_protocol(ctx);
 #else
 	anx7625_chip_register_init(ctx);
@@ -1298,9 +1273,9 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 
 	DRM_DEV_INFO(dev, "Firmware ver %02x%02x,",
 		     anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-				      P0_OCM_FW_VERSION),
+				      OCM_FW_VERSION),
 		     anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-				      P0_OCM_FW_REVERSION));
+				      OCM_FW_REVERSION));
 	DRM_DEV_INFO(dev, "Driver version %s\n", ANX7625_DRV_VERSION);
 
 	return 0;
@@ -1309,7 +1284,6 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 static void anx7625_power_on_init(struct anx7625_data *ctx)
 {
 	int retry_count, i;
-	struct device *dev = &ctx->client->dev;
 
 	for (retry_count = 0; retry_count < 3; retry_count++) {
 		anx7625_power_on(ctx);
@@ -1322,7 +1296,6 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 		}
 		anx7625_power_standby(ctx);
 	}
-	DRM_DEV_ERROR(dev, "anx7625_power_on_init Failed.\n");
 }
 
 static void anx7625_chip_control(struct anx7625_data *ctx, int state)
@@ -1404,7 +1377,7 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	u8 sp_tx_lane_count; /* link training lane count */
 
 	if (ctx->hpd_high_cnt >= 2) {
-		DRM_DEV_ERROR(dev, "anx7625 filter useless HPD\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx7625 filter useless HPD\n");
 		return;
 	}
 
@@ -1424,7 +1397,7 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	ret = anx7625_write_and(ctx, ctx->i2c.rx_p1_client, 0xee, 0x9f);
 
 	if (hdcp_cap == 0x01)
-		DRM_DEV_INFO(dev, "HDCP1.4\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "HDCP1.4\n");
 
 	/* try auth flag */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p1_client, 0xec, 0x10);
@@ -1432,23 +1405,21 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p1_client, 0xff, 0x01);
 	if (ret < 0)
 		return;
-
-	DRM_DEV_INFO(dev, "MAX BW=%02x, MAX Lane cnt=%02x, HDCP=%02x\n",
-			  (u32)sp_tx_bw,
-			  (u32)sp_tx_lane_count,
-			  (u32)hdcp_cap);
+	DRM_DEV_DEBUG_DRIVER(dev, "MAX BW=%02x, MAX Lane cnt=%02x, HDCP=%02x\n",
+			     (u32)sp_tx_bw,
+			     (u32)sp_tx_lane_count,
+			     (u32)hdcp_cap);
 
 	ret = anx7625_reg_read(ctx, ctx->i2c.rx_p1_client, 0x86);
 	if (ret < 0)
 		return;
 
-	DRM_DEV_INFO(dev, "Secure OCM version=%02x\n", ret);
+	DRM_DEV_DEBUG_DRIVER(dev, "Secure OCM version=%02x\n", ret);
 }
 
 static int anx7625_read_hpd_status_p0(struct anx7625_data *ctx)
 {
-	return anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-				P0_GPIO_4_MAP);
+	return anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, GPIO_4_MAP);
 }
 
 static void anx7625_hpd_polling(struct anx7625_data *ctx)
@@ -1456,7 +1427,6 @@ static void anx7625_hpd_polling(struct anx7625_data *ctx)
 	int ret, val;
 	struct device *dev = &ctx->client->dev;
 
-	pr_err(">>> %s: ENTER: %d", __func__, atomic_read(&ctx->power_status));
 	if (atomic_read(&ctx->power_status) != 1) {
 		DRM_DEV_DEBUG_DRIVER(dev, "No need to poling HPD status.\n");
 		return;
@@ -1464,10 +1434,9 @@ static void anx7625_hpd_polling(struct anx7625_data *ctx)
 
 	ret = readx_poll_timeout(anx7625_read_hpd_status_p0,
 				 ctx, val,
-				 ((val & P0_HPD_STATUS) || (val < 0)),
+				 ((val & HPD_STATUS) || (val < 0)),
 				 5000,
 				 5000 * 100);
-	pr_err(">>>> %s: ret: %d, val: %d", __func__, ret, val);
 	if (ret) {
 		DRM_DEV_ERROR(dev, "HPD polling timeout!\n");
 	} else {
@@ -1475,12 +1444,10 @@ static void anx7625_hpd_polling(struct anx7625_data *ctx)
 		anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
 				  TCPC_INTR_ALERT_1, 0xFF);
 		anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				  P0_GPIO_3_MAP, 0);
+				  GPIO_3_MAP, 0);
 	}
 
 	anx7625_start_dp_work(ctx);
-	ctx->hpd_status = 1;
-	pr_err("<<< %s: EXIT", __func__);
 }
 
 static void anx7625_disconnect_check(struct anx7625_data *ctx)
@@ -1505,7 +1472,6 @@ static void anx7625_low_power_mode_check(struct anx7625_data *ctx,
 	}
 }
 
-#if 1
 static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
 {
 	struct device *dev = &ctx->client->dev;
@@ -1524,7 +1490,6 @@ static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
 
 	ctx->hpd_status = 1;
 }
-#endif
 
 #ifdef CABLE_DET_PIN_HAS_GLITCH
 static unsigned char confirmed_cable_det(void *data)
@@ -1563,7 +1528,6 @@ static irqreturn_t anx7625_cbl_det_isr(int irq, void *data)
 #endif
 
 	if (atomic_read(&ctx->power_status) != atomic_read(&ctx->cable_connected)) {
-pr_err(">>>> %s start work  <<<<", __func__);
 		queue_delayed_work(ctx->workqueue, &ctx->work, msecs_to_jiffies(1));
 	}
 
@@ -1593,7 +1557,7 @@ static int anx7625_handle_intr_comm(struct anx7625_data *ctx)
 				     TCPC_INTR_ALERT_1);
 
 	intr_vector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-				       P0_GPIO_3_MAP);
+				       GPIO_3_MAP);
 	if (intr_vector < 0) {
 		DRM_ERROR("IO error : access interrupt change register.\n");
 		return intr_vector;
@@ -1601,14 +1565,14 @@ static int anx7625_handle_intr_comm(struct anx7625_data *ctx)
 
 	DRM_DEV_DEBUG_DRIVER(dev, "0x7e:0x44=%x\n", intr_vector);
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				P0_GPIO_3_MAP,
+				GPIO_3_MAP,
 				intr_vector & (~intr_vector));
 	if (ret < 0) {
 		DRM_ERROR("IO error : clear interrupt change register.\n");
 		goto clear_int;
 	}
 
-	if (!(intr_vector & P0_HPD_STATUS_CHANGE)) {
+	if (!(intr_vector & HPD_STATUS_CHANGE)) {
 		ret = -ENOENT;
 	}
 
@@ -1626,12 +1590,10 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 	int ret = 0;
 	struct device *dev = &ctx->client->dev;
 
-pr_err(">>>> %s <<<<", __func__);
 	DRM_DEV_DEBUG_DRIVER(dev, "power_status=%d\n",
 			     (u32)atomic_read(&ctx->power_status));
 
 	if (atomic_read(&ctx->auto_start) == 1) {
-pr_err(">>>> %s auto_start <<<<", __func__);
 		atomic_set(&ctx->auto_start, 0);
 		anx7625_power_on(ctx);
 		anx7625_drp_toggle_enable(ctx);
@@ -1640,16 +1602,13 @@ pr_err(">>>> %s auto_start <<<<", __func__);
 		return 0;
 	}
 
-	pr_err(">>>> %s: CABLE: %d", __func__, atomic_read(&ctx->cable_connected));
 	if (atomic_read(&ctx->power_status) == 0) {
 		if (atomic_read(&ctx->cable_connected) == 1) {
-			pr_err(">>>> %s: BEGIN BRING UP", __func__);
 			anx7625_low_power_mode_check(ctx, 1);
 			return 0;
 		}
 	} else {
 		if (atomic_read(&ctx->cable_connected) == 0) {
-			pr_err(">>>> %s: BEGIN BRING DOWN", __func__);
 			atomic_set(&ctx->power_status, 0);
 			anx7625_power_on_init(ctx);
 			if (ctx->hpd_status >= 1)
@@ -1661,7 +1620,6 @@ pr_err(">>>> %s auto_start <<<<", __func__);
 		}
 	}
 
-#if 1
 	if (atomic_read(&ctx->power_status) == 1) {
 		ret = anx7625_read_hpd_status_p0(ctx);
 		if (ret < 0) {
@@ -1669,11 +1627,9 @@ pr_err(">>>> %s auto_start <<<<", __func__);
 			return ret;
 		}
 
-		pr_err(">> %s: 5 SYSTEM_STSTUS=%x", __func__, ret);
 		DRM_DEV_DEBUG_DRIVER(dev, "0x7e:0x45=%x\n", ret);
-		dp_hpd_change_handler(ctx, ret & P0_HPD_STATUS);
+		dp_hpd_change_handler(ctx, ret & HPD_STATUS);
 	}
-#endif
 
 	/* handle alert */
 	if (atomic_read(&ctx->alert_arrived) == 1) {
@@ -1686,10 +1642,9 @@ pr_err(">>>> %s auto_start <<<<", __func__);
 static void anx7625_work_func(struct work_struct *work)
 {
 	int event;
-	struct anx7625_data *ctx = container_of(work, struct anx7625_data,
-						work.work);
+	struct anx7625_data *ctx = container_of(work,
+						struct anx7625_data, work.work);
 
-pr_err(">>>> %s <<<<", __func__);
 	mutex_lock(&ctx->lock);
 	event = anx7625_hpd_change_detect(ctx);
 	mutex_unlock(&ctx->lock);
@@ -1840,7 +1795,7 @@ static int anx7625_get_modes(struct drm_connector *connector)
 
 	anx7625_low_power_mode_check(ctx, 1);
 	p_edid->edid_block_num = sp_tx_edid_read(ctx, p_edid->edid_raw_data);
-//MX	anx7625_low_power_mode_check(ctx, 0);
+	anx7625_low_power_mode_check(ctx, 0);
 
 	pr_err(">> %s: 2 edid_block_num: %d", __func__, p_edid->edid_block_num);
 	err = -EIO;
