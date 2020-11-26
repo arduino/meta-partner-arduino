@@ -298,7 +298,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +};
 +
 +&usbotg2 {
-+	dr_mode = "otg";
++	dr_mode = "host";
 +	picophy,pre-emp-curr-control = <3>;
 +	picophy,dc-vol-level-adjust = <7>;
 +	status = "okay";
