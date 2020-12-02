@@ -59,7 +59,28 @@
 #define TCPC_CC_STATUS          0x1D
 #define TCPC_PWR_STATUS         0x1E
 #define TCPC_COMMAND            0x23
+
+#define TCPC_ANALOG_CTRL_0      0xA0
+#define TCPC_AC0_CC1_VRD_3P0          BIT(0)
+#define TCPC_AC0_CC1_VRD_1P5          BIT(1)
+#define TCPC_AC0_CC1_VRD_USB          BIT(2)
+#define TCPC_AC0_CC1_5P1K             BIT(3)
+#define TCPC_AC0_CC1_RA               BIT(4)
+#define TCPC_AC0_CC_VRD_VBUS_SHORT    BIT(5)
+#define TCPC_AC0_DFP_OR_UFP           BIT(6)
+#define TCPC_AC0_ANALOG_TOGGLING      BIT(7)
+
 #define TCPC_ANALOG_CTRL_1      0xA1
+#define TCPC_AC1_CC2_VRD_3P0             BIT(0)
+#define TCPC_AC1_CC2_VRD_1P5             BIT(1)
+#define TCPC_AC1_CC2_VRD_USB             BIT(2)
+#define TCPC_AC1_CC2_5P1K                BIT(3)
+#define TCPC_AC1_CC2_RA                  BIT(4)
+#define TCPC_AC1_TOGGLE_CTRL_MODE        BIT(5)
+#define TCPC_AC1_R_LATCH_TOGGLE_ENABLE   BIT(6)
+#define TCPC_AC1_R_TOGGLE_ENABLE         BIT(7)
+ 
+ 
 #define TCPC_INTR_ALERT_1       0xCC
 #define TCPC_INTR_SOFTWARE_INT    BIT(3)
 #define TCPC_INTR_RECEIVED_MSG    BIT(5)
@@ -226,38 +247,38 @@
 
 /* After MIPI RX protocol layer received this many video frames, */
 /* protocol layer starts to reconstruct video stream from PHY */
-#define  MIPI_VIDEO_STABLE_CNT  0x0A
+#define  MIPI_VIDEO_STABLE_CNT          0x0A
 
-#define  MIPI_LANE_CTRL_10      0x0F
-#define  MIPI_DIGITAL_ADJ_1     0x1B
+#define  MIPI_LANE_CTRL_10              0x0F
+#define  MIPI_DIGITAL_ADJ_1             0x1B
 
-#define  MIPI_PLL_M_NUM_23_16   0x1E
-#define  MIPI_PLL_M_NUM_15_8    0x1F
-#define  MIPI_PLL_M_NUM_7_0     0x20
-#define  MIPI_PLL_N_NUM_23_16   0x21
-#define  MIPI_PLL_N_NUM_15_8    0x22
-#define  MIPI_PLL_N_NUM_7_0     0x23
+#define  MIPI_PLL_M_NUM_23_16           0x1E
+#define  MIPI_PLL_M_NUM_15_8            0x1F
+#define  MIPI_PLL_M_NUM_7_0             0x20
+#define  MIPI_PLL_N_NUM_23_16           0x21
+#define  MIPI_PLL_N_NUM_15_8            0x22
+#define  MIPI_PLL_N_NUM_7_0             0x23
 
-#define  MIPI_DIGITAL_PLL_6     0x2A
+#define  MIPI_DIGITAL_PLL_6             0x2A
 /* bit[7:6]: VCO band control, only effective */
 /* when MIPI_PLL_FORCE_BAND_EN (0x84:0x2B[6]) is 1 */
-#define  MIPI_M_NUM_READY        0x10
-#define  MIPI_N_NUM_READY        0x08
-#define  STABLE_INTEGER_CNT_EN   0x04
-#define  MIPI_PLL_TEST_BIT       0
+#define  MIPI_M_NUM_READY               0x10
+#define  MIPI_N_NUM_READY               0x08
+#define  STABLE_INTEGER_CNT_EN          0x04
+#define  MIPI_PLL_TEST_BIT                0
 /* bit[1:0]: test point output select - */
 /* 00: VCO power, 01: dvdd_pdt, 10: dvdd, 11: vcox */
 
-#define  MIPI_DIGITAL_PLL_7      0x2B
-#define  MIPI_PLL_FORCE_N_EN     7
-#define  MIPI_PLL_FORCE_BAND_EN  6
+#define  MIPI_DIGITAL_PLL_7             0x2B
+#define  MIPI_PLL_FORCE_N_EN              7
+#define  MIPI_PLL_FORCE_BAND_EN           6
 
-#define  MIPI_PLL_VCO_TUNE_REG   4
+#define  MIPI_PLL_VCO_TUNE_REG            4
 /* bit[5:4]: VCO metal capacitance - */
 /* 00: +20% fast, 01: +10% fast (default), 10: typical, 11: -10% slow */
-#define  MIPI_PLL_VCO_TUNE_REG_VAL   0x30
+#define  MIPI_PLL_VCO_TUNE_REG_VAL      0x30
 
-#define  MIPI_PLL_PLL_LDO_BIT    2
+#define  MIPI_PLL_PLL_LDO_BIT             2
 /* bit[3:2]: vco_v2i power - */
 /* 00: 1.40V, 01: 1.45V (default), 10: 1.50V, 11: 1.55V */
 #define  MIPI_PLL_RESET_N        0x02

@@ -53,10 +53,10 @@ static int create_sysfs_interfaces(struct device *dev);
 static int destory_sysfs_interfaces(struct device *dev);
 
 /*
-* there is a sync issue while access I2C register between AP(CPU) and
-* internal firmware(OCM), to avoid the race condition, AP should access
-* the reserved slave address before slave address occurs changes.
-*/
+ * there is a sync issue while access I2C register between AP(CPU) and
+ * internal firmware(OCM), to avoid the race condition, AP should access
+ * the reserved slave address before slave address occurs changes.
+ */
 static int i2c_access_workaround(struct anx7625_data *ctx,
                                  struct i2c_client *client)
 {
@@ -1181,9 +1181,9 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
     DRM_DEV_ERROR(dev, "IO error : access flash load.\n");
     return ret;
   }
-  if ((ret & FLASH_LOAD_STA_CHK) != FLASH_LOAD_STA_CHK)
+  if ((ret & FLASH_LOAD_STA_CHK) != FLASH_LOAD_STA_CHK) {
     return -ENODEV;
-
+  }
 #if 0
   anx7625_disable_pd_protocol(ctx);
 #else
@@ -1214,6 +1214,7 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
     }
     anx7625_power_standby(ctx);
   }
+  printk("anx7625_power_on_init failed\n");
 }
 
 static void anx7625_chip_control(struct anx7625_data *ctx, int state)
@@ -1221,7 +1222,7 @@ static void anx7625_chip_control(struct anx7625_data *ctx, int state)
   struct device *dev = &ctx->client->dev;
 
   DRM_DEV_DEBUG_DRIVER(dev, "before set, power_state(%d).\n",
-          atomic_read(&ctx->power_status));
+                       atomic_read(&ctx->power_status));
 
   if (!ctx->pdata.low_power_mode) {
     return;
@@ -1242,7 +1243,7 @@ static void anx7625_chip_control(struct anx7625_data *ctx, int state)
   }
 
   DRM_DEV_DEBUG_DRIVER(dev, "after set, power_state(%d).\n",
-          atomic_read(&ctx->power_status));
+                       atomic_read(&ctx->power_status));
 }
 
 static void anx7625_init_gpio(struct anx7625_data *platform)
@@ -1331,7 +1332,7 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
                        (u32)sp_tx_bw,
                        (u32)sp_tx_lane_count,
                        (u32)hdcp_cap);
-
+//Name: MIPI_PPS_REG_6  I2C Address: 0x84  Offset: 0x86
   ret = anx7625_reg_read(ctx, ctx->i2c.rx_p1_client, 0x86);
   if (ret < 0) {
     return;
@@ -1398,8 +1399,7 @@ static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
   struct device *dev = &ctx->client->dev;
 
   /* hpd changed */
-  DRM_DEV_DEBUG_DRIVER(dev, "dp_hpd_change_default_func: %d\n",
-          (u32)on);
+  DRM_DEV_DEBUG_DRIVER(dev, "dp_hpd_change_default_func: %d\n", (u32)on);
 
   if (on == 0) {
     DRM_DEV_DEBUG_DRIVER(dev, "HPD low\n");
@@ -1523,7 +1523,7 @@ void handle_intr_vector(struct anx7625_data *ctx)
     //status = ReadReg(OCM_SLAVE_I2C_ADDR, NEW_CC_STATUS);
     status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, NEW_CC_STATUS);
     //pd_cc_status_default_func(status);
-    printk("cc status %x\n", status);
+    printk("handle_intr_vector: cc status %x\n", status);
   }
   sys_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, GPIO_4_MAP);
   printk("handle_intr_vector: system status = 0x%x\n",  sys_status);
@@ -1630,6 +1630,19 @@ clear_int:
   return ret;
 }
 
+int anx7625_cable(struct anx7625_data *ctx)
+{
+  int ret;
+
+  ret = anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
+                          TCPC_ANALOG_CTRL_0,
+                          //TCPC_AC0_CC1_5P1K |
+                          TCPC_AC0_CC1_RA |
+                          TCPC_AC0_CC_VRD_VBUS_SHORT);
+  
+  return ret;
+}
+
 static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 {
   int ret = 0;
@@ -1644,6 +1657,7 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
     anx7625_power_on(ctx);
     anx7625_drp_toggle_enable(ctx);
     usleep_range(1000, 1100);
+    anx7625_cable(ctx);
     anx7625_power_standby(ctx);
     return 0;
   }
@@ -1652,6 +1666,7 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
     DRM_DEV_DEBUG_DRIVER(dev, "power_status=0\n");
     if (atomic_read(&ctx->cable_connected) == 1) {
       DRM_DEV_DEBUG_DRIVER(dev, "cable_connected=1\n");
+//      atomic_set(&ctx->power_status, 1);
       anx7625_low_power_mode_check(ctx, 1);
       return 0;
     }
@@ -1660,10 +1675,12 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
       DRM_DEV_DEBUG_DRIVER(dev, "cable_connected=0\n");
       atomic_set(&ctx->power_status, 0);
       anx7625_power_on_init(ctx);
-      if (ctx->hpd_status >= 1)
+      if (ctx->hpd_status >= 1) {
         anx7625_stop_dp_work(ctx);
+      }
       anx7625_drp_toggle_enable(ctx);
       usleep_range(1000, 1100);
+      sys_sta_bak = 0;
       anx7625_power_standby(ctx);
       return 0;
     }
@@ -1674,9 +1691,8 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
     ret = anx7625_read_hpd_status_p0(ctx);
     if (ret < 0) {
       DRM_ERROR("IO error : can't read status: %d\n", ret);
-      return ret;
+      return 0;
     }
-
     DRM_DEV_DEBUG_DRIVER(dev, "0x7e:0x45=%x\n", ret);
     dp_hpd_change_handler(ctx, ret & HPD_STATUS);
   }
@@ -1694,7 +1710,7 @@ static void anx7625_work_func(struct work_struct *work)
 {
   int event;
   struct anx7625_data *ctx = container_of(work, struct anx7625_data, work.work);
-printk("anx7625_work_func: ctx %p\n", (void*)ctx);
+
   mutex_lock(&ctx->lock);
   event = anx7625_hpd_change_detect(ctx);
   mutex_unlock(&ctx->lock);
@@ -1856,12 +1872,11 @@ static int anx7625_get_modes(struct drm_connector *connector)
   }
 
   err = drm_connector_update_edid_property(connector,
-            (struct edid *)
-            &p_edid->edid_raw_data);
-
+                                           (struct edid *)&p_edid->edid_raw_data);
   if (err) {
     DRM_ERROR("Failed to update EDID property: %d\n", err);
   }
+
 fail:
   if (ctx->pdata.panel && turn_off_flag == 1) {
     anx7625_post_disable(&ctx->bridge);
@@ -1904,7 +1919,7 @@ anx7625_connector_mode_valid(struct drm_connector *connector,
 }
 
 static struct drm_connector_helper_funcs anx7625_connector_helper_funcs = {
-  .get_modes = anx7625_get_modes,
+  .get_modes  = anx7625_get_modes,
   .mode_valid = anx7625_connector_mode_valid,
 };
 
@@ -1914,7 +1929,7 @@ static enum drm_connector_status anx7625_detect(struct drm_connector *connector,
   struct anx7625_data  *ctx = connector_to_anx7625(connector);
   struct device        *dev = &ctx->client->dev;
 
-  DRM_DEV_DEBUG_DRIVER(dev, "drm detect\n");
+  DRM_DEV_DEBUG_DRIVER(dev, "drm detect, force %d\n", force);
 
   if (ctx->pdata.internal_panel) {
     return connector_status_connected;
@@ -2017,8 +2032,8 @@ static int anx7625_bridge_attach(struct drm_bridge *bridge)
   }
 
   err = drm_connector_init(bridge->dev, &ctx->connector,
-        &anx7625_connector_funcs,
-        DRM_MODE_CONNECTOR_DisplayPort);
+                           &anx7625_connector_funcs,
+                           DRM_MODE_CONNECTOR_DisplayPort);
   if (err) {
     DRM_ERROR("Failed to initialize connector: %d\n", err);
     return err;
@@ -2365,11 +2380,12 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 
   /* add work function */
   queue_delayed_work(platform->workqueue, &platform->work,
-        msecs_to_jiffies(1000));
+                     msecs_to_jiffies(1000));
 
   platform->bridge.funcs = &anx7625_bridge_funcs;
-  if (IS_ENABLED(CONFIG_OF))
+  if (IS_ENABLED(CONFIG_OF)) {
     platform->bridge.of_node = client->dev.of_node;
+  }
   drm_bridge_add(&platform->bridge);
 
   DRM_DEV_DEBUG_DRIVER(dev, "probe done\n");
@@ -2449,8 +2465,8 @@ module_i2c_driver(anx7625_driver);
 /* SYSFS FUNCTIONS */
 
 static ssize_t anx7625_sysfs_dump_register(struct device *dev,
-            struct device_attribute *attr,
-            const char *buf, size_t count)
+                                           struct device_attribute *attr,
+                                           const char *buf, size_t count)
 {
   struct i2c_client *client = to_i2c_client(dev);
   struct anx7625_data *platform = i2c_get_clientdata(client);
@@ -2493,9 +2509,10 @@ static ssize_t anx7625_sysfs_dump_register(struct device *dev,
 
   for (i = 0; i <= 0xFF; i++) {
     snprintf(&(out[(i % 0x10) * 3]), 4, "%02x ",
-      anx7625_reg_read(platform, dummy, i));
-    if ((i & 0xF) == 0xF)
+             anx7625_reg_read(platform, dummy, i));
+    if ((i & 0xF) == 0xF) {
       pr_info("[%02x] %s", i - 0xF, out);
+    }
   }
 
   return count;
@@ -2504,8 +2521,8 @@ static ssize_t anx7625_sysfs_dump_register(struct device *dev,
 /* dump all registers */
 /* Usage: dumpall */
 static ssize_t anx7625_sysfs_dump_all(struct device *dev,
-              struct device_attribute *attr,
-              const char *buf, size_t count)
+                                      struct device_attribute *attr,
+                                      const char *buf, size_t count)
 {
   unsigned char addr[] = {
     TCPC_INTERFACE_ADDR,
@@ -2517,11 +2534,19 @@ static ssize_t anx7625_sysfs_dump_all(struct device *dev,
 
   for (i = 0; i < sizeof(addr); i++) {
     snprintf(addrstr, 3, "%02x", addr[i]);
-    anx7625_sysfs_dump_register(dev, attr,
-              addrstr, sizeof(addrstr));
+    anx7625_sysfs_dump_register(dev, attr, addrstr, sizeof(addrstr));
   }
 
   return count;
+}
+
+static ssize_t anx7625_sysfs_cbldet(struct device *dev,
+                                    struct device_attribute *attr, char *buf)
+{
+  struct i2c_client *client = to_i2c_client(dev);
+  struct anx7625_data *ctx = i2c_get_clientdata(client);
+
+  return snprintf(buf, 16, "CBL_DET=%d\n", gpiod_get_value(ctx->pdata.gpio_cbl_det));
 }
 
 static struct device_attribute anx7625_device_attrs[] = {
@@ -2542,21 +2567,24 @@ static struct device_attribute anx7625_device_attrs[] = {
   __ATTR(dumpedid, S_IRUGO, anx7625_dump_edid, NULL),
   __ATTR(cmd,      S_IWUSR, NULL, anx7625_debug)
 #endif
+  __ATTR(cbldet,   S_IRUGO, anx7625_sysfs_cbldet, NULL),
 };
 
 static int create_sysfs_interfaces(struct device *dev)
 {
   int i;
 
-  for (i = 0; i < ARRAY_SIZE(anx7625_device_attrs); i++)
-    if (device_create_file(dev, &anx7625_device_attrs[i]))
+  for (i = 0; i < ARRAY_SIZE(anx7625_device_attrs); i++) {
+    if (device_create_file(dev, &anx7625_device_attrs[i])) {
       goto error;
-
+    }
+  }
   return 0;
 
 error:
-  for (; i >= 0; i--)
+  for (; i >= 0; i--) {
     device_remove_file(dev, &anx7625_device_attrs[i]);
+  }
   pr_err("%s: anx7625 Unable to create interface", __func__);
   return -EINVAL;
 }
@@ -2565,9 +2593,9 @@ static int destory_sysfs_interfaces(struct device *dev)
 {
   int i;
 
-  for (i = 0; i < ARRAY_SIZE(anx7625_device_attrs); i++)
+  for (i = 0; i < ARRAY_SIZE(anx7625_device_attrs); i++) {
     device_remove_file(dev, &anx7625_device_attrs[i]);
-
+  }
   return 0;
 }
 
