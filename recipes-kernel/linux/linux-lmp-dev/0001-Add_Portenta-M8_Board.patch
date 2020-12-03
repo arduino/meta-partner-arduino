@@ -2,7 +2,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,314 @@
 +/**
 + */
 +
@@ -50,7 +50,11 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
 +			"Headphone Jack", "HPOUTA",
 +			"Headphone Jack", "HPOUTB",
 +			"Speaker Ext", "SPKOUTA",
-+			"Speaker Ext", "SPKOUTB";
++			"Speaker Ext", "SPKOUTB",
++			"ADC Left Swap", "PCM Left Swap",
++			"ADC Right Swap", "PCM Right Swap",
++			"PCM Left Swap", "AIFINL",
++			"PCM Right Swap", "AIFINR";
 +
 +		cpudai: simple-audio-card,cpu {
 +			sound-dai = <&sai3>;
@@ -2439,7 +2443,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 ===================================================================
 --- /dev/null
 +++ kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
-@@ -0,0 +1,653 @@
+@@ -0,0 +1,654 @@
 +/**
 + * Copyright 2020
 + */
@@ -2766,7 +2770,8 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/portenta-m8.dts
 +};
 +
 +&usbotg1 {
-+	dr_mode = "otg";
++	/*dr_mode = "otg";*/
++	dr_mode = "host";
 +	hnp-disable;
 +	srp-disable;
 +	adp-disable;
@@ -3127,7 +3132,7 @@ Index: kernel-source/arch/arm64/boot/dts/arduino/anx7625.dtsi
 +
 +    // 1: internal_panel; !=1: external????
 +    panel_flags = <2>;
-+    
++
 +    enable-gpios = <&gpio4 21 0x0>;     // VIDEO_EN
 +    reset-gpios = <&gpio4 27 0x0>;      // VIDEO_RSTN
 +    cbl_det-gpios = <&gpio4 22 0x0>;    // VIDEO_CABLE
