@@ -374,7 +374,6 @@ struct anx7625_platform_data {
 	int cbl_det_irq;
 	u32 panel_flags;
 	u32 low_power_mode;
-	u32 dsi_supported;
 	u32 internal_panel;
 	struct device_node *mipi_host_node;
 	struct device_node *panel_node;

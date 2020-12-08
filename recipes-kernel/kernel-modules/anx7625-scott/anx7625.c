@@ -1523,10 +1523,7 @@ static int anx7625_parse_dt(struct device *dev,
 
 	pdata->mipi_host_node = of_graph_get_remote_node(np, 0, 0);
 	of_node_put(pdata->mipi_host_node);
-	pdata->dsi_supported = 1;
 	DRM_DEV_DEBUG_DRIVER(dev, "found dsi host node.\n");
-
-	DRM_DEV_DEBUG_DRIVER(dev, "dsi_supported : %d\n", pdata->dsi_supported);
 
 	pdata->panel_node = of_graph_get_port_by_id(np, 2);
 	if (pdata->panel_node) {
