@@ -1059,69 +1059,6 @@ static void anx7625_config(struct anx7625_data *ctx)
 			  XTAL_FRQ_SEL, XTAL_FRQ_27M);
 }
 
-#if 0
-static void anx7625_send_initialized_setting(struct anx7625_data *ctx)
-{
-	int ret, state = 1;
-	do {
-
-		switch (send_init_setting_state) {
-		default:
-		case 0:
-			break;
-		case 1:
-			/* send TYPE_PWR_SRC_CAP init setting */
-			send_pd_msg(TYPE_PWR_SRC_CAP,
-				(const char *)init_src_caps,
-				sizeof(init_src_caps));
-			send_init_setting_state++;
-			break;
-		case 2:
-			c = ReadReg(OCM_SLAVE_I2C_ADDR2, InterfaceSendBuf_Addr);
-			if (c == 0)
-				send_init_setting_state++;
-			else
-				break;
-		case 3:
-			/* send TYPE_PWR_SNK_CAP init setting */
-			send_pd_msg(TYPE_PWR_SNK_CAP,
-				(const char *)init_snk_cap,
-				sizeof(init_snk_cap));
-			send_init_setting_state++;
-			break;
-		case 4:
-			c = ReadReg(OCM_SLAVE_I2C_ADDR2, InterfaceSendBuf_Addr);
-			if (c == 0)
-				send_init_setting_state++;
-			else
-				break;
-		case 5:
-			/* send TYPE_DP_SNK_IDENTITY init setting */
-			send_pd_msg(TYPE_DP_SNK_IDENTITY,
-				init_snk_ident,
-				sizeof(init_snk_ident));
-			send_init_setting_state++;
-			break;
-		case 6:
-			c = ReadReg(OCM_SLAVE_I2C_ADDR2, InterfaceSendBuf_Addr);
-			if (c == 0)
-				send_init_setting_state++;
-			else
-				break;
-		case 7:
-			/* send TYPE_SVID init setting */
-			send_pd_msg(TYPE_SVID, init_svid, sizeof(init_svid));
-			send_init_setting_state++;
-			break;
-		case 8:
-		case 9:
-			send_init_setting_state = 0;
-			break;
-		}
-	} while (send_init_setting_state != 0);
-}
-#endif
-
 static void anx7625_chip_register_init(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
@@ -1147,8 +1084,6 @@ static void anx7625_chip_register_init(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
 	else
 		DRM_DEV_DEBUG_DRIVER(dev, "init registers succeeded.\n");
-
-	// anx7625_send_initialized_setting(ctx);
 }
 
 static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
@@ -1187,11 +1122,7 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 	if ((ret & FLASH_LOAD_STA_CHK) != FLASH_LOAD_STA_CHK)
 		return -ENODEV;
 
-#if 0
-	anx7625_disable_pd_protocol(ctx);
-#else
 	anx7625_chip_register_init(ctx);
-#endif
 
 	DRM_DEV_DEBUG_DRIVER(dev, "Firmware ver %02x%02x,",
 			     anx7625_reg_read(ctx,
@@ -2344,23 +2275,8 @@ static ssize_t anx7625_sysfs_dump_all(struct device *dev,
 }
 
 static struct device_attribute anx7625_device_attrs[] = {
-#if 0
-	__ATTR(pdcmd,    S_IWUSR, NULL, anx7625_send_pd_cmd),
-	__ATTR(rdreg,    S_IWUSR, NULL, anx7625_sysfs_read_reg),
-	__ATTR(wrreg,    S_IWUSR, NULL, anx7625_sysfs_write_reg),
-#endif
 	__ATTR(dumpreg,  S_IWUSR, NULL, anx7625_sysfs_dump_register),
 	__ATTR(dumpall,  S_IWUSR, NULL, anx7625_sysfs_dump_all),
-#if 0
-	__ATTR(prole,    S_IRUGO, anx7625_get_power_role, NULL),
-	__ATTR(drole,    S_IRUGO, anx7625_get_data_role, NULL),
-	__ATTR(pswap,    S_IRUGO, anx7625_send_pswap, NULL),
-	__ATTR(dswap,    S_IRUGO, anx7625_send_dswap, NULL),
-	__ATTR(dpcdr,    S_IWUSR, NULL, anx7625_dpcd_read),
-	__ATTR(dpcdw,    S_IWUSR, NULL, anx7625_dpcd_write),
-	__ATTR(dumpedid, S_IRUGO, anx7625_dump_edid, NULL),
-	__ATTR(cmd,      S_IWUSR, NULL, anx7625_debug)
-#endif
 };
 
 static int create_sysfs_interfaces(struct device *dev)
