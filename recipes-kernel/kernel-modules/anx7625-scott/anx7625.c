@@ -1485,17 +1485,6 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 		}
 	}
 
-	if (atomic_read(&ctx->power_status) == 1) {
-		ret = anx7625_read_hpd_status_p0(ctx);
-		if (ret < 0) {
-			DRM_ERROR("IO error : can't read status: %d\n", ret);
-			return ret;
-		}
-
-		DRM_DEV_DEBUG_DRIVER(dev, "0x7e:0x45=%x\n", ret);
-		dp_hpd_change_handler(ctx, ret & HPD_STATUS);
-	}
-
 	/* handle alert */
 	if (atomic_read(&ctx->alert_arrived) == 1) {
 		ret = anx7625_handle_intr_comm(ctx);
