@@ -1376,7 +1376,6 @@ static irqreturn_t anx7625_cbl_det_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 
-	pr_err(">>>> %s <<<<", __func__);
 #ifdef CABLE_DET_PIN_HAS_GLITCH
 	atomic_set(&ctx->cable_connected, confirmed_cable_det((void*)ctx));
 #else
@@ -1623,10 +1622,8 @@ static int anx7625_get_modes(struct drm_connector *connector)
 	struct s_edid_data *p_edid = &ctx->slimport_edid_p;
 	struct device *dev = &ctx->client->dev;
 
-	pr_err(">> %s: ENTER", __func__);
 	DRM_DEV_DEBUG_DRIVER(dev, "drm get modes\n");
 
-	pr_err(">> %s: 1 edid_block_num: %d", __func__, ctx->slimport_edid_p.edid_block_num);
 	if (ctx->slimport_edid_p.edid_block_num > 0)
 		goto out;
 
@@ -1639,7 +1636,6 @@ static int anx7625_get_modes(struct drm_connector *connector)
 	p_edid->edid_block_num = sp_tx_edid_read(ctx, p_edid->edid_raw_data);
 	anx7625_low_power_mode_check(ctx, 0);
 
-	pr_err(">> %s: 2 edid_block_num: %d", __func__, p_edid->edid_block_num);
 	err = -EIO;
 	if (p_edid->edid_block_num < 0) {
 		DRM_ERROR("Failed to read EDID.\n");
@@ -1665,7 +1661,6 @@ out:
 				       (struct edid *)&p_edid->edid_raw_data);
 	DRM_DEV_DEBUG_DRIVER(dev, "num_modes(%d)\n", num_modes);
 
-	pr_err("<< %s: EXIT", __func__);
 	return num_modes;
 }
 
