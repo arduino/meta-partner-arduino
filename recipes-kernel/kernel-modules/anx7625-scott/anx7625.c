@@ -1066,7 +1066,8 @@ static void anx7625_chip_register_init(struct anx7625_data *ctx)
 
 	/* set interrupt vector mask bit as platform needed  0: enable 1: disable*/
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-				GPIO_2_MAP, GPIO_INTR_MASK);
+				INTERFACE_CHANGE_INT_MASK,
+				INT_MASK_OFF);
 	/* AUTO_RDO_ENABLE */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
 				AUTO_PD_MODE, AUTO_PD_ENABLE);

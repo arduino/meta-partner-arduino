@@ -193,8 +193,8 @@
 #define R_DSC_CTRL_0			0x40
 /* 1=DSC enabled, 0=DSC disabled */
 #define R_DSC_EN		BIT(0)
-#define GPIO_2_MAP			0x43
-#define GPIO_INTR_MASK		0
+#define INTERFACE_CHANGE_INT_MASK	0x43
+#define INT_MASK_OFF		0
 #define INTERFACE_CHANGE_INT		0x44
 #define HPD_STATUS_CHANGE	BIT(7)
 #define SYSTEM_STSTUS			0x45
