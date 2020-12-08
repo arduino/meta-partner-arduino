@@ -1343,7 +1343,7 @@ static irqreturn_t anx7625_intr_comm_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 
-	if (atomic_read(&ctx->power_status) != 1)
+	if (atomic_read(&ctx->power_status) < 1)
 		return IRQ_NONE;
 
 	atomic_set(&ctx->alert_arrived, 1);
