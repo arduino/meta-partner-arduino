@@ -1441,6 +1441,13 @@ clear_int:
 	return ret;
 }
 
+int anx7625_cable(struct anx7625_data *ctx)
+{
+  return anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
+			   TCPC_ANALOG_CTRL_0,
+			   TCPC_AC0_CC1_RA | TCPC_AC0_CC_VRD_VBUS_SHORT);
+}
+
 static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 {
 	int ret = 0;
@@ -1454,6 +1461,7 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 		anx7625_power_on(ctx);
 		anx7625_drp_toggle_enable(ctx);
 		usleep_range(1000, 1100);
+		anx7625_cable(ctx);
 		anx7625_power_standby(ctx);
 		return 0;
 	}
