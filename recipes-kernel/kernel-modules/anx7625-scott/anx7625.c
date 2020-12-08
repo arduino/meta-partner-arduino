@@ -1352,10 +1352,26 @@ static irqreturn_t anx7625_intr_comm_isr(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+#define STS_VBUS_CHANGE \
+	(((sys_status & VBUS_STATUS) != \
+	 (sys_sta_bak & VBUS_STATUS)) ? VBUS_CHANGE : 0)
+#define STS_VCONN_CHANGE \
+	(((sys_status & VCONN_STATUS) != \
+	 (sys_sta_bak & VCONN_STATUS)) ? VCONN_CHANGE : 0)
+#define STS_DATA_ROLE_CHANGE \
+	(((sys_status & DATA_ROLE_STATUS) != \
+	 (sys_sta_bak & DATA_ROLE_STATUS)) ? DATA_ROLE_CHANGE : 0)
+#define STS_HPD_CHANGE \
+	(((sys_status & HPD_STATUS) != \
+	 (sys_sta_bak & HPD_STATUS)) ? HPD_STATUS_CHANGE:0)
+
+static unsigned char sys_sta_bak;
+
 static int anx7625_handle_intr_comm(struct anx7625_data *ctx)
 {
-	int ret, intr_vector, intr_type;
 	struct device *dev = &ctx->client->dev;
+	int ret;
+	u8 status, sys_status, intr_type, intr_vector;
 
 	intr_type = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
 				     TCPC_INTR_ALERT_1);
@@ -1366,7 +1382,8 @@ static int anx7625_handle_intr_comm(struct anx7625_data *ctx)
 		DRM_DEV_ERROR(dev, "cannot access interrupt change reg.\n");
 		return intr_vector;
 	}
-	DRM_DEV_DEBUG_DRIVER(dev, "0x7e:0x44=%x\n", intr_vector);
+
+	DRM_DEV_DEBUG_DRIVER(dev, "INTERFACE_CHANGE_INT=%x\n", intr_vector);
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 				INTERFACE_CHANGE_INT,
 				intr_vector & (~intr_vector));
@@ -1375,8 +1392,45 @@ static int anx7625_handle_intr_comm(struct anx7625_data *ctx)
 		goto clear_int;
 	}
 
-	if (!(intr_vector & HPD_STATUS_CHANGE))
-		ret = -ENOENT;
+	if (intr_vector & CC_STATUS_CHANGE) {
+		status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
+					  NEW_CC_STATUS);
+		DRM_DEV_DEBUG_DRIVER(dev, "NEW_CC_STATUS=0x%x\n", status);
+	}
+
+	sys_status = anx7625_read_hpd_status_p0(ctx);
+
+	if ((intr_vector & VCONN_CHANGE) | STS_VCONN_CHANGE) {
+		DRM_DEV_DEBUG_DRIVER(dev, "VCONN_STATUS 0x%x\n",
+				     (u8)(sys_status & VCONN_STATUS));
+	}
+
+	if ((intr_vector & VBUS_CHANGE) | STS_VBUS_CHANGE) {
+		DRM_DEV_DEBUG_DRIVER(dev, "VBUS_STATUS 0x%x\n",
+				     (u8)(sys_status & VBUS_STATUS));
+	}
+
+	if ((intr_vector & DATA_ROLE_CHANGE) | STS_DATA_ROLE_CHANGE) {
+		DRM_DEV_DEBUG_DRIVER(dev, "DATA_ROLL_STATUS 0x%x\n",
+				     (u8)(sys_status & DATA_ROLE_STATUS));
+	}
+
+	if ((intr_vector & HPD_STATUS_CHANGE) | STS_HPD_CHANGE) {
+		DRM_DEV_DEBUG_DRIVER(dev, "HPD_STATUS 0x%x\n",
+				     (u8)(sys_status & HPD_STATUS));
+		dp_hpd_change_handler(ctx, sys_status & HPD_STATUS);
+	}
+
+	sys_sta_bak = sys_status;
+
+	if ((gpiod_get_value(ctx->pdata.gpio_intr_comm)) == 0) {
+		atomic_set(&ctx->alert_arrived, 1);
+		queue_delayed_work(ctx->workqueue, &ctx->work, msecs_to_jiffies(1));
+		DRM_DEV_DEBUG_DRIVER(dev, "comm isr pin still low, re-enter\n");
+	} else {
+		atomic_set(&ctx->alert_arrived, 0);
+		DRM_DEV_DEBUG_DRIVER(dev, "comm isr pin cleared\n");
+	}
 
 clear_int:
 	if (anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
@@ -1417,6 +1471,7 @@ static int anx7625_hpd_change_detect(struct anx7625_data *ctx)
 				anx7625_stop_dp_work(ctx);
 			anx7625_drp_toggle_enable(ctx);
 			usleep_range(1000, 1100);
+			sys_sta_bak = 0;
 			anx7625_power_standby(ctx);
 			return 0;
 		}
