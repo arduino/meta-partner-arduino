@@ -1291,11 +1291,10 @@ static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
 		DRM_DEV_DEBUG_DRIVER(dev, " HPD low\n");
 		anx7625_stop_dp_work(ctx);
 	} else {
+		ctx->hpd_status = 1;
 		DRM_DEV_DEBUG_DRIVER(dev, " HPD high\n");
 		anx7625_start_dp_work(ctx);
 	}
-
-	ctx->hpd_status = 1;
 }
 
 #ifdef CABLE_DET_PIN_HAS_GLITCH
