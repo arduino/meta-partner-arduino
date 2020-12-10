@@ -1443,7 +1443,7 @@ clear_int:
 
 int anx7625_cable(struct anx7625_data *ctx)
 {
-  return anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
+	return anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
 			   TCPC_ANALOG_CTRL_0,
 			   TCPC_AC0_CC1_RA | TCPC_AC0_CC_VRD_VBUS_SHORT);
 }
@@ -1620,6 +1620,7 @@ static int anx7625_get_modes(struct drm_connector *connector)
 	int turn_off_flag = 0;
 	struct s_edid_data *p_edid = &ctx->slimport_edid_p;
 	struct device *dev = &ctx->client->dev;
+	u32 bus_format = MEDIA_BUS_FMT_RGB888_1X24;
 
 	DRM_DEV_DEBUG_DRIVER(dev, "drm get modes\n");
 
@@ -1659,6 +1660,16 @@ out:
 	num_modes = drm_add_edid_modes(connector,
 				       (struct edid *)&p_edid->edid_raw_data);
 	DRM_DEV_DEBUG_DRIVER(dev, "num_modes(%d)\n", num_modes);
+
+	connector->display_info.bus_flags = DRM_BUS_FLAG_DE_LOW |
+					DRM_BUS_FLAG_PIXDATA_NEGEDGE;
+
+	err = drm_display_info_set_bus_formats(&connector->display_info,
+																				&bus_format, 1);
+	if (err) {
+		DRM_ERROR("Fail on drm_display_info_set_bus_formats\n");
+		return err;
+	}
 
 	return num_modes;
 }
