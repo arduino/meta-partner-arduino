@@ -1,0 +1,14 @@
+diff --git a/arch/arm64/boot/dts/arduino/portenta-m8.dts b/arch/arm64/boot/dts/arduino/portenta-m8.dts
+index 7d3f9fce70b6..9d8bad8e4784 100644
+--- a/arch/arm64/boot/dts/arduino/portenta-m8.dts
++++ b/arch/arm64/boot/dts/arduino/portenta-m8.dts
+@@ -272,7 +272,7 @@
+ 		 <&clk IMX8MM_CLK_PCIE1_PHY>,
+ 		 <&pcie0_refclk>;
+ 	clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
+-	ext_osc = <1>;
++	ext_osc = <0>;
+ 	reserved-region = <&rpmsg_reserved>;
+-	status = "disabled";
++	status = "okay";
+ };

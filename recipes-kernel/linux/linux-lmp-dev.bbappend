@@ -10,5 +10,6 @@ SRC_URI_append_portenta-m8 = " \
   file://0001-Add_Portenta-M8_Board.patch \
   file://0002-drivers-clk-rtc-enable-RTC-as-clock-input-for-the-pm.patch \
   file://0002-Extcon-GPIO_Add_DT_bindings.patch \
+  file://0003-DTB_enable_pci.patch \
   file://portenta_m8_defconfig \
 "
