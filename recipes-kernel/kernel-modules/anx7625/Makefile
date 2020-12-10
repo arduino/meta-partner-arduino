@@ -1,4 +1,3 @@
-# anx7625-objs := analogix-anx7625.o
 
 obj-m += anx7625.o
 

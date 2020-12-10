@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright(c) 2020, Analogix Semiconductor. All rights reserved.
+ * Copyright(c) 2020, Foundries.io. All rights reserved.
  *
  */
 #include <linux/gcd.h>
@@ -300,8 +301,6 @@ static int anx7625_config_audio_input(struct anx7625_data *ctx)
 	/* Channel num */
 	ret = anx7625_reg_write(ctx, ctx->i2c.tx_p2_client,
 				AUDIO_CHANNEL_STATUS_6, I2S_CH_2 << 5);
-	/* layout */
-	/* as I2S channel is 2, no need to set layout */
 
 	/* FS */
 	ret |= anx7625_write_and_or(ctx, ctx->i2c.tx_p2_client,

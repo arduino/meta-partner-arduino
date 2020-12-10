@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright(c) 2016, Analogix Semiconductor. All rights reserved.
+ * Copyright(c) 2020, Analogix Semiconductor. All rights reserved.
+ * Copyright(c) 2020, Foundries.io. All rights reserved.
  *
  */
 
@@ -56,24 +57,9 @@
 #define TCPC_PWR_STATUS			0x1E
 #define TCPC_COMMAND			0x23
 #define TCPC_ANALOG_CTRL_0		0xA0
-#define TCPC_AC0_CC1_VRD_3P0          BIT(0)
-#define TCPC_AC0_CC1_VRD_1P5          BIT(1)
-#define TCPC_AC0_CC1_VRD_USB          BIT(2)
-#define TCPC_AC0_CC1_5P1K             BIT(3)
 #define TCPC_AC0_CC1_RA		BIT(4)
 #define TCPC_AC0_CC_VRD_VBUS_SHORT BIT(5)
-#define TCPC_AC0_DFP_OR_UFP           BIT(6)
-#define TCPC_AC0_ANALOG_TOGGLING      BIT(7)
-
 #define TCPC_ANALOG_CTRL_1		0xA1
-#define TCPC_AC1_CC2_VRD_3P0             BIT(0)
-#define TCPC_AC1_CC2_VRD_1P5             BIT(1)
-#define TCPC_AC1_CC2_VRD_USB             BIT(2)
-#define TCPC_AC1_CC2_5P1K                BIT(3)
-#define TCPC_AC1_CC2_RA                  BIT(4)
-#define TCPC_AC1_TOGGLE_CTRL_MODE        BIT(5)
-#define TCPC_AC1_R_LATCH_TOGGLE_ENABLE   BIT(6)
-#define TCPC_AC1_R_TOGGLE_ENABLE         BIT(7)
 #define TCPC_INTR_ALERT_1		0xCC
 #define TCPC_INTR_SOFTWARE_INT	BIT(3)
 #define TCPC_INTR_RECEIVED_MSG	BIT(5)

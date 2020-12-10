@@ -37,5 +37,5 @@ CORE_IMAGE_BASE_INSTALL += " \
 # Arduino additions
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
-    anx7625-scott \
+    anx7625 \
 "
