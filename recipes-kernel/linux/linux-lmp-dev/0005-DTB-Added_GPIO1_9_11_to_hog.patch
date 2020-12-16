@@ -1,0 +1,28 @@
+Index: kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
+===================================================================
+--- kernel-source.orig/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
++++ kernel-source/arch/arm64/boot/dts/arduino/envie_enuc_carrier.dtsi
+@@ -82,6 +82,9 @@
+ };
+ 
+ &iomuxc {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_hog>;
++
+ 	imx8mm {
+ /*
+ 		pinctrl_gpio1: gpio1grp {
+@@ -109,6 +112,13 @@
+ 		};
+ */
+ /**/
++		pinctrl_hog: hoggrp {
++			fsl,pins = <
++				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9   0x44 /* J2 50 */
++				MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11  0x44 /* J2 54 */
++			>;
++		};
++
+ 		pinctrl_i2c2: i2c2grp {
+ 			fsl,pins = <
+ 				MX8MM_IOMUXC_I2C2_SCL_I2C2_SCL      0x400001c3
