@@ -13,5 +13,6 @@ SRC_URI_append_portenta-m8 = " \
   file://0003-DTB_enable_pci.patch \
   file://1000-TEMP-FIX_PCIe_reset_after_clock.patch \
   file://0005-DTB-Added_GPIO1_9_11_to_hog.patch \
+  file://0006-DTB_ANX7625_Audio.patch \
   file://portenta_m8_defconfig \
 "
