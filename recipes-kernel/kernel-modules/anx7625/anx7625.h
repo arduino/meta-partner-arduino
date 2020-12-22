@@ -8,6 +8,11 @@
 #ifndef __ANX7625_H__
 #define __ANX7625_H__
 
+#include <drm/drm_bridge.h>
+
+#include <drm/drm_dp_helper.h>
+#include <video/display_timing.h>
+
 #define ANX7625_DRV_VERSION "0.1.04"
 
 /* Loading OCM re-trying times */
@@ -429,6 +434,23 @@ struct anx7625_data {
 	struct drm_dp_link link;
 	struct drm_display_mode vid_info;
 	struct notifier_block event_nb;
+	struct platform_device *audio_pdev;
 };
+
+int anx7625_reg_write(struct anx7625_data *ctx,
+			     struct i2c_client *client,
+			     u8 reg_addr, u8 reg_val);
+int anx7625_write_and_or(struct anx7625_data *ctx,
+				struct i2c_client *client,
+				u8 offset, u8 and_mask, u8 or_mask);
+int anx7625_write_or(struct anx7625_data *ctx,
+			    struct i2c_client *client,
+			    u8 offset, u8 mask);
+
+
+int anx7625_config_audio_input(struct anx7625_data *ctx);
+
+int anx7625_audio_init(struct device *dev, struct anx7625_data *anx7625);
+void anx7625_audio_exit(struct anx7625_data *anx7625);
 
 #endif  /* __ANX7625_H__ */

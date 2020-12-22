@@ -9,7 +9,8 @@ PV = "0.1"
 
 SRC_URI = " \
   file://Makefile \
-  file://anx7625.c \
+  file://anx7625_drv.c \
+  file://anx7625_audio.c \
   file://anx7625.h \
   file://COPYING \
 "

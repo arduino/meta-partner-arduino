@@ -1,4 +1,4 @@
-
+anx7625-objs := anx7625_drv.o anx7625_audio.o
 obj-m += anx7625.o
 
 SRC := $(shell pwd)

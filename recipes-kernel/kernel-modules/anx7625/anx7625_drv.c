@@ -129,7 +129,7 @@ static int anx7625_reg_block_read(struct anx7625_data *ctx,
 	return ret;
 }
 
-static int anx7625_reg_write(struct anx7625_data *ctx,
+int anx7625_reg_write(struct anx7625_data *ctx,
 			     struct i2c_client *client,
 			     u8 reg_addr, u8 reg_val)
 {
@@ -147,7 +147,7 @@ static int anx7625_reg_write(struct anx7625_data *ctx,
 	return ret;
 }
 
-static int anx7625_write_or(struct anx7625_data *ctx,
+int anx7625_write_or(struct anx7625_data *ctx,
 			    struct i2c_client *client,
 			    u8 offset, u8 mask)
 {
@@ -173,7 +173,7 @@ static int anx7625_write_and(struct anx7625_data *ctx,
 	return anx7625_reg_write(ctx, client, offset, (val & (mask)));
 }
 
-static int anx7625_write_and_or(struct anx7625_data *ctx,
+int anx7625_write_and_or(struct anx7625_data *ctx,
 				struct i2c_client *client,
 				u8 offset, u8 and_mask, u8 or_mask)
 {
@@ -293,7 +293,7 @@ static int anx7625_video_mute_control(struct anx7625_data *ctx,
 	return ret;
 }
 
-static int anx7625_config_audio_input(struct anx7625_data *ctx)
+int anx7625_config_audio_input(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
 	int ret;
@@ -722,7 +722,7 @@ static void anx7625_dp_start(struct anx7625_data *ctx)
 		return;
 	}
 
-	anx7625_config_audio_input(ctx);
+//	anx7625_config_audio_input(ctx);
 
 	ret = anx7625_dsi_config(ctx);
 
@@ -2127,6 +2127,8 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 		platform->bridge.of_node = client->dev.of_node;
 	drm_bridge_add(&platform->bridge);
 
+	anx7625_audio_init(dev, platform);
+
 	DRM_DEV_DEBUG_DRIVER(dev, "probe done\n");
 
 	return 0;
@@ -2153,6 +2155,8 @@ free_platform:
 static int anx7625_i2c_remove(struct i2c_client *client)
 {
 	struct anx7625_data *platform = i2c_get_clientdata(client);
+
+	anx7625_audio_exit(platform);
 
 	drm_bridge_remove(&platform->bridge);
 	destory_sysfs_interfaces(&client->dev);
