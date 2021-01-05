@@ -130,6 +130,7 @@ DRM_DEV_DEBUG_DRIVER(dev, "audio_startup\n");
 
 static void audio_shutdown(struct device *dev, void *data)
 {
+DRM_DEV_DEBUG_DRIVER(dev, "audio_shutdown\n");
 }
 
 static int anx7625_hdmi_i2s_get_dai_id(struct snd_soc_component *component,
@@ -140,7 +141,7 @@ static int anx7625_hdmi_i2s_get_dai_id(struct snd_soc_component *component,
 
 	ret = of_graph_parse_endpoint(endpoint, &of_ep);
 	if (ret < 0) {
-		printk("anx7625_hdmi_i2s_get_dai_id: ERROR: endpoint not found\n");
+printk("anx7625_hdmi_i2s_get_dai_id: ERROR: endpoint not found\n");
 		return ret;
 	}
 	/*
@@ -148,6 +149,7 @@ static int anx7625_hdmi_i2s_get_dai_id(struct snd_soc_component *component,
 	 * Then, it is sound port 0
 	 */
 	if (of_ep.port == 3) {
+printk("anx7625_hdmi_i2s_get_dai_id: of_ep.port == 3\n");
 		return 0;
 	}
 printk("anx7625_hdmi_i2s_get_dai_id: ERROR\n");
@@ -180,6 +182,7 @@ DRM_DEV_DEBUG_DRIVER(dev, "anx7625_audio_init: audio_pdev %p\n", anx7625->audio_
 
 void anx7625_audio_exit(struct anx7625_data *anx7625)
 {
+printk("anx7625_audio_exit\n");
 	if (anx7625->audio_pdev) {
 		platform_device_unregister(anx7625->audio_pdev);
 		anx7625->audio_pdev = NULL;
