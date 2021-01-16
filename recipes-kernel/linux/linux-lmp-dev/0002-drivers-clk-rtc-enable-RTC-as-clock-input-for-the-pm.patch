@@ -7,47 +7,10 @@ The RTC clockout is use as an oscillator input to the pmic
 
 Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
 ---
- arch/arm64/boot/dts/arduino/portenta-m8.dts |  7 ++++---
  drivers/clk/clk-bd718x7.c                   | 13 ++++++++++++-
  drivers/rtc/rtc-pcf8563.c                   | 10 +++++++++-
  3 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/arduino/portenta-m8.dts b/arch/arm64/boot/dts/arduino/portenta-m8.dts
-index 7d3f9fce70b6..34d1564ac979 100644
---- a/arch/arm64/boot/dts/arduino/portenta-m8.dts
-+++ b/arch/arm64/boot/dts/arduino/portenta-m8.dts
-@@ -136,13 +136,14 @@
- 	pinctrl-0 = <&pinctrl_i2c1>;
- 	status = "okay";
- 
--	pmic@4b {
-+	pmic:pmic@4b {
- 		compatible = "rohm,bd71847";
- 		reg = <0x4b>;
- 		pinctrl-0 = <&pinctrl_pmic>;
- 		interrupt-parent = <&gpio3>;
- 		interrupts = <8 GPIO_ACTIVE_LOW>;
- 		rohm,reset-snvs-powered;
-+		clocks = <&pcf8563>;
- 
- 		regulators {
- 			buck1_reg: BUCK1 {
-@@ -250,13 +251,13 @@
- 			};
- 		};
- 	};
--/*
-+
- 	pcf8563: pcf8563@51 {
- 		compatible = "nxp,pcf8563";
- 		reg = <0x51>;
- 		#clock-cells = <0>;
- 	};
--*/
-+
- };
- 
- &pcie0{
 diff --git a/drivers/clk/clk-bd718x7.c b/drivers/clk/clk-bd718x7.c
 index ae6e5baee330..c1afeb7a2c4b 100644
 --- a/drivers/clk/clk-bd718x7.c
