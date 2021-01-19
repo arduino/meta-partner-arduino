@@ -114,6 +114,7 @@
 /**/
 		pinctrl_hog: hoggrp {
 			fsl,pins = <
+				MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7   0x44 /* J2 46 */
 				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9   0x44 /* J2 50 */
 				MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11  0x44 /* J2 54 */
 			>;
