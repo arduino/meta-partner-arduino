@@ -38,5 +38,7 @@ CORE_IMAGE_BASE_INSTALL += " \
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     anx7625 \
+    bq24195 \
     modemmanager \
+    i2c-tools \
 "
