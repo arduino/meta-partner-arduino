@@ -114,11 +114,13 @@
 /**/
 		pinctrl_hog: hoggrp {
 			fsl,pins = <
+				MX8MM_IOMUXC_GPIO1_IO01_GPIO1_IO1   0x44 /* J2 59: PWM1 H/Fn     */
 				MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7   0x44 /* J2 46: EN_USB */
 				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9   0x44 /* J2 50: CELL_RST */
 				MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11  0x44 /* J2 54: CELL_PON */
-				MX8MM_IOMUXC_GPIO1_IO13_GPIO1_IO13  0x44 /* J2 64: 485/232N */
-				MX8MM_IOMUXC_GPIO1_IO14_GPIO1_IO14  0x44 /* J2 64: EN_485 */
+				MX8MM_IOMUXC_GPIO1_IO13_GPIO1_IO13  0x44 /* J2 61: PWM2 485/232N */
+				MX8MM_IOMUXC_GPIO1_IO14_GPIO1_IO14  0x44 /* J2 63: PWM3 EN_485 */
+				MX8MM_IOMUXC_GPIO1_IO15_GPIO1_IO15  0x44 /* J2 65: PWM4 EN_CAN   */
 			>;
 		};
 
@@ -223,7 +225,8 @@
 	bq24195: charger@6b {
 		compatible = "ti,bq24195";
 		reg = <0x6b>;
-		//interrupts-extended = <&gpiochip 10 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <20 GPIO_ACTIVE_LOW>;
 		monitored-battery = <&bat>;
 		ti,system-minimum-microvolt = <3200000>;
 	};
@@ -246,6 +249,7 @@
 	status = "okay";
 };
 
+#if 0
 &pwm1 {
 	status = "okay";
 };
@@ -261,6 +265,7 @@
 &pwm4 {
 	status = "okay";
 };
+#endif
 
 &sai3 {
 	pinctrl-names = "default";
@@ -303,10 +308,19 @@
 	status = "okay";
 	};
 
-&uart2 {
+&uart2 { /* SARA */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart2>;
 	status = "okay";
+};
+
+&uart4 { /* LORA */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart4>;
+	assigned-clocks = <&clk IMX8MM_CLK_UART4>;
+	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+	/*fsl,uart-has-rtscts;*/
+	status = "disabled";
 };
 
 &usbotg2 {
