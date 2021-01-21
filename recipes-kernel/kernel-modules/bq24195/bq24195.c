@@ -1,5 +1,5 @@
 /*
- * Driver for the TI bq24190 battery charger.
+ * Driver for the TI bq24195 battery charger.
  *
  * Author: Mark A. Greer <mgreer@animalcreek.com>
  *
@@ -145,7 +145,7 @@
 #define BQ24195_REG_VPRS_DEV_REG_SHIFT        0
 
 /*
- * The FAULT register is latched by the bq24190 (except for NTC_FAULT)
+ * The FAULT register is latched by the bq24195 (except for NTC_FAULT)
  * so the first read after a fault returns the latched value and subsequent
  * reads return the current value.  In order to return the fault status
  * to the user, have the interrupt handler save the reg's value and retrieve
@@ -312,7 +312,7 @@ static int bq24195_set_field_val(struct bq24195_dev_info *bdi,
 
 #ifdef CONFIG_SYSFS
 /*
- * There are a numerous options that are configurable on the bq24190
+ * There are a numerous options that are configurable on the bq24195
  * that go well beyond what the power_supply properties provide access to.
  * Provide sysfs access to them so they can be examined and possibly modified
  * on the fly.  They will be provided for the charger power_supply object only
@@ -627,7 +627,7 @@ static int bq24195_set_config(struct bq24195_dev_info *bdi)
 
   /*
    * According to the "Host Mode and default Mode" section of the
-   * manual, a write to any register causes the bq24190 to switch
+   * manual, a write to any register causes the bq24195 to switch
    * from default mode to host mode.  It will switch back to default
    * mode after a WDT timeout unless the WDT is turned off as well.
    * So, by simply turning off the WDT, we accomplish both with the
@@ -682,7 +682,7 @@ static int bq24195_register_reset(struct bq24195_dev_info *bdi)
    * struct property_entry pe[] =
    *   { PROPERTY_ENTRY_BOOL("disable-reset"), ... };
    * struct i2c_board_info bi =
-   *   { .type = "bq24190", .addr = 0x6b, .properties = pe, .irq = irq };
+   *   { .type = "bq24195", .addr = 0x6b, .properties = pe, .irq = irq };
    * struct i2c_adapter ad = { ... };
    * i2c_add_adapter(&ad);
    * i2c_new_device(&ad, &bi);
@@ -759,7 +759,7 @@ static int bq24195_charger_set_charge_type(struct bq24195_dev_info *bdi,
 
   /*
    * According to the "Termination when REG02[0] = 1" section of
-   * the bq24190 manual, the trickle charge could be less than the
+   * the bq24195 manual, the trickle charge could be less than the
    * termination current so it recommends turning off the termination
    * function.
    *
@@ -1223,7 +1223,7 @@ static void bq24195_charger_external_power_changed(struct power_supply *psy)
 
   /*
    * The Power-Good detection may take up to 220ms, sometimes
-   * the external charger detection is quicker, and the bq24190 will
+   * the external charger detection is quicker, and the bq24195 will
    * reset to iinlim based on its own charger detection (which is not
    * hooked up when using external charger detection) resulting in a
    * too low default 500mA iinlim. Delay setting the input-current-limit
@@ -1256,7 +1256,7 @@ static char *bq24195_charger_supplied_to[] = {
 };
 
 static const struct power_supply_desc bq24195_charger_desc = {
-  .name      = "bq24190-charger",
+  .name      = "bq24195-charger",
   .type      = POWER_SUPPLY_TYPE_USB,
   .properties    = bq24195_charger_properties,
   .num_properties    = ARRAY_SIZE(bq24195_charger_properties),
@@ -1416,7 +1416,7 @@ static int bq24195_battery_get_property(struct power_supply *psy,
   struct bq24195_dev_info *bdi = power_supply_get_drvdata(psy);
   int ret;
 
-  dev_warn(bdi->dev, "warning: /sys/class/power_supply/bq24190-battery is deprecated\n");
+  dev_warn(bdi->dev, "warning: /sys/class/power_supply/bq24195-battery is deprecated\n");
   dev_dbg(bdi->dev, "prop: %d\n", psp);
 
   ret = pm_runtime_get_sync(bdi->dev);
@@ -1462,7 +1462,7 @@ static int bq24195_battery_set_property(struct power_supply *psy,
   struct bq24195_dev_info *bdi = power_supply_get_drvdata(psy);
   int ret;
 
-  dev_warn(bdi->dev, "warning: /sys/class/power_supply/bq24190-battery is deprecated\n");
+  dev_warn(bdi->dev, "warning: /sys/class/power_supply/bq24195-battery is deprecated\n");
   dev_dbg(bdi->dev, "prop: %d\n", psp);
 
   ret = pm_runtime_get_sync(bdi->dev);
@@ -1779,7 +1779,7 @@ static int bq24195_probe(struct i2c_client *client,
   ret = devm_request_threaded_irq(dev, client->irq, NULL,
       bq24195_irq_handler_thread,
       IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-      "bq24190-charger", bdi);
+      "bq24195-charger", bdi);
   if (ret < 0) {
     dev_err(dev, "Can't set up irq handler\n");
     goto out_sysfs;
@@ -1946,7 +1946,7 @@ static struct i2c_driver bq24195_driver = {
   .remove   = bq24195_remove,
   .id_table = bq24195_i2c_ids,
   .driver = {
-    .name           = "bq24190-charger",
+    .name           = "bq24195-charger",
     .pm             = &bq24195_pm_ops,
     .of_match_table = of_match_ptr(bq24195_of_match),
   },
@@ -1955,4 +1955,4 @@ module_i2c_driver(bq24195_driver);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Mark A. Greer <mgreer@animalcreek.com>");
-MODULE_DESCRIPTION("TI BQ24190 Charger Driver");
+MODULE_DESCRIPTION("TI BQ24195 Charger Driver");
