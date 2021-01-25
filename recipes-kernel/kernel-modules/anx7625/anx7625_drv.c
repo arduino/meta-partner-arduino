@@ -2161,13 +2161,6 @@ static int anx7625_i2c_remove(struct i2c_client *client)
 	drm_bridge_remove(&platform->bridge);
 	destory_sysfs_interfaces(&client->dev);
 
-	if (platform->pdata.cbl_det_irq >= 0)
-		free_irq(platform->pdata.cbl_det_irq, platform);
-
-	if (client->irq >= 0) {
-		free_irq(client->irq, platform);
-	}
-
 	destroy_workqueue(platform->workqueue);
 
 	anx7625_unregister_i2c_dummy_clients(platform);
