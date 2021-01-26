@@ -669,6 +669,20 @@ static int bq24195_set_config(struct bq24195_dev_info *bdi)
       return ret;
   }
 
+  v = bq24195_read(bdi, BQ24195_REG_ISC, &v);
+  if (ret < 0)
+      return ret;
+  v = v | BQ24195_REG_ISC_IINLIM_MASK; /* MP: REG00 input current limit 3A */
+  ret = bq24195_write(bdi, BQ24195_REG_ISC, v);
+  if (ret < 0)
+      return ret;ret = bq24195_read(bdi, BQ24195_REG_POC, &v);
+  if (ret < 0)
+      return ret;
+  v = v & ~BQ24195_REG_POC_CHG_CONFIG_MASK; /* MP: REG01 disable battery charge functionality */
+  ret = bq24195_write(bdi, BQ24195_REG_POC, v);
+  if (ret < 0)
+      return ret;
+
   return 0;
 }
 
