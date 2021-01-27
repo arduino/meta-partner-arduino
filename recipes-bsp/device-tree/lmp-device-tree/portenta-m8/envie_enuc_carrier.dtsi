@@ -227,6 +227,7 @@
 		interrupts = <20 GPIO_ACTIVE_LOW>;
 		monitored-battery = <&bat>;
 		ti,system-minimum-microvolt = <3200000>;
+		omit-battery-class;
 	};
 
 	cs42l52: cs42l52@4a {
@@ -302,7 +303,7 @@
 	clock-names = "core", "rxtx0", "rxtx1", "rxtx2", "rxtx3",
 		"rxtx4", "rxtx5", "rxtx6", "rxtx7", "spba", "pll8k", "pll11k";
 	status = "okay";
-	};
+};
 
 &uart2 { /* SARA */
 	pinctrl-names = "default";
