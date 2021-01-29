@@ -317,7 +317,7 @@
 	assigned-clocks = <&clk IMX8MM_CLK_UART4>;
 	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 	/*fsl,uart-has-rtscts;*/
-	status = "disabled";
+	status = "okay";
 };
 
 &usbotg2 {
