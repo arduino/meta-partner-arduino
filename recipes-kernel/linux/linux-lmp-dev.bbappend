@@ -11,5 +11,6 @@ SRC_URI_append_portenta-m8 = " \
   file://0002-Extcon-GPIO_Add_DT_bindings.patch \
   file://1000-TEMP-FIX_PCIe_reset_after_clock.patch \
   file://0001-drm-bridge-anx7625-early-drop.patch \
+  file://0002-kernel-anx7625-add-traces.patch \
   file://portenta_m8_defconfig \
 "
