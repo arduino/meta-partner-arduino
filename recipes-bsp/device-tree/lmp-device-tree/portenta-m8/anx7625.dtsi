@@ -24,6 +24,7 @@
 		compatible ="analogix,anx7625";
 		status = "okay";
 		reg = <0x58>;
+		vdda-supply = <&ldo5_reg>;
 
 		// 1: internal_panel; !=1: external????
 		panel_flags = <2>;
