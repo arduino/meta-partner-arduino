@@ -1,0 +1,45 @@
+From 214b147cf4c485eb829670549f8e0fdbbd633b6d Mon Sep 17 00:00:00 2001
+From: Jorge Ramirez-Ortiz <jorge@foundries.io>
+Date: Mon, 1 Feb 2021 09:37:02 +0100
+Subject: [PATCH] drm: anx7625: wait for LDO5
+
+Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
+---
+ drivers/gpu/drm/bridge/anx7625_drv.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/gpu/drm/bridge/anx7625_drv.c b/drivers/gpu/drm/bridge/anx7625_drv.c
+index c97aedba70c3..c5ed91553edf 100644
+--- a/drivers/gpu/drm/bridge/anx7625_drv.c
++++ b/drivers/gpu/drm/bridge/anx7625_drv.c
+@@ -7,6 +7,7 @@
+  */
+ #include <linux/gcd.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/i2c.h>
+ #include <linux/interrupt.h>
+ #include <linux/iopoll.h>
+@@ -2027,8 +2028,19 @@ static int anx7625_i2c_probe(struct i2c_client *client,
+ 	struct anx7625_platform_data *pdata;
+ 	struct device *dev = &client->dev;
+ 	struct anx7625_data *platform;
++	struct regulator *regulator;
+ 	int ret;
+ 
++	printk("anx probe starts\n");
++
++	regulator = devm_regulator_get(dev, "vdda");
++	if (IS_ERR(regulator)) {
++		if (PTR_ERR(regulator) == -EPROBE_DEFER) {
++			/* wait for the 3V regulator */
++			return PTR_ERR(regulator);
++		}
++	}
++
+ 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_I2C_BLOCK))
+ 		return -ENODEV;
+ 
+-- 
+2.17.1
+
