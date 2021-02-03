@@ -1,4 +1,4 @@
-From 18da3286095a0a48f40de29e309a9ccb3f41b652 Mon Sep 17 00:00:00 2001
+From d22701aa35e708cda42d2b253c17d30298bf19b8 Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Wed, 3 Feb 2021 15:43:30 +0100
 Subject: [PATCH] an7625: hdmi audio
@@ -9,11 +9,12 @@ Requires additional work for other use cases.
 Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
 ---
  drivers/gpu/drm/bridge/Makefile               |   2 +-
- .../drm/bridge/{anx7625_drv.c => anx7625.c}   | 166 ++++++++++++-----
+ .../drm/bridge/{anx7625_drv.c => anx7625.c}   | 166 +++++++++++----
  drivers/gpu/drm/bridge/anx7625.h              |  16 --
- drivers/gpu/drm/bridge/anx7625_audio.c        | 170 +-----------------
- 4 files changed, 127 insertions(+), 227 deletions(-)
+ drivers/gpu/drm/bridge/anx7625_audio.c        | 190 ------------------
+ 4 files changed, 123 insertions(+), 251 deletions(-)
  rename drivers/gpu/drm/bridge/{anx7625_drv.c => anx7625.c} (93%)
+ delete mode 100644 drivers/gpu/drm/bridge/anx7625_audio.c
 
 diff --git a/drivers/gpu/drm/bridge/Makefile b/drivers/gpu/drm/bridge/Makefile
 index f2ede53d363d..397a09871419 100644
@@ -338,36 +339,40 @@ index 6c9e8b57c4f0..0d685f7896d5 100644
 -
  #endif  /* __ANX7625_H__ */
 diff --git a/drivers/gpu/drm/bridge/anx7625_audio.c b/drivers/gpu/drm/bridge/anx7625_audio.c
-index 30fbf6ed7663..a64dd2526b92 100644
+deleted file mode 100644
+index 30fbf6ed7663..000000000000
 --- a/drivers/gpu/drm/bridge/anx7625_audio.c
-+++ b/drivers/gpu/drm/bridge/anx7625_audio.c
-@@ -5,10 +5,6 @@
-  * Copyright (c) 2016, Linaro Limited
-  */
- 
++++ /dev/null
+@@ -1,190 +0,0 @@
+-/*
+- * ANX7625 Audio transmitter driver
+- *
+- * Copyright 2012 Analog Devices Inc.
+- * Copyright (c) 2016, Linaro Limited
+- */
+-
 -#include <sound/core.h>
 -#include <sound/hdmi-codec.h>
 -#include <sound/pcm.h>
 -#include <sound/soc.h>
- #include <linux/of_graph.h>
- 
- #include "anx7625.h"
-@@ -19,172 +15,14 @@
- #ifdef DRM_DEV_DEBUG_DRIVER
- #undef DRM_DEV_DEBUG_DRIVER
- #endif
+-#include <linux/of_graph.h>
+-
+-#include "anx7625.h"
+-
+-#define DEBUG 1
+-
+-#ifdef DEBUG
+-#ifdef DRM_DEV_DEBUG_DRIVER
+-#undef DRM_DEV_DEBUG_DRIVER
+-#endif
 -#define DRM_DEV_DEBUG_DRIVER(dev, fmt, ...) dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
-+#define DRM_DEV_DEBUG_DRIVER(dev, fmt, ...) \
-+dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
- 
- #ifdef DRM_DEV_ERROR
- #undef DRM_DEV_ERROR
- #endif
+-
+-#ifdef DRM_DEV_ERROR
+-#undef DRM_DEV_ERROR
+-#endif
 -#define DRM_DEV_ERROR(dev, fmt, ...) dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
-+#define DRM_DEV_ERROR(dev, fmt, ...) \
-+dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
- #endif
- 
+-#endif
+-
 -int anx7625_hdmi_hw_params(struct device *dev, void *data,
 -			   struct hdmi_codec_daifmt *fmt,
 -			   struct hdmi_codec_params *hparms)
@@ -378,7 +383,7 @@ index 30fbf6ed7663..a64dd2526b92 100644
 -	unsigned int rate;
 -	unsigned int len;
 -	int ret;
- 
+-
 -	DRM_DEV_DEBUG_DRIVER(dev, "anx7625_hdmi_hw_params sample rate %d, width %d.\n",
 -			     hparms->sample_rate, hparms->sample_width);
 -
