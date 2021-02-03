@@ -15,5 +15,6 @@ SRC_URI_append_portenta-m8 = " \
   file://rtc-pcf8563-remove-workaround.patch \
   file://drm-anx7625-wait-for-LDO5.patch \
   file://mfd-bd718x7-wait-for-clock.patch \
+  file://an7625-hdmi-audio.patch \
   file://portenta_m8_defconfig \
 "
