@@ -458,7 +458,7 @@ index 30fbf6ed7663..000000000000
 -	/* Word length */
 -	ret |= anx7625_write_and_or(ctx, ctx->i2c.tx_p2_client,
 -				    AUDIO_CHANNEL_STATUS_5, 0xF0, len);
--
+-	
 -	/* Audio change flag */
 -	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
 -				AP_AV_STATUS, AP_AUDIO_CHG);
