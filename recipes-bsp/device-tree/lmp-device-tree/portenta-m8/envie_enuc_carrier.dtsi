@@ -147,6 +147,7 @@
 			fsl,pins = <
 				MX8MM_IOMUXC_SAI1_MCLK_PDM_CLK      0xd6
 				MX8MM_IOMUXC_SAI1_RXD2_PDM_DATA2    0xd6
+				MX8MM_IOMUXC_SAI1_RXD7_GPIO4_IO9    0x19
 			>;
 		};
 

@@ -1,0 +1,64 @@
+From b66e5e5c50a10c87aa7feba07ad6cdce9eee968c Mon Sep 17 00:00:00 2001
+From: Jorge Ramirez-Ortiz <jorge@foundries.io>
+Date: Tue, 9 Feb 2021 13:28:28 +0100
+Subject: [PATCH] gpu: drm: anx7625 (Portenta) - control USBC_PWR
+
+Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
+---
+ drivers/gpu/drm/bridge/anx7625.c | 18 +++++++++++++++---
+ drivers/gpu/drm/bridge/anx7625.h |  1 +
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/bridge/anx7625.c b/drivers/gpu/drm/bridge/anx7625.c
+index 4f59badb35ed..db3c7f62a531 100644
+--- a/drivers/gpu/drm/bridge/anx7625.c
++++ b/drivers/gpu/drm/bridge/anx7625.c
+@@ -1286,8 +1286,14 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
+ 
+ 	DRM_DEV_DEBUG_DRIVER(dev, "init gpio\n");
+ 
++	/* usb-c direction OUT, default to high*/
++	platform->pdata.gpio_usbc_pwr = devm_gpiod_get_optional(dev,
++								"usbc_pwr",
++								GPIOD_OUT_HIGH);
++
++	/* keep the ANX powered off: power/reset gpios are active high  */
+ 	platform->pdata.gpio_p_on = devm_gpiod_get_optional(dev, "enable",
+-							    GPIOD_OUT_LOW);
++							       GPIOD_OUT_LOW);
+ 
+ 	platform->pdata.gpio_reset = devm_gpiod_get_optional(dev, "reset",
+ 							     GPIOD_OUT_LOW);
+@@ -1302,9 +1308,15 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
+ 	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset) {
+ 		platform->pdata.low_power_mode = 1;
+ 		DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled, "
+-					  "pon %d, reset %d.\n",
++				     "usbc_pwr (%d) = %d, "
++				     "POWER_EN (%d) = %d, "
++				     "RESET_N (%d) =  %d\n",
++				     desc_to_gpio(platform->pdata.gpio_usbc_pwr),
++				     gpiod_get_value(platform->pdata.gpio_usbc_pwr),
+ 				     desc_to_gpio(platform->pdata.gpio_p_on),
+-				     desc_to_gpio(platform->pdata.gpio_reset));
++				     gpiod_get_value(platform->pdata.gpio_p_on),
++				     desc_to_gpio(platform->pdata.gpio_reset),
++				     gpiod_get_value(platform->pdata.gpio_reset));
+ 		atomic_set(&platform->power_status, 0);
+ 	} else {
+ 		platform->pdata.low_power_mode = 0;
+diff --git a/drivers/gpu/drm/bridge/anx7625.h b/drivers/gpu/drm/bridge/anx7625.h
+index 0d685f7896d5..c7a982791105 100644
+--- a/drivers/gpu/drm/bridge/anx7625.h
++++ b/drivers/gpu/drm/bridge/anx7625.h
+@@ -385,6 +385,7 @@ struct s_edid_data {
+ /***************** Display End *****************/
+ 
+ struct anx7625_platform_data {
++	struct gpio_desc *gpio_usbc_pwr;
+ 	struct gpio_desc *gpio_p_on;
+ 	struct gpio_desc *gpio_reset;
+ 	struct gpio_desc *gpio_cbl_det;
+-- 
+2.30.0
+
