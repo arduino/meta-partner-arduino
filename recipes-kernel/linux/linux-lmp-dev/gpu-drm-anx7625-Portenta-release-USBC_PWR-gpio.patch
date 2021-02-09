@@ -1,0 +1,27 @@
+From a4aa6aef7b906b95bd73267cfeee7ed7ed645af4 Mon Sep 17 00:00:00 2001
+From: Jorge Ramirez-Ortiz <jorge@foundries.io>
+Date: Tue, 9 Feb 2021 14:23:00 +0100
+Subject: [PATCH] gpu: drm: anx7625 (Portenta) - release USBC_PWR gpio
+
+Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
+---
+ drivers/gpu/drm/bridge/anx7625.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpu/drm/bridge/anx7625.c b/drivers/gpu/drm/bridge/anx7625.c
+index db3c7f62a531..10d23882f34b 100644
+--- a/drivers/gpu/drm/bridge/anx7625.c
++++ b/drivers/gpu/drm/bridge/anx7625.c
+@@ -1317,6 +1317,9 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
+ 				     gpiod_get_value(platform->pdata.gpio_p_on),
+ 				     desc_to_gpio(platform->pdata.gpio_reset),
+ 				     gpiod_get_value(platform->pdata.gpio_reset));
++
++		devm_gpiod_put(dev, platform->pdata.gpio_usbc_pwr);
++
+ 		atomic_set(&platform->power_status, 0);
+ 	} else {
+ 		platform->pdata.low_power_mode = 0;
+-- 
+2.30.0
+
