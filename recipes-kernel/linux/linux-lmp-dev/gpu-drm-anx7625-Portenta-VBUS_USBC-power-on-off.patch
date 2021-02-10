@@ -1,16 +1,16 @@
-From a1e974ca45414077aae9a90d110f268003e19fcd Mon Sep 17 00:00:00 2001
+From a205b40650d55255a952dec0f63e6c1006ab8719 Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Wed, 10 Feb 2021 10:22:06 +0100
 Subject: [PATCH] gpu: drm: anx7625 (Portenta) - VBUS_USBC power on/off
 
 Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
 ---
- drivers/gpu/drm/bridge/anx7625.c | 59 ++++++++++++++++++++++----------
+ drivers/gpu/drm/bridge/anx7625.c | 61 ++++++++++++++++++++++----------
  drivers/gpu/drm/bridge/anx7625.h |  1 -
- 2 files changed, 40 insertions(+), 20 deletions(-)
+ 2 files changed, 43 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/anx7625.c b/drivers/gpu/drm/bridge/anx7625.c
-index 10d23882f34b..3292dc3d1dac 100644
+index 10d23882f34b..4da85002a668 100644
 --- a/drivers/gpu/drm/bridge/anx7625.c
 +++ b/drivers/gpu/drm/bridge/anx7625.c
 @@ -52,6 +52,9 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
@@ -35,14 +35,14 @@ index 10d23882f34b..3292dc3d1dac 100644
  	}
  
 +	/* portenta: VBUS_USBC on */
-+	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_ASIS);
-+	if (pwr) {
-+		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC: %d -> 0\n",
++	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_LOW);
++	if (!IS_ERR(pwr)) {
++		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC: %d\n",
 +				     gpiod_get_value(pwr));
-+		gpiod_set_value(pwr, 0);
 +		devm_gpiod_put(dev, pwr);
 +	} else
-+		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed \n");
++		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed %ld\n",
++				     PTR_ERR(pwr));
 +
  	gpiod_set_value(ctx->pdata.gpio_p_on, 1);
 -	usleep_range(100, 110);
@@ -73,21 +73,21 @@ index 10d23882f34b..3292dc3d1dac 100644
  	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 -	usleep_range(100, 110);
 +	usleep_range(200, 210);
-+
-+	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_ASIS);
-+	if (pwr) {
-+		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC: %d -> 1\n",
-+				     gpiod_get_value(pwr));
-+		gpiod_set_value(pwr, 1);
-+		devm_gpiod_put(dev, pwr);
  
 -	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
++	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
++	if (!IS_ERR(pwr) ) {
++		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC: %d\n",
++				     gpiod_get_value(pwr));
++		devm_gpiod_put(dev, pwr);
++
 +	} else
-+		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC failed \n");
++		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC failed %ld\n",
++				     PTR_ERR(pwr));
  }
  
  static void anx7625_config(struct anx7625_data *ctx)
-@@ -1283,13 +1306,13 @@ static void anx7625_chip_control(struct anx7625_data *ctx, int state)
+@@ -1283,13 +1306,12 @@ static void anx7625_chip_control(struct anx7625_data *ctx, int state)
  static void anx7625_init_gpio(struct anx7625_data *platform)
  {
  	struct device *dev = &platform->client->dev;
@@ -102,16 +102,11 @@ index 10d23882f34b..3292dc3d1dac 100644
 -								GPIOD_OUT_HIGH);
 +	/* portenta: VBUS_USBC off (gpio = 1) */
 +	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
-+	devm_gpiod_put(dev, pwr);
  
  	/* keep the ANX powered off: power/reset gpios are active high  */
  	platform->pdata.gpio_p_on = devm_gpiod_get_optional(dev, "enable",
-@@ -1305,23 +1328,21 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
- 								 "intr_comm",
- 								 GPIOD_IN);
- 
--	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset) {
-+	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset && pwr) {
+@@ -1308,25 +1330,28 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
+ 	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset) {
  		platform->pdata.low_power_mode = 1;
  		DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled, "
 -				     "usbc_pwr (%d) = %d, "
@@ -122,7 +117,8 @@ index 10d23882f34b..3292dc3d1dac 100644
 +				     "VBUS_USBC(%d) = %d, "
 +				     "POWER_EN(%d) = %d, "
 +				     "RESET_N(%d) =  %d\n",
-+				     desc_to_gpio(pwr), gpiod_get_value(pwr),
++				     !IS_ERR(pwr) ? desc_to_gpio(pwr) : 0,
++				     !IS_ERR(pwr) ? gpiod_get_value(pwr) : 0,
  				     desc_to_gpio(platform->pdata.gpio_p_on),
  				     gpiod_get_value(platform->pdata.gpio_p_on),
  				     desc_to_gpio(platform->pdata.gpio_reset),
@@ -136,6 +132,15 @@ index 10d23882f34b..3292dc3d1dac 100644
  		platform->pdata.low_power_mode = 0;
  		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode.\n");
  		anx7625_disable_pd_protocol(platform);
+ 		atomic_set(&platform->power_status, 1);
+ 	}
++
++	if (!IS_ERR(pwr)) {
++		devm_gpiod_put(dev, pwr);
++	}
+ }
+ 
+ static void anx7625_stop_dp_work(struct anx7625_data *ctx)
 diff --git a/drivers/gpu/drm/bridge/anx7625.h b/drivers/gpu/drm/bridge/anx7625.h
 index c7a982791105..0d685f7896d5 100644
 --- a/drivers/gpu/drm/bridge/anx7625.h
