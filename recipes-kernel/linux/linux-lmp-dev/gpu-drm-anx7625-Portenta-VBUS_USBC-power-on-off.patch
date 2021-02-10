@@ -1,16 +1,16 @@
-From a205b40650d55255a952dec0f63e6c1006ab8719 Mon Sep 17 00:00:00 2001
+From 5080317b0f56fb0f5eaf22080b71251ff9588ba5 Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Wed, 10 Feb 2021 10:22:06 +0100
 Subject: [PATCH] gpu: drm: anx7625 (Portenta) - VBUS_USBC power on/off
 
 Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
 ---
- drivers/gpu/drm/bridge/anx7625.c | 61 ++++++++++++++++++++++----------
+ drivers/gpu/drm/bridge/anx7625.c | 92 +++++++++++++++++++-------------
  drivers/gpu/drm/bridge/anx7625.h |  1 -
- 2 files changed, 43 insertions(+), 19 deletions(-)
+ 2 files changed, 56 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/anx7625.c b/drivers/gpu/drm/bridge/anx7625.c
-index 10d23882f34b..4da85002a668 100644
+index 10d23882f34b..6a9e2bd5add1 100644
 --- a/drivers/gpu/drm/bridge/anx7625.c
 +++ b/drivers/gpu/drm/bridge/anx7625.c
 @@ -52,6 +52,9 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
@@ -73,14 +73,14 @@ index 10d23882f34b..4da85002a668 100644
  	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 -	usleep_range(100, 110);
 +	usleep_range(200, 210);
- 
--	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
++
 +	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
 +	if (!IS_ERR(pwr) ) {
 +		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC: %d\n",
 +				     gpiod_get_value(pwr));
 +		devm_gpiod_put(dev, pwr);
-+
+ 
+-	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
 +	} else
 +		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC failed %ld\n",
 +				     PTR_ERR(pwr));
@@ -141,6 +141,62 @@ index 10d23882f34b..4da85002a668 100644
  }
  
  static void anx7625_stop_dp_work(struct anx7625_data *ctx)
+@@ -1961,34 +1986,29 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static irqreturn_t anx7625_comm_irq(int irq, void *data)
++static irqreturn_t anx7625_comm_isr(int irq, void *data)
+ {
+ 	struct anx7625_data *ctx = (struct anx7625_data *)data;
++	int sys_status, itype, ivector, cc_status;
++
++#define STS_HPD_CHANGE \
++	(((sys_status & HPD_STATUS) != \
++	 (sys_sta_bak & HPD_STATUS)) ? HPD_STATUS_CHANGE : 0)
+ 
++	mutex_lock(&ctx->lock);
+ 	if (atomic_read(&ctx->power_status) < 1) {
+ 		printk("anx: comm irq NONE - no power, must be spurious\n");
+-			return IRQ_NONE;
++		mutex_unlock(&ctx->lock);
++		return IRQ_NONE;
+ 	}
+ 
+ 	if (!atomic_read(&ctx->cable_connected)) {
+-		printk("anx: comm irq NONE - cable not connected, must be spurious\n");
++		printk("anx: comm irq NONE - cable not connected, "
++		       "must be spurious\n");
++		mutex_unlock(&ctx->lock);
+ 		return IRQ_NONE;
+ 	}
+-	printk("anx: comm irq\n");
+-
+-	return IRQ_WAKE_THREAD;
+-}
+-
+-static irqreturn_t anx7625_comm_isr(int irq, void *data)
+-{
+-	struct anx7625_data *ctx = (struct anx7625_data *)data;
+-	int sys_status, itype, ivector, cc_status;
+-
+-#define STS_HPD_CHANGE \
+-	(((sys_status & HPD_STATUS) != \
+-	 (sys_sta_bak & HPD_STATUS)) ? HPD_STATUS_CHANGE : 0)
+ 
+-	mutex_lock(&ctx->lock);
+ 	printk("anx: comm isr starts -------------------------------\n");
+ 	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
+ 				 TCPC_INTR_ALERT_1);
+@@ -2173,7 +2193,7 @@ static int anx7625_i2c_probe(struct i2c_client *client,
+ 		goto free_platform;
+ 
+ 	ret = devm_request_threaded_irq(dev, client->irq,
+-					anx7625_comm_irq,
++					NULL,
+ 					anx7625_comm_isr,
+ 					IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+ 					"anx7625-intr-comm", platform);
 diff --git a/drivers/gpu/drm/bridge/anx7625.h b/drivers/gpu/drm/bridge/anx7625.h
 index c7a982791105..0d685f7896d5 100644
 --- a/drivers/gpu/drm/bridge/anx7625.h
