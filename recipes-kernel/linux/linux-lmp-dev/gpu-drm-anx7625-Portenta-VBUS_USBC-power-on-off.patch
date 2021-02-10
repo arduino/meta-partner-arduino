@@ -1,24 +1,33 @@
-From bf3a37952620dc1c4da7ef30ecca12605e8cbda0 Mon Sep 17 00:00:00 2001
+From 83014fc2b834164f07996a8707777453976e88a1 Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Wed, 10 Feb 2021 10:22:06 +0100
 Subject: [PATCH] gpu: drm: anx7625 (Portenta) - VBUS_USBC power on/off
 
 Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
 ---
- drivers/gpu/drm/bridge/anx7625.c | 37 ++++++++++++++++++++------------
- 1 file changed, 23 insertions(+), 14 deletions(-)
+ drivers/gpu/drm/bridge/anx7625.c | 53 +++++++++++++++++++++++---------
+ 1 file changed, 39 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/anx7625.c b/drivers/gpu/drm/bridge/anx7625.c
-index 10d23882f34b..96506befa237 100644
+index 10d23882f34b..255d229f9e1d 100644
 --- a/drivers/gpu/drm/bridge/anx7625.c
 +++ b/drivers/gpu/drm/bridge/anx7625.c
-@@ -1108,13 +1108,17 @@ static void anx7625_power_on(struct anx7625_data *ctx)
+@@ -1108,13 +1108,26 @@ static void anx7625_power_on(struct anx7625_data *ctx)
  		return;
  	}
  
 +	/* portenta: VBUS_USBC on */
-+	gpiod_set_value(ctx->pdata.gpio_usbc_pwr, 0);
-+	usleep_range(500, 510);
++	ctx->pdata.gpio_usbc_pwr =
++		devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_ASIS);
++
++	if (ctx->pdata.gpio_usbc_pwr) {
++		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC=0\n");
++		gpiod_set_value(ctx->pdata.gpio_usbc_pwr, 0);
++
++		usleep_range(500, 510);
++		devm_gpiod_release(dev, ctx->pdata.gpio_usbc_pwr);
++	} else
++		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed \n");
 +
  	gpiod_set_value(ctx->pdata.gpio_p_on, 1);
 -	usleep_range(100, 110);
@@ -27,13 +36,13 @@ index 10d23882f34b..96506befa237 100644
  	gpiod_set_value(ctx->pdata.gpio_reset, 1);
 -	usleep_range(100, 110);
 +	usleep_range(200, 210);
++
  
 -	DRM_DEV_DEBUG_DRIVER(dev, "power on\n");
-+	DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC=0\n");
  }
  
  static void anx7625_power_standby(struct anx7625_data *ctx)
-@@ -1127,12 +1131,16 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
+@@ -1127,12 +1140,22 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
  	}
  
  	gpiod_set_value(ctx->pdata.gpio_reset, 0);
@@ -43,17 +52,23 @@ index 10d23882f34b..96506befa237 100644
  	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 -	usleep_range(100, 110);
 +	usleep_range(200, 210);
-+
-+	/* portenta: VBUS_USBC off */
-+	gpiod_set_value(ctx->pdata.gpio_usbc_pwr, 1);
-+	usleep_range(500, 510);
  
 -	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
-+	DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC=1\n");
++	ctx->pdata.gpio_usbc_pwr =
++		devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_ASIS);
++
++	if (ctx->pdata.gpio_usbc_pwr) {
++		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC=1\n");
++
++		gpiod_set_value(ctx->pdata.gpio_usbc_pwr, 1);
++		usleep_range(500, 510);
++		devm_gpiod_release(dev, ctx->pdata.gpio_usbc_pwr);
++	} else
++		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed \n");
  }
  
  static void anx7625_config(struct anx7625_data *ctx)
-@@ -1284,9 +1292,9 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
+@@ -1284,12 +1307,13 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
  {
  	struct device *dev = &platform->client->dev;
  
@@ -65,7 +80,11 @@ index 10d23882f34b..96506befa237 100644
  	platform->pdata.gpio_usbc_pwr = devm_gpiod_get_optional(dev,
  								"usbc_pwr",
  								GPIOD_OUT_HIGH);
-@@ -1305,12 +1313,14 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
++	devm_gpiod_put(dev, platform->pdata.gpio_usbc_pwr);
+ 
+ 	/* keep the ANX powered off: power/reset gpios are active high  */
+ 	platform->pdata.gpio_p_on = devm_gpiod_get_optional(dev, "enable",
+@@ -1305,12 +1329,14 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
  								 "intr_comm",
  								 GPIOD_IN);
  
@@ -84,7 +103,7 @@ index 10d23882f34b..96506befa237 100644
  				     desc_to_gpio(platform->pdata.gpio_usbc_pwr),
  				     gpiod_get_value(platform->pdata.gpio_usbc_pwr),
  				     desc_to_gpio(platform->pdata.gpio_p_on),
-@@ -1318,10 +1328,9 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
+@@ -1318,10 +1344,9 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
  				     desc_to_gpio(platform->pdata.gpio_reset),
  				     gpiod_get_value(platform->pdata.gpio_reset));
  
