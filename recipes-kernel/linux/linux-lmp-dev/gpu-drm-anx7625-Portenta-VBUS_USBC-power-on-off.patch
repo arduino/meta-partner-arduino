@@ -1,4 +1,4 @@
-From 83014fc2b834164f07996a8707777453976e88a1 Mon Sep 17 00:00:00 2001
+From 2bb3cf379ecc0945358b31bda9cdf969189c5b0a Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Wed, 10 Feb 2021 10:22:06 +0100
 Subject: [PATCH] gpu: drm: anx7625 (Portenta) - VBUS_USBC power on/off
@@ -9,7 +9,7 @@ Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
  1 file changed, 39 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/gpu/drm/bridge/anx7625.c b/drivers/gpu/drm/bridge/anx7625.c
-index 10d23882f34b..255d229f9e1d 100644
+index 10d23882f34b..88014be6b0e8 100644
 --- a/drivers/gpu/drm/bridge/anx7625.c
 +++ b/drivers/gpu/drm/bridge/anx7625.c
 @@ -1108,13 +1108,26 @@ static void anx7625_power_on(struct anx7625_data *ctx)
@@ -25,7 +25,7 @@ index 10d23882f34b..255d229f9e1d 100644
 +		gpiod_set_value(ctx->pdata.gpio_usbc_pwr, 0);
 +
 +		usleep_range(500, 510);
-+		devm_gpiod_release(dev, ctx->pdata.gpio_usbc_pwr);
++		devm_gpiod_put(dev, ctx->pdata.gpio_usbc_pwr);
 +	} else
 +		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed \n");
 +
@@ -62,7 +62,7 @@ index 10d23882f34b..255d229f9e1d 100644
 +
 +		gpiod_set_value(ctx->pdata.gpio_usbc_pwr, 1);
 +		usleep_range(500, 510);
-+		devm_gpiod_release(dev, ctx->pdata.gpio_usbc_pwr);
++		devm_gpiod_put(dev, ctx->pdata.gpio_usbc_pwr);
 +	} else
 +		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed \n");
  }
