@@ -11,6 +11,20 @@
 
 #include "envie_enuc_carrier.dtsi"
 
+/**
+ * UART1 configuration
+ *   BT       232 with RTS CTS and modem reset
+ *   RS232    232 with only tx and rx
+ *   RS485_H  485 full duplex
+ *   RS485_F  485 half duplex CTS controls tx enable
+
+ */
+#define UART1_BT
+//#define UART1_RS232
+//#define UART1_RS485_H
+//#define UART1_RS485_F
+
+
 / {
 	model = "Arduino i.MX8MM Portenta board";
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
@@ -305,15 +319,109 @@
 	status = "okay";
 };
 
-&uart1 { /* BT */
+&uart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart1>;
 	assigned-clocks = <&clk IMX8MM_CLK_UART1>;
 	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
-	fsl,uart-has-rtscts;
-	resets = <&modem_reset>;
-	status = "okay";
 };
+
+#if defined(UART1_BT)
+	&uart1 {
+		fsl,uart-has-rtscts;
+		resets = <&modem_reset>;
+		status = "okay";
+	};
+#elif defined(UART1_RS232)
+	&uart1 {
+		status = "okay";
+	};
+	&gpio1 {
+		HF {
+			gpio-hog;
+			gpios = <1 0>;
+			output-high;
+			line-name = "HF-gpio";
+		};
+		SERIAL_TYPE {
+			gpio-hog;
+			gpios = <13 0>;
+			output-low;
+			line-name = "SERIAL_TYPE-gpio";
+		};
+		SERIAL_EN {
+			gpio-hog;
+			gpios = <14 0>;
+			output-high;
+			line-name = "SERIAL_EN-gpio";
+		};
+	};
+#elif defined(UART1_RS485_H)
+	&uart1 {
+		linux,rs485-enabled-at-boot-time;
+		rs485-rts-delay = <0 200>;  // In milliseconds
+		fsl,uart-has-rtscts;
+		status = "okay";
+	};
+	&gpio1 {
+		HF {
+			gpio-hog;
+			gpios = <1 0>;
+			output-high;
+			line-name = "HF-gpio";
+		};
+		SERIAL_TYPE {
+			gpio-hog;
+			gpios = <13 0>;
+			output-high;
+			line-name = "SERIAL_TYPE-gpio";
+		};
+		SERIAL_EN {
+			gpio-hog;
+			gpios = <14 0>;
+			output-high;
+			line-name = "SERIAL_EN-gpio";
+		};
+	};
+#elif defined(UART1_RS485_F)
+	&uart1 {
+		status = "okay";
+	};
+	&gpio5 {
+		de {
+			gpio-hog;
+			gpios = <26 0>;
+			output-high;
+			line-name = "DE-gpio";
+		};
+		ren {
+			gpio-hog;
+			gpios = <27 0>;
+			output-low;
+			line-name = "REn-gpio";
+		};
+	};
+	&gpio1 {
+		HF {
+			gpio-hog;
+			gpios = <1 0>;
+			output-low;
+			line-name = "HF-gpio";
+		};
+		SERIAL_TYPE {
+			gpio-hog;
+			gpios = <13 0>;
+			output-high;
+			line-name = "SERIAL_TYPE-gpio";
+		};
+		SERIAL_EN {
+			gpio-hog;
+			gpios = <14 0>;
+			output-high;
+			line-name = "SERIAL_EN-gpio";
+		};
+	};
+#endif
 
 &uart3 { /* console */
 	pinctrl-names = "default";
@@ -451,7 +559,7 @@
 				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x41
 			>;
 		};
-
+#if defined(UART1_BT)
 		pinctrl_uart1: uart1grp {
 			fsl,pins = <
 				MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
@@ -461,7 +569,32 @@
 				MX8MM_IOMUXC_SD1_DATA4_GPIO2_IO6	0x19      // BT_REG_ON
 			>;
 		};
-
+#elif defined(UART1_RS232)
+		pinctrl_uart1: uart1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
+				MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
+				//MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140
+				//MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140
+			>;
+		};
+#elif defined(UART1_RS485_H)
+		pinctrl_uart1: uart1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
+				MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
+				MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140
+				MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140
+			>;
+		};
+#elif defined(UART1_RS485_F)
+		pinctrl_uart1: uart1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
+				MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
+			>;
+		};
+#endif
 		pinctrl_uart3: uart3grp {
 			fsl,pins = <
 				MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX		0x140
