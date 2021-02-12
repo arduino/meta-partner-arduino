@@ -19,5 +19,6 @@ SRC_URI_append_portenta-m8 = " \
   file://gpu-drm-anx7625-Portenta-control-USBC_PWR.patch \
   file://gpu-drm-anx7625-Portenta-release-USBC_PWR-gpio.patch \
   file://gpu-drm-anx7625-Portenta-VBUS_USBC-power-on-off.patch \
+  file://gpu-drm-anx7625-Portenta-VBUS_USBC-power-on-off-disa.patch \
   file://portenta_m8_defconfig \
 "
