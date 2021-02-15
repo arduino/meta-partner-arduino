@@ -21,16 +21,14 @@
 	sound-cs42l52 {
 		compatible = "simple-audio-card";
 		simple-audio-card,name = "cs42l52-audio";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,frame-master = <&cpudai>;
-		simple-audio-card,bitclock-master = <&cpudai>;
-
+		simple-audio-card,format = "left_j";
+		simple-audio-card,bitclock-master = <&dailink0_master>;
+		simple-audio-card,frame-master = <&dailink0_master>;
 		simple-audio-card,widgets =
 			"Microphone", "Microphone Jack",
+			"Line", "Line In Jack",
 			"Headphone", "Headphone Jack",
-			"Speaker", "Speaker Ext",
-			"Line", "Line In Jack";
-
+			"Speaker", "External Speaker";
 		simple-audio-card,routing =
 			"AIN1L", "Line In Jack" ,
 			"AIN1R", "Line In Jack",
@@ -44,14 +42,10 @@
 			"MICB", "Microphone Jack",
 			"Headphone Jack", "HPOUTA",
 			"Headphone Jack", "HPOUTB",
-			"Speaker Ext", "SPKOUTA",
-			"Speaker Ext", "SPKOUTB",
-			"ADC Left Swap", "PCM Left Swap",
-			"ADC Right Swap", "PCM Right Swap",
-			"PCM Left Swap", "AIFINL",
-			"PCM Right Swap", "AIFINR";
+			"External Speaker", "SPKOUTA",
+			"External Speaker", "SPKOUTB";
 
-		cpudai: simple-audio-card,cpu {
+		dailink0_master: simple-audio-card,cpu {
 			sound-dai = <&sai3>;
 			dai-tdm-slot-num = <2>;
 			dai-tdm-slot-width = <32>;
@@ -60,9 +54,6 @@
 		simple-audio-card,codec {
 			sound-dai = <&cs42l52>;
 			clocks = <&clk IMX8MM_CLK_SAI3_ROOT>;
-			frame-master;
-			bitclock-master;
-			system-clock-frequency = <25000000>;
 		};
 	};
 
@@ -306,6 +297,16 @@
 	status = "okay";
 };
 
+// Connect on CSI connector
+&micfil {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_pdm>;
+	assigned-clocks = <&clk IMX8MM_CLK_PDM>;
+	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
+	assigned-clock-rates = <196608000>;
+	status = "okay";
+};
+
 &uart2 { /* SARA */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart2>;
@@ -325,15 +326,5 @@
 	dr_mode = "host";
 	picophy,pre-emp-curr-control = <3>;
 	picophy,dc-vol-level-adjust = <7>;
-	status = "okay";
-};
-
-// connect on CSI connector
-&micfil {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_pdm>;
-	assigned-clocks = <&clk IMX8MM_CLK_PDM>;
-	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-	assigned-clock-rates = <196608000>;
 	status = "okay";
 };
