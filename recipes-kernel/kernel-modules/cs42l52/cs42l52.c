@@ -525,24 +525,8 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 	SND_SOC_DAPM_PGA("PGA MICB", CS42L52_PWRCTL2, 2, 1, NULL, 0),
 
 	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 1, NULL, 0),
-#if 1
 	SND_SOC_DAPM_SUPPLY("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
-#else // TODO remove
-/*
-#define SND_SOC_DAPM_SUPPLY(wname, wreg, wshift, winvert, wevent, wflags) \
-{	.id = snd_soc_dapm_supply, .name = wname, \
-	SND_SOC_DAPM_INIT_REG_VAL(wreg, wshift, winvert), \
-	.event = wevent, .event_flags = wflags}
-*/
-	{
-		.id = snd_soc_dapm_supply,
-		.name = "Charge Pump",
-		SND_SOC_DAPM_INIT_REG_VAL(CS42L52_PWRCTL1, 7, 1),
-		.is_supply = 1,
-		.event_flags = 0,
-		.event = NULL,
-	},
-#endif
+
 	SND_SOC_DAPM_AIF_IN("AIFINL", NULL,  0,
 			SND_SOC_NOPM, 0, 0),
 	SND_SOC_DAPM_AIF_IN("AIFINR", NULL,  0,
@@ -574,6 +558,7 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 
 };
 
+/* The parameters are {sink, control, source} */
 static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 
 	{"Capture", NULL, "AIFOUTL"},
