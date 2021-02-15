@@ -344,12 +344,12 @@ static const struct snd_kcontrol_new cs42l52_snd_controls[] = {
 			      CS42L52_MASTERB_VOL, 0, 0x34, 0xE4, hl_tlv),
 
 	SOC_DOUBLE_R_SX_TLV("Headphone Volume", CS42L52_HPA_VOL,
-			      CS42L52_HPB_VOL, 0, 0x34, 0xC0, hpd_tlv),
+			      CS42L52_HPB_VOL, 0, 0x40, 0xC0, hpd_tlv),
 
 	SOC_ENUM("Headphone Analog Gain", hp_gain_enum),
 
 	SOC_DOUBLE_R_SX_TLV("Speaker Volume", CS42L52_SPKA_VOL,
-			      CS42L52_SPKB_VOL, 0, 0x40, 0xC0, hl_tlv),
+			      CS42L52_SPKB_VOL, 0, 0x40, 0xC0, hpd_tlv),
 
 	SOC_DOUBLE_R_SX_TLV("Bypass Volume", CS42L52_PASSTHRUA_VOL,
 			      CS42L52_PASSTHRUB_VOL, 0, 0x88, 0x90, pga_tlv),
