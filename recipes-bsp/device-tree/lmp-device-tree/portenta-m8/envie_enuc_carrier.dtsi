@@ -25,7 +25,8 @@
 		simple-audio-card,bitclock-master = <&dailink0_master>;
 		simple-audio-card,frame-master = <&dailink0_master>;
 		simple-audio-card,widgets =
-			"Microphone", "Microphone Jack",
+			"Microphone", "Microphone A",
+			"Microphone", "Microphone B",
 			"Line", "Line In Jack",
 			"Headphone", "Headphone Jack",
 			"Speaker", "External Speaker";
@@ -38,8 +39,10 @@
 			"AIN3R", "Line In Jack",
 			"AIN4L", "Line In Jack" ,
 			"AIN4R", "Line In Jack",
-			"MICA", "Microphone Jack",
-			"MICB", "Microphone Jack",
+			"MICA", "Microphone A",
+			"MICB", "Microphone B",
+			"Microphone A", "Mic Bias",
+			"Microphone B", "Mic Bias",
 			"Headphone Jack", "HPOUTA",
 			"Headphone Jack", "HPOUTB",
 			"External Speaker", "SPKOUTA",
