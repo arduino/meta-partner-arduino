@@ -525,7 +525,8 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 	SND_SOC_DAPM_PGA("PGA MICB", CS42L52_PWRCTL2, 2, 1, NULL, 0),
 
 	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 1, NULL, 0),
-	SND_SOC_DAPM_SUPPLY("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
+
+	SND_SOC_DAPM_PGA("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
 
 	SND_SOC_DAPM_AIF_IN("AIFINL", NULL,  0,
 			SND_SOC_NOPM, 0, 0),
@@ -569,16 +570,10 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 
 	{"Output Mux", "ADC", "ADC Left"},
 	{"Output Mux", "ADC", "ADC Right"},
-#if 0
-	{"ADC Left", NULL, "Charge Pump"},
-	{"ADC Right", NULL, "Charge Pump"},
 
-	{"Charge Pump", NULL, "ADC Left Mux"},
-	{"Charge Pump", NULL, "ADC Right Mux"},
-#else
 	{"ADC Left", NULL, "ADC Left Mux"},
 	{"ADC Right", NULL, "ADC Right Mux"},
-#endif
+
 	{"ADC Left Mux", "Input1A", "AIN1L"},
 	{"ADC Right Mux", "Input1B", "AIN1R"},
 	{"ADC Left Mux", "Input2A", "AIN2L"},
@@ -628,6 +623,11 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 	{"Bypass Right", "Switch", "PGA Right"},
 	{"HP Left Amp", "Switch", "DAC Left"},
 	{"HP Right Amp", "Switch", "DAC Right"},
+
+	{"Charge Pump", NULL, "HPOUTA"},
+	{"Charge Pump", NULL, "HPOUTB"},
+	{"HP Left Amp", NULL, "Charge Pump"},
+	{"HP Right Amp", NULL, "Charge Pump"},
 
 	{"SPKOUTA", NULL, "SPK Left Amp"},
 	{"SPKOUTB", NULL, "SPK Right Amp"},
