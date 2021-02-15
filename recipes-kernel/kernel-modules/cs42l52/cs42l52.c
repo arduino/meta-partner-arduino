@@ -7,6 +7,7 @@
  * Author: Georgi Vlaev <joe@nucleusys.com>
  * Author: Brian Austin <brian.austin@cirrus.com>
  */
+#define DEBUG
 
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -524,8 +525,24 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 	SND_SOC_DAPM_PGA("PGA MICB", CS42L52_PWRCTL2, 2, 1, NULL, 0),
 
 	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 1, NULL, 0),
+#if 1
 	SND_SOC_DAPM_SUPPLY("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
-
+#else // TODO remove
+/*
+#define SND_SOC_DAPM_SUPPLY(wname, wreg, wshift, winvert, wevent, wflags) \
+{	.id = snd_soc_dapm_supply, .name = wname, \
+	SND_SOC_DAPM_INIT_REG_VAL(wreg, wshift, winvert), \
+	.event = wevent, .event_flags = wflags}
+*/
+	{
+		.id = snd_soc_dapm_supply,
+		.name = "Charge Pump",
+		SND_SOC_DAPM_INIT_REG_VAL(CS42L52_PWRCTL1, 7, 1),
+		.is_supply = 1,
+		.event_flags = 0,
+		.event = NULL,
+	},
+#endif
 	SND_SOC_DAPM_AIF_IN("AIFINL", NULL,  0,
 			SND_SOC_NOPM, 0, 0),
 	SND_SOC_DAPM_AIF_IN("AIFINR", NULL,  0,
@@ -567,13 +584,16 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 
 	{"Output Mux", "ADC", "ADC Left"},
 	{"Output Mux", "ADC", "ADC Right"},
-
+#if 0
 	{"ADC Left", NULL, "Charge Pump"},
 	{"ADC Right", NULL, "Charge Pump"},
 
 	{"Charge Pump", NULL, "ADC Left Mux"},
 	{"Charge Pump", NULL, "ADC Right Mux"},
-
+#else
+	{"ADC Left", NULL, "ADC Left Mux"},
+	{"ADC Right", NULL, "ADC Right Mux"},
+#endif
 	{"ADC Left Mux", "Input1A", "AIN1L"},
 	{"ADC Right Mux", "Input1B", "AIN1R"},
 	{"ADC Left Mux", "Input2A", "AIN2L"},
@@ -584,7 +604,7 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 	{"ADC Right Mux", "Input4B", "AIN4R"},
 	{"ADC Left Mux", "PGA Input Left", "PGA Left"},
 	{"ADC Right Mux", "PGA Input Right" , "PGA Right"},
-
+#if 0
 	{"PGA Left", "Switch", "AIN1L"},
 	{"PGA Right", "Switch", "AIN1R"},
 	{"PGA Left", "Switch", "AIN2L"},
@@ -599,7 +619,22 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 
 	{"PGA Right", "Switch", "PGA MICB"},
 	{"PGA MICB", NULL, "MICB"},
+#else
+	{"PGA Left", NULL, "AIN1L"},
+	{"PGA Right", NULL, "AIN1R"},
+	{"PGA Left", NULL, "AIN2L"},
+	{"PGA Right", NULL, "AIN2R"},
+	{"PGA Left", NULL, "AIN3L"},
+	{"PGA Right", NULL, "AIN3R"},
+	{"PGA Left", NULL, "AIN4L"},
+	{"PGA Right", NULL, "AIN4R"},
 
+	{"PGA Left", NULL, "PGA MICA"},
+	{"PGA MICA", NULL, "MICA"},
+
+	{"PGA Right", NULL, "PGA MICB"},
+	{"PGA MICB", NULL, "MICB"},
+#endif
 	{"HPOUTA", NULL, "HP Left Amp"},
 	{"HPOUTB", NULL, "HP Right Amp"},
 	{"HP Left Amp", NULL, "Bypass Left"},
