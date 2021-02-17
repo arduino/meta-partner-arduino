@@ -8,6 +8,7 @@
 #include "imx8mm.dtsi"
 
 #include "anx7625.dtsi"
+
 #include "envie_enuc_carrier.dtsi"
 
 /**
@@ -18,9 +19,9 @@
  *   RS485_F  485 half duplex CTS controls tx enable
 
  */
-#define UART1_BT
+//#define UART1_BT
 //#define UART1_RS232
-//#define UART1_RS485_H
+#define UART1_RS485_H
 //#define UART1_RS485_F
 
 
@@ -317,10 +318,18 @@
 	};
 #elif defined(UART1_RS485_H)
 	&uart1 {
+		uart-has-rtscts;
 		linux,rs485-enabled-at-boot-time;
 		rs485-rts-delay = <0 200>;  // In milliseconds
-		fsl,uart-has-rtscts;
 		status = "okay";
+	};
+	&gpio5 {
+		ren {
+			gpio-hog;
+			gpios = <27 0>;
+			output-low;
+			line-name = "REn-gpio";
+		};
 	};
 	&gpio1 {
 		HF {
