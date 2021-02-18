@@ -19,9 +19,9 @@
  *   RS485_F  485 half duplex CTS controls tx enable
 
  */
-//#define UART1_BT
+#define UART1_BT
 //#define UART1_RS232
-#define UART1_RS485_H
+//#define UART1_RS485_H
 //#define UART1_RS485_F
 
 
@@ -318,18 +318,12 @@
 	};
 #elif defined(UART1_RS485_H)
 	&uart1 {
-		uart-has-rtscts;
 		linux,rs485-enabled-at-boot-time;
+		//rs485-rx-during-tx;
 		rs485-rts-delay = <0 200>;  // In milliseconds
 		status = "okay";
-	};
-	&gpio5 {
-		ren {
-			gpio-hog;
-			gpios = <27 0>;
-			output-low;
-			line-name = "REn-gpio";
-		};
+		cts-gpios = <&gpio5 27 GPIO_ACTIVE_LOW>; // RTS -> REn in our schematic
+		rts-gpios = <&gpio5 26 GPIO_ACTIVE_HIGH>; // CTS -> DE in our schematic
 	};
 	&gpio1 {
 		HF {
@@ -356,13 +350,13 @@
 		status = "okay";
 	};
 	&gpio5 {
-		de {
+		de { /* CTS */
 			gpio-hog;
 			gpios = <26 0>;
 			output-high;
 			line-name = "DE-gpio";
 		};
-		ren {
+		ren { /* RTS */
 			gpio-hog;
 			gpios = <27 0>;
 			output-low;
@@ -551,8 +545,8 @@
 			fsl,pins = <
 				MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
 				MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
-				MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140
-				MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140
+				//MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140
+				//MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140
 			>;
 		};
 #elif defined(UART1_RS485_F)
