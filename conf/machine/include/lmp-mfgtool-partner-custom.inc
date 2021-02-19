@@ -1,0 +1,5 @@
+PREFERRED_PROVIDER_virtual/kernel_portenta-m8 = "linux-lmp-dev-mfgtool"
+KERNEL_REPO_portenta-m8 ?= "git://source.codeaurora.org/external/imx/linux-imx.git"
+LINUX_VERSION_portenta-m8 ?= "5.4.y"
+KERNEL_BRANCH_portenta-m8 ?= "imx_5.4.24_2.1.0"
+IMAGE_BOOT_FILES_portenta-m8 = "imx-boot u-boot.itb boot.itb"
