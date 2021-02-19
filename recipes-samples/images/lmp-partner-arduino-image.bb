@@ -41,3 +41,10 @@ CORE_IMAGE_BASE_INSTALL += " \
     modemmanager \
     i2c-tools \
 "
+
+# Portenta-M8 has a Murata 1DX wifi/bt module which uses custom recipes
+# linux-firmware-cyw-fmac-fw_git and linux-firmware-cyw-fmac-nvram.
+# Make sure we avoid default linux bcm43430 firmware
+CORE_IMAGE_BASE_INSTALL_remove_portenta-m8 = " \
+    linux-firmware-bcm43430 \
+"
