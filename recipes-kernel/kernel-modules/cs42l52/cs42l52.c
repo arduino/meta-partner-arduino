@@ -54,7 +54,7 @@ struct  cs42l52_private {
 
 static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_PWRCTL1, 0x9F },	/* r02 PWRCTL 1 */
-	{ CS42L52_PWRCTL2, 0x07 },	/* r03 PWRCTL 2 */
+	{ CS42L52_PWRCTL2, 0x06 },	/* r03 PWRCTL 2 */ /* M.P. Bit0 is PDN_BIAS. Bit0=0 means is powered up */
 	{ CS42L52_PWRCTL3, 0xFF },	/* r04 PWRCTL 3 */
 	{ CS42L52_CLK_CTL, 0xA0 },	/* r05 Clocking Ctl */
 	{ CS42L52_IFACE_CTL1, 0x00 },	/* r06 Interface Ctl 1 */
@@ -524,7 +524,7 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 	SND_SOC_DAPM_PGA("PGA MICA", CS42L52_PWRCTL2, 1, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("PGA MICB", CS42L52_PWRCTL2, 2, 1, NULL, 0),
 
-	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 1, NULL, 0),
+	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 0, NULL, 0), /* M.P. SND_SOC_DAPM_SUPPLY(wname, wreg, wshift, winvert, wevent, wflags) where winvert is used to set default reg value */
 
 	SND_SOC_DAPM_PGA("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
 
