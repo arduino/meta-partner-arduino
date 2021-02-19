@@ -730,9 +730,9 @@
 &ecspi2 {
 	#address-cells = <1>;
 	#size-cells = <0>;
-	fsl,spi-num-chipselects = <2>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs_adc &pinctrl_ecspi2_cs>;
+	num-cs = <2>;
 	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>, <&gpio5 13 GPIO_ACTIVE_LOW>;
 	status = "okay";
 
@@ -740,7 +740,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		compatible = "ti,ads7959";
-		spi-max-frequency = <20000000>;
+		spi-max-frequency = <5000000>;
 		reg = <0>;
 	};
 /* TODO
@@ -748,7 +748,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		compatible = "spidev";
-		spi-max-frequency = <20000000>;
+		spi-max-frequency = <5000000>;
 		reg = <1>;
 	};
 */
