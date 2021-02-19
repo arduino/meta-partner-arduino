@@ -180,10 +180,10 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
 +		dev_err(dev, "failed to convert gpio to interrupt %d %d\n", data->gpio, data->irq);
 +		return data->irq;
 +	}
++
++	data->debounce_jiffies = msecs_to_jiffies(data->debounce);
  
 -	/* Allocate the memory of extcon devie and register extcon device */
-+	data->debounce_jiffies = msecs_to_jiffies(data->debounce);
-+
 +	/* Allocate the memory of extcon device and register extcon device */
  	data->edev = devm_extcon_dev_allocate(dev, &data->extcon_id);
  	if (IS_ERR(data->edev)) {

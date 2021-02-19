@@ -2,7 +2,7 @@ Index: kernel-source/drivers/pci/controller/dwc/pci-imx6.c
 ===================================================================
 --- kernel-source.orig/drivers/pci/controller/dwc/pci-imx6.c
 +++ kernel-source/drivers/pci/controller/dwc/pci-imx6.c
-@@ -944,6 +944,7 @@ static void imx6_pcie_deassert_core_rese
+@@ -1170,6 +1170,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
  	}
  
  	/* Some boards don't have PCIe reset GPIO. */
@@ -10,20 +10,18 @@ Index: kernel-source/drivers/pci/controller/dwc/pci-imx6.c
  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
  		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
  					imx6_pcie->gpio_active_high);
-@@ -951,7 +952,7 @@ static void imx6_pcie_deassert_core_rese
+@@ -1177,6 +1178,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
  		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
  					!imx6_pcie->gpio_active_high);
  	}
--
 +#endif
+ 
  	switch (imx6_pcie->drvdata->variant) {
- 	case IMX8QXP:
  	case IMX8QM:
-@@ -1047,7 +1048,15 @@ static void imx6_pcie_deassert_core_rese
- 	case IMX6Q:		/* Nothing to do */
+@@ -1329,6 +1331,15 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
  		break;
  	}
--
+ 
 +#if 1
 +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
 +		gpio_set_value_cansleep(imx6_pcie->reset_gpio,

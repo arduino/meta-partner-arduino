@@ -131,7 +131,7 @@ diff --git a/drivers/gpu/drm/bridge/Makefile b/drivers/gpu/drm/bridge/Makefile
 index b131dc70dcbf..f2ede53d363d 100644
 --- a/drivers/gpu/drm/bridge/Makefile
 +++ b/drivers/gpu/drm/bridge/Makefile
-@@ -21,3 +21,4 @@ obj-y += cadence/
+@@ -22,3 +22,4 @@ obj-y += cadence/
  obj-y += synopsys/
  obj-$(CONFIG_DRM_ITE_IT6263) += it6263.o
  obj-$(CONFIG_DRM_SEC_MIPI_DSIM) += sec-dsim.o
