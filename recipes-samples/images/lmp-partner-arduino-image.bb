@@ -40,6 +40,7 @@ CORE_IMAGE_BASE_INSTALL += " \
     bq24195 \
     modemmanager \
     i2c-tools \
+    cs42l52 \
 "
 
 # Portenta-M8 has a Murata 1DX wifi/bt module which uses custom recipes
