@@ -1,0 +1,29 @@
+From 867ca2217de15faf9ac334b0e8b2bf72ebb1c0f8 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Mon, 22 Feb 2021 15:58:14 +0100
+Subject: [PATCH] Handle the case if gpio driver is not ready yet when spi is
+ probed
+
+---
+ drivers/spi/spi-imx.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/spi/spi-imx.c b/drivers/spi/spi-imx.c
+index 91e32291c44e..2ef7eab722db 100644
+--- a/drivers/spi/spi-imx.c
++++ b/drivers/spi/spi-imx.c
+@@ -1775,6 +1775,11 @@ static int spi_imx_probe(struct platform_device *pdev)
+ 	/* Request GPIO CS lines, if any */
+ 	if (!spi_imx->slave_mode && master->cs_gpios) {
+ 		for (i = 0; i < master->num_chipselect; i++) {
++			if (master->cs_gpios[i] == -EPROBE_DEFER) {
++				dev_info(&pdev->dev, "EPROBE_DEFER\n");
++				ret = -EPROBE_DEFER;
++				goto out_spi_bitbang;
++			}
+ 			if (!gpio_is_valid(master->cs_gpios[i]))
+ 				continue;
+ 
+-- 
+2.25.1
+
