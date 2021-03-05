@@ -35,12 +35,17 @@ CORE_IMAGE_BASE_INSTALL += " \
 "
 
 # Arduino additions
+EXTERNAL_MODULES = " \
+    bq24195 \
+    cs42l52 \
+    anx7625 \
+"
+
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
-    bq24195 \
     modemmanager \
     i2c-tools \
-    cs42l52 \
+    ${EXTERNAL_MODULES} \
 "
 
 # Portenta-M8 has a Murata 1DX wifi/bt module which uses custom recipes
