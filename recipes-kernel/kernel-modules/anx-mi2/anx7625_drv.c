@@ -2218,34 +2218,34 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	       cc_status & 0x0F, cc_status & 0xF0);
 
 	switch (cc_status & 0x0F) {
-	case 0:
+	case 0x0:
 		printk("anx: CC1: SRC.Open\n"); break;
-	case 1:
+	case 0x1:
 		printk("anx: CC1: SRC.Rd\n"); break;
-	case 2:
+	case 0x2:
 		printk("anx: CC1: SRC.Ra\n"); break;
-	case 4:
+	case 0x4:
 		printk("anx: CC1: SNK.default\n"); break;
-	case 8:
+	case 0x8:
 		printk("anx: CC1: SNK.power.1.5\n"); break;
-	case 12:
+	case 0xC:
 		printk("anx: CC1: SNK.power.3.0\n"); break;
 	default:
 		printk("anx: CC1: Reserved\n");
 	}
 
 	switch (cc_status & 0xF0) {
-	case 0:
+	case 0x00:
 		printk("anx: CC2: SRC.Open\n"); break;
-	case 1:
+	case 0x10:
 		printk("anx: CC2: SRC.Rd\n"); break;
-	case 2:
+	case 0x20:
 		printk("anx: CC2: SRC.Ra\n"); break;
-	case 4:
+	case 0x40:
 		printk("anx: CC2: SNK.default\n"); break;
-	case 8:
+	case 0x80:
 		printk("anx: CC2: SNK.power.1.5\n"); break;
-	case 12:
+	case 0xC0:
 		printk("anx: CC2: SNK.power.3.0\n"); break;
 	default:
 		printk("anx: CC2: Reserved\n");

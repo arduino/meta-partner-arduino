@@ -44,13 +44,13 @@ int anx7625_write_and_or(struct anx7625_data *ctx,
 
 
 struct anx7625_tcpm {
-	struct device       *dev;
-	struct tcpm_port    *port;
-	bool                 controls_vbus;
-	struct tcpc_dev      tcpc;
-	int                  vbus;
-	enum typec_cc_status cc1;
-	enum typec_cc_status cc2;
+	struct device         *dev;
+	struct tcpm_port      *port;
+	struct tcpc_dev        tcpc;
+	int                    vbus;
+	enum typec_cc_polarity polarity;
+	enum typec_cc_status   cc1;
+	enum typec_cc_status   cc2;
 };
 
 struct anx7625_tcpm *anx7625_tcpm;
@@ -118,7 +118,7 @@ DBG_PRINT("start\n");
 	anx7625_tcpm->tcpc.set_roles    = anx7625_tcpm_set_roles;
 	anx7625_tcpm->tcpc.pd_transmit  = anx7625_tcpm_pd_transmit;
 	
-	anx7625_tcpm->controls_vbus = true; /* XXX */
+	//anx7625_tcpm->controls_vbus = true; /* XXX */
 
 	anx7625_tcpm->tcpc.fwnode = device_get_named_child_node(dev, "connector");
 	if (!anx7625_tcpm->tcpc.fwnode) {
@@ -221,6 +221,7 @@ static int anx7625_tcpm_get_vbus(struct tcpc_dev *tcpc)
 }
 
 /**
+ * TODO da rivedere con poalrity
  */
 static int anx7625_tcpm_set_cc(struct tcpc_dev *tcpc, enum typec_cc_status cc)
 {
@@ -281,13 +282,14 @@ static int anx7625_tcpm_set_vbus(struct tcpc_dev *tcpc, bool source, bool sink)
 static int anx7625_tcpm_set_polarity(struct tcpc_dev *tcpc,
 		enum typec_cc_polarity polarity)
 {
-	/*
+/*
 enum typec_cc_polarity {
 	TYPEC_POLARITY_CC1,
 	TYPEC_POLARITY_CC2,
 };
+*/
 
-	 */
+	anx7625_tcpm->polarity = polarity;
 	DBG_PRINT("polarity %d\n", polarity);
 	return 0;
 }
