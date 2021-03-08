@@ -152,6 +152,8 @@ DBG_PRINT("\n");
  */
 int anx7625_tcpm_change(int sys_status, int ivector, int cc_status)
 {
+	DBG_PRINT("sys_status %X, ivector %X, cc_status %X\n",
+						sys_status, ivector, cc_status);
 	switch (cc_status & 0x0F) {
 	case 0x00: anx7625_tcpm->cc1 = TYPEC_CC_OPEN  ; break;
 	case 0x01: anx7625_tcpm->cc1 = TYPEC_CC_RD    ; break;
@@ -237,8 +239,8 @@ enum typec_cc_status {
 1:0 CC1_CONTROL 00: Ra, 01: Rp, 10: Rd, 11: Open.
 */
 	u8 reg;
-	reg = anx7625_reg_read(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
-											 TCPC_ROLE_CONTROL);
+	//reg = anx7625_reg_read(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	//										 TCPC_ROLE_CONTROL);
 	reg &= 0xC0;
 	switch (cc) {
 	case TYPEC_CC_OPEN  : reg |= 0x0F; break;
@@ -249,8 +251,8 @@ enum typec_cc_status {
 	case TYPEC_CC_RP_3_0: reg |= 0x25; break;
 	}
 //	DBG_PRINT("cc %d\n", cc);
-	anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
-											 TCPC_ROLE_CONTROL, reg);
+	//anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	//										 TCPC_ROLE_CONTROL, reg);
 
 	return 0;
 }

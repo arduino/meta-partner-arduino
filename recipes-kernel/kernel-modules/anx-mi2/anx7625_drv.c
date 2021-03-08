@@ -100,7 +100,7 @@ static int i2c_access_workaround(struct anx7625_data *ctx,
 	ret = i2c_smbus_write_byte_data(client, offset, 0x00);
 	if (ret < 0)
 		DRM_DEV_ERROR(dev,
-			      "fail to access i2c id=%x\n:%x",
+			      "fail to access i2c id=%x:%x\n",
 			      client->addr, offset);
 
 	return ret;
@@ -144,8 +144,8 @@ int anx7625_reg_write(struct anx7625_data *ctx,
 	i2c_access_workaround(ctx, client);
 	ret = i2c_smbus_write_byte_data(client, reg_addr, reg_val);
 	if (ret < 0)
-		DRM_DEV_ERROR(dev, "fail to write i2c id=%x\n:%x",
-			      client->addr, reg_addr);
+		DRM_DEV_ERROR(dev, "fail to write i2c id=%x:%x %x\n",
+			      client->addr, reg_addr, reg_val);
 	return ret;
 }
 
@@ -2105,6 +2105,18 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
 	if (!atomic_read(&ctx->power_status))
 		anx7625_chip_control(ctx, 1);
 	printk("anx: cable isr done\n");
+
+#ifdef ENABLE_TCPM
+	{
+	int sys_status, ivector, cc_status;
+
+	sys_status = anx7625_read_hpd_status_p0(ctx);
+	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, INTERFACE_CHANGE_INT);
+	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
+	anx7625_tcpm_change(sys_status, ivector, cc_status);
+	}
+#endif
+
 	mutex_unlock(&ctx->lock);
 
 	return IRQ_HANDLED;
@@ -2328,7 +2340,7 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	if (ret)
 		goto free_platform;
 
-#if 1
+#if 0
 	DRM_DEV_DEBUG_DRIVER(dev, "Wake CABLE DET irq\n");
 	ret = irq_set_irq_wake(platform->pdata.cbl_det_irq, 1);
 	if (ret < 0) {
