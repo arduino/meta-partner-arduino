@@ -153,25 +153,25 @@ DBG_PRINT("\n");
 int anx7625_tcpm_change(int sys_status, int ivector, int cc_status)
 {
 	switch (cc_status & 0x0F) {
-	case  0: anx7625_tcpm->cc1 = TYPEC_CC_OPEN  ; break;
-	case  1: anx7625_tcpm->cc1 = TYPEC_CC_RD    ; break;
-	case  2: anx7625_tcpm->cc1 = TYPEC_CC_RA    ; break;
-	case  4: anx7625_tcpm->cc1 = TYPEC_CC_RP_DEF; break;
-	case  8: anx7625_tcpm->cc1 = TYPEC_CC_RP_1_5; break;
-	case 12: anx7625_tcpm->cc1 = TYPEC_CC_RP_3_0; break;
+	case 0x00: anx7625_tcpm->cc1 = TYPEC_CC_OPEN  ; break;
+	case 0x01: anx7625_tcpm->cc1 = TYPEC_CC_RD    ; break;
+	case 0x02: anx7625_tcpm->cc1 = TYPEC_CC_RA    ; break;
+	case 0x04: anx7625_tcpm->cc1 = TYPEC_CC_RP_DEF; break;
+	case 0x08: anx7625_tcpm->cc1 = TYPEC_CC_RP_1_5; break;
+	case 0x0C: anx7625_tcpm->cc1 = TYPEC_CC_RP_3_0; break;
 	default:
-		printk("anx: CC1: Reserved\n");
+		DBG_PRINT("CC1: '%X' Reserved\n", cc_status & 0x0F);
 	}
 
 	switch (cc_status & 0xF0) {
-	case  0: anx7625_tcpm->cc2 = TYPEC_CC_OPEN  ; break;
-	case  1: anx7625_tcpm->cc2 = TYPEC_CC_RD    ; break;
-	case  2: anx7625_tcpm->cc2 = TYPEC_CC_RA    ; break;
-	case  4: anx7625_tcpm->cc2 = TYPEC_CC_RP_DEF; break;
-	case  8: anx7625_tcpm->cc2 = TYPEC_CC_RP_1_5; break;
-	case 12: anx7625_tcpm->cc2 = TYPEC_CC_RP_3_0; break;
+	case  0x00: anx7625_tcpm->cc2 = TYPEC_CC_OPEN  ; break;
+	case  0x10: anx7625_tcpm->cc2 = TYPEC_CC_RD    ; break;
+	case  0x20: anx7625_tcpm->cc2 = TYPEC_CC_RA    ; break;
+	case  0x40: anx7625_tcpm->cc2 = TYPEC_CC_RP_DEF; break;
+	case  0x80: anx7625_tcpm->cc2 = TYPEC_CC_RP_1_5; break;
+	case  0xC0: anx7625_tcpm->cc2 = TYPEC_CC_RP_3_0; break;
 	default:
-		printk("anx: CC2: Reserved\n");
+		DBG_PRINT("CC2: '%X' Reserved\n", (cc_status & 0xF0)>>4);
 	}
 
 	anx7625_tcpm->vbus = (sys_status & BIT(3))? 1: 0;  // TODO to verify
