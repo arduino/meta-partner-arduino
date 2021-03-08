@@ -56,12 +56,6 @@
 			};
 		};
 
-		port {
-			typec1_dr_sw: endpoint {
-				remote-endpoint = <&usb1_drd_sw>;
-			};
-		};
-
 		typec1_con: connector {
 			compatible = "usb-c-connector";
 			label = "USB-C";
@@ -73,6 +67,16 @@
 			             PDO_VAR(5000, 20000, 3000)>;
 			op-sink-microwatt = <15000000>;
 			self-powered;
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@1 {
+					reg = <1>;
+					typec1_dr_sw: endpoint {
+						remote-endpoint = <&usb1_drd_sw>;
+					};
+				};
+			};
 		};
 
 	};

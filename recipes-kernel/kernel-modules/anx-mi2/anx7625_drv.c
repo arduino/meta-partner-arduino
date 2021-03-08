@@ -2328,6 +2328,21 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	if (ret)
 		goto free_platform;
 
+#if 1
+	DRM_DEV_DEBUG_DRIVER(dev, "Wake CABLE DET irq\n");
+	ret = irq_set_irq_wake(platform->pdata.cbl_det_irq, 1);
+	if (ret < 0) {
+		DRM_DEV_ERROR(dev, "Request irq for cable detect interrupt wake set fail\n");
+		//goto err4;
+	}
+
+	ret = enable_irq_wake(platform->pdata.cbl_det_irq);
+	if (ret < 0) {
+		DRM_DEV_ERROR(dev, "Enable irq for cable detect interrupt wake enable fail\n");
+		//goto err4;
+	}
+#endif
+
 	ret = devm_request_threaded_irq(dev, client->irq,
 					NULL,
 					anx7625_comm_isr,

@@ -249,6 +249,9 @@ enum typec_cc_status {
 	case TYPEC_CC_RP_3_0: reg |= 0x25; break;
 	}
 //	DBG_PRINT("cc %d\n", cc);
+	anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+											 TCPC_ROLE_CONTROL, reg);
+
 	return 0;
 }
 
