@@ -35,6 +35,10 @@
 #include <sound/soc.h>
 #include "anx7625.h"
 
+#define NO_POWER_GPIO
+#define NO_RESET_GPIO
+#define IRQ_CHECK
+
 #define DEBUG 1
 
 #ifdef DEBUG
@@ -1208,13 +1212,16 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 #else
 	DRM_DEV_DEBUG_DRIVER(dev, "power on\n");
 #endif
+#ifndef NO_POWER_GPIO
 	/* 10ms: as per data sheet */
 	gpiod_set_value(ctx->pdata.gpio_p_on, 1);
 	usleep_range(10000, 10100);
-
+#endif
+#ifndef NO_RESET_GPIO
 	/* 10ms: as per data sheet */
 	gpiod_set_value(ctx->pdata.gpio_reset, 1);
 	usleep_range(10000, 10100);
+#endif
 #ifndef DISABLE_PD
 	pdinit();
 #endif
@@ -1231,11 +1238,14 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
 		return;
 	}
 
+#ifndef NO_POWER_GPIO
 	gpiod_set_value(ctx->pdata.gpio_reset, 0);
 	usleep_range(1000, 1100);
-
+#endif
+#ifndef NO_RESET_GPIO
 	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 	usleep_range(1000, 1100);
+#endif
 #if 0
 	/* portenta: VBUS_USBC off (1) */
 	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
@@ -1413,20 +1423,22 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 	/* portenta: VBUS_USBC off (gpio = 1) */
 	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
 #endif
+#ifndef NO_POWER_GPIO
 	/* keep the ANX powered off: power/reset gpios are active high  */
 	platform->pdata.gpio_p_on = devm_gpiod_get_optional(dev, "enable",
 							       GPIOD_OUT_LOW);
-
+#endif
+#ifndef NO_RESET_GPIO
 	platform->pdata.gpio_reset = devm_gpiod_get_optional(dev, "reset",
 							     GPIOD_OUT_LOW);
-
+#endif
 	platform->pdata.gpio_cbl_det = devm_gpiod_get_optional(dev, "cbl_det",
 							       GPIOD_IN);
 
 	platform->pdata.gpio_intr_comm = devm_gpiod_get_optional(dev,
 								 "intr_comm",
 								 GPIOD_IN);
-
+#ifndef NO_POWER_GPIO
 	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset) {
 		platform->pdata.low_power_mode = 1;
 #if 0
@@ -1459,6 +1471,11 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 #endif
 		atomic_set(&platform->power_status, 1);
 	}
+#else
+	platform->pdata.low_power_mode = 1;
+	DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled\n");
+	atomic_set(&platform->power_status, 0);
+#endif
 
 #if 0
 	/* return VBUS_USBC back to users */
@@ -2377,6 +2394,14 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 
 #ifdef ENABLE_TCPM
 	anx7625_tcpm_probe();
+#endif
+	
+#ifdef IRQ_CHECK
+	ret = anx7625_cable_irq(0, platform);
+	if (ret == IRQ_WAKE_THREAD) {
+		anx7625_cable_isr(0, platform);
+	}
+	anx7625_comm_isr(0, platform);
 #endif
 
 	printk("anx probed\n");
