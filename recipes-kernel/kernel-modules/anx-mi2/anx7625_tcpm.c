@@ -24,6 +24,12 @@
 
 #ifdef DEBUG
 
+char *str_port_type[] = {
+	"PORT_SRC",
+	"PORT_SNK",
+	"PORT_DRP",
+};
+
 char *str_data_role[] = {
 	"DEVICE",
 	"HOST",
@@ -33,7 +39,6 @@ char *str_role[] = {
 	"SINK",
 	"SOURCE",
 };
-
 
 char *str_cc_status[] = {
 	"CC_OPEN",
@@ -64,9 +69,6 @@ int anx7625_write_and_or(struct anx7625_data *ctx,
 				struct i2c_client *client, u8 offset,
 				u8 and_mask, u8 or_mask);
 
-
-
-
 struct anx7625_tcpm {
 	struct device         *dev;
 	struct tcpm_port      *port;
@@ -89,6 +91,9 @@ static int anx7625_tcpm_set_vbus(struct tcpc_dev *tcpc, bool source, bool sink);
 static int anx7625_tcpm_set_polarity(struct tcpc_dev *tcpc,
 		enum typec_cc_polarity polarity);
 static int anx7625_tcpm_set_vconn(struct tcpc_dev *tcpc, bool enable);
+static int anx7625_tcpm_start_toggling(struct tcpc_dev *tcpc,
+				enum typec_port_type port_type,
+				enum typec_cc_status cc);
 static int anx7625_tcpm_set_pd_rx(struct tcpc_dev *tcpc, bool enable);
 static int anx7625_tcpm_set_roles(struct tcpc_dev *tcpc, bool attached,
 			   enum typec_role role, enum typec_data_role data);
@@ -108,39 +113,18 @@ DBG_PRINT("start\n");
 	}
 
 	anx7625_tcpm->dev = dev;
-	//anx7625_tcpm->data = data;
-	//anx7625_tcpm->regmap = data->regmap;
-/* TODO
 
+	anx7625_tcpm->tcpc.init           = anx7625_tcpm_init;
+	anx7625_tcpm->tcpc.get_vbus       = anx7625_tcpm_get_vbus;
+	anx7625_tcpm->tcpc.set_vbus       = anx7625_tcpm_set_vbus;
+	anx7625_tcpm->tcpc.set_cc         = anx7625_tcpm_set_cc;
+	anx7625_tcpm->tcpc.get_cc         = anx7625_tcpm_get_cc;
+	anx7625_tcpm->tcpc.set_polarity   = anx7625_tcpm_set_polarity;
+	anx7625_tcpm->tcpc.set_vconn      = anx7625_tcpm_set_vconn;
 	anx7625_tcpm->tcpc.start_toggling = anx7625_tcpm_start_toggling;
-
-	
-	*/
-
-/* TODO vanno definite
-
-	    !tcpc->get_vbus ||
-	    !tcpc->set_cc ||
-	    !tcpc->get_cc ||
-	    !tcpc->set_polarity || 
-	    !tcpc->set_vconn ||
-	    !tcpc->set_vbus ||
-	    !tcpc->set_pd_rx ||
-	    !tcpc->set_roles ||
-	    !tcpc->pd_transmit)
-	    
-	    */
-
-	anx7625_tcpm->tcpc.init         = anx7625_tcpm_init;
-	anx7625_tcpm->tcpc.get_vbus     = anx7625_tcpm_get_vbus;
-	anx7625_tcpm->tcpc.set_vbus     = anx7625_tcpm_set_vbus;
-	anx7625_tcpm->tcpc.set_cc       = anx7625_tcpm_set_cc;
-	anx7625_tcpm->tcpc.get_cc       = anx7625_tcpm_get_cc;
-	anx7625_tcpm->tcpc.set_polarity = anx7625_tcpm_set_polarity;
-	anx7625_tcpm->tcpc.set_vconn    = anx7625_tcpm_set_vconn;
-	anx7625_tcpm->tcpc.set_pd_rx    = anx7625_tcpm_set_pd_rx;
-	anx7625_tcpm->tcpc.set_roles    = anx7625_tcpm_set_roles;
-	anx7625_tcpm->tcpc.pd_transmit  = anx7625_tcpm_pd_transmit;
+	anx7625_tcpm->tcpc.set_pd_rx      = anx7625_tcpm_set_pd_rx;
+	anx7625_tcpm->tcpc.set_roles      = anx7625_tcpm_set_roles;
+	anx7625_tcpm->tcpc.pd_transmit    = anx7625_tcpm_pd_transmit;
 	
 	//anx7625_tcpm->controls_vbus = true; /* XXX */
 
@@ -245,11 +229,14 @@ static int anx7625_tcpm_get_vbus(struct tcpc_dev *tcpc)
 	return anx7625_tcpm->vbus;
 }
 
+
 /**
- * TODO da rivedere con poalrity
+ * TODO da rivedere con polarity
  */
 static int anx7625_tcpm_set_cc(struct tcpc_dev *tcpc, enum typec_cc_status cc)
 {
+	//DBG_PRINT("cc %d %s\n", cc, str_cc_status[cc]);
+
 	/*
 enum typec_cc_status {
 	TYPEC_CC_OPEN,
@@ -263,10 +250,13 @@ enum typec_cc_status {
 5:4 RP_VALUE 00: Rp default, 01: Rp 1.5A, 10: Rp 3.0A, 11:reserved
 3:2 CC2_CONTROL 00: Ra, 01: Rp, 10: Rd, 11: Open.
 1:0 CC1_CONTROL 00: Ra, 01: Rp, 10: Rd, 11: Open.
+
 */
+#if 0
 	u8 reg;
-	//reg = anx7625_reg_read(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
-	//										 TCPC_ROLE_CONTROL);
+
+	reg = anx7625_reg_read(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	                       TCPC_ROLE_CONTROL);
 	reg &= 0xC0;
 	switch (cc) {
 	case TYPEC_CC_OPEN  : reg |= 0x0F; break;
@@ -276,10 +266,39 @@ enum typec_cc_status {
 	case TYPEC_CC_RP_1_5: reg |= 0x15; break;
 	case TYPEC_CC_RP_3_0: reg |= 0x25; break;
 	}
-//	DBG_PRINT("cc %d\n", cc);
-	//anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
-	//										 TCPC_ROLE_CONTROL, reg);
+	DBG_PRINT("cc %d %s, poalrity %d, write %02X in TCPC_ROLE_CONTROL\n",
+	          cc, str_cc_status[cc], anx7625_tcpm->polarity, reg);
+	anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	                  TCPC_ROLE_CONTROL, reg);
+#endif
+#if 0
+	u8 ccc; // CC control
+	u8 rpv; // RP Value
+	u8 reg;
 
+	switch (cc) {
+	case TYPEC_CC_OPEN  : ccc = 3; rpv = 0x00; break;
+	case TYPEC_CC_RA    : ccc = 0; rpv = 0x00; break;
+	case TYPEC_CC_RD    : ccc = 2; rpv = 0x00; break;
+	case TYPEC_CC_RP_DEF: ccc = 1; rpv = 0x00; break;
+	case TYPEC_CC_RP_1_5: ccc = 1; rpv = 0x10; break;
+	case TYPEC_CC_RP_3_0: ccc = 1; rpv = 0x20; break;
+	}
+
+	reg = anx7625_reg_read(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	                       TCPC_ROLE_CONTROL);
+	reg &= 0xC0;
+	reg |= rpv;
+	if (anx7625_tcpm->polarity) {
+		reg |= ccc | (3 << 2);
+	} else {
+		reg |= 3 | (ccc << 2);
+	}
+	DBG_PRINT("cc %d %s, poalrity %d, write %02X in TCPC_ROLE_CONTROL\n",
+	          cc, str_cc_status[cc], anx7625_tcpm->polarity, reg);
+	anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	                  TCPC_ROLE_CONTROL, reg);
+#endif
 	return 0;
 }
 
@@ -328,6 +347,83 @@ static int anx7625_tcpm_set_vconn(struct tcpc_dev *tcpc, bool enable)
 	DBG_PRINT("enable %d\n", enable);
 	return 0;
 }
+
+/**
+ */
+static int anx7625_tcpm_start_toggling(struct tcpc_dev *tcpc,
+				enum typec_port_type port_type,
+				enum typec_cc_status cc)
+{
+#if 0
+	int ret;
+	struct tcpci *tcpci = tcpc_to_tcpci(tcpc);
+	unsigned int reg = TCPC_ROLE_CTRL_DRP;
+
+	/* Handle vendor drp toggling */
+	if (tcpci->data->start_drp_toggling) {
+		ret = tcpci->data->start_drp_toggling(tcpci, tcpci->data, cc);
+		if (ret < 0)
+			return ret;
+	}
+
+	switch (cc) {
+	default:
+	case TYPEC_CC_RP_DEF:
+		reg |= (TCPC_ROLE_CTRL_RP_VAL_DEF << TCPC_ROLE_CTRL_RP_VAL_SHIFT);
+		break;
+	case TYPEC_CC_RP_1_5:
+		reg |= (TCPC_ROLE_CTRL_RP_VAL_1_5 << TCPC_ROLE_CTRL_RP_VAL_SHIFT);
+		break;
+	case TYPEC_CC_RP_3_0:
+		reg |= (TCPC_ROLE_CTRL_RP_VAL_3_0 << TCPC_ROLE_CTRL_RP_VAL_SHIFT);
+		break;
+	}
+	if (cc == TYPEC_CC_RD)
+		reg |= (TCPC_ROLE_CTRL_CC_RD << TCPC_ROLE_CTRL_CC1_SHIFT) |
+			   (TCPC_ROLE_CTRL_CC_RD << TCPC_ROLE_CTRL_CC2_SHIFT);
+	else
+		reg |= (TCPC_ROLE_CTRL_CC_RP << TCPC_ROLE_CTRL_CC1_SHIFT) |
+			   (TCPC_ROLE_CTRL_CC_RP << TCPC_ROLE_CTRL_CC2_SHIFT);
+	ret = regmap_write(tcpci->regmap, TCPC_ROLE_CTRL, reg);
+	if (ret < 0)
+		return ret;
+
+	return regmap_write(tcpci->regmap, TCPC_COMMAND,
+			    TCPC_CMD_LOOK4CONNECTION);
+#endif
+#if 0
+	u8 reg;
+	int ret;
+
+	DBG_PRINT("port_type %d %s, cc %d %s\n",
+	          port_type, str_port_type[port_type],
+	          cc, str_cc_status[cc]);
+
+	switch (cc) {
+	case TYPEC_CC_OPEN  : reg |= 0x0F; break;
+	case TYPEC_CC_RA    : reg |= 0x00; break;
+	case TYPEC_CC_RD    : reg |= 0x0A; break;
+	case TYPEC_CC_RP_DEF: reg |= 0x05; break;
+	case TYPEC_CC_RP_1_5: reg |= 0x15; break;
+	case TYPEC_CC_RP_3_0: reg |= 0x25; break;
+	}
+	reg |= 0x40; // enable DRP
+	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+	                        TCPC_ROLE_CONTROL, reg);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+					TCPC_COMMAND, 0x99);
+	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+					TCPC_ANALOG_CTRL_1, 0xA0);
+	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
+					TCPC_ANALOG_CTRL_1, 0xE0);
+#endif
+	return 0;
+}
+
 
 /**
  */
