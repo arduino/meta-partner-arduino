@@ -25,23 +25,23 @@
 #ifdef DEBUG
 
 char *str_data_role[] = {
-	"TYPEC_DEVICE",
-	"TYPEC_HOST",
+	"DEVICE",
+	"HOST",
 };
 
 char *str_role[] = {
-	"TYPEC_SINK",
-	"TYPEC_SOURCE",
+	"SINK",
+	"SOURCE",
 };
 
 
 char *str_cc_status[] = {
-	"TYPEC_CC_OPEN",
-	"TYPEC_CC_RA",
-	"TYPEC_CC_RD",
-	"TYPEC_CC_RP_DEF",
-	"TYPEC_CC_RP_1_5",
-	"TYPEC_CC_RP_3_0",
+	"CC_OPEN",
+	"CC_RA",
+	"CC_RD",
+	"CC_RP_DEF",
+	"CC_RP_1_5",
+	"CC_RP_3_0",
 };
 #endif
 
