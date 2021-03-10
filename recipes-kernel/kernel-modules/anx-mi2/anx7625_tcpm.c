@@ -22,6 +22,30 @@
 #define DBG_PRINT(fmt, ...) 	printk(KERN_ERR "TCPM:%s:"fmt, __func__, ##__VA_ARGS__)
 #endif
 
+#ifdef DEBUG
+
+char *str_data_role[] = {
+	"TYPEC_DEVICE",
+	"TYPEC_HOST",
+};
+
+char *str_role[] = {
+	"TYPEC_SINK",
+	"TYPEC_SOURCE",
+};
+
+
+char *str_cc_status[] = {
+	"TYPEC_CC_OPEN",
+	"TYPEC_CC_RA",
+	"TYPEC_CC_RD",
+	"TYPEC_CC_RP_DEF",
+	"TYPEC_CC_RP_1_5",
+	"TYPEC_CC_RP_3_0",
+};
+#endif
+
+
 extern struct anx7625_data *anx7625_ctx;
 
 
@@ -154,6 +178,7 @@ int anx7625_tcpm_change(int sys_status, int ivector, int cc_status)
 {
 	DBG_PRINT("sys_status %X, ivector %X, cc_status %X\n",
 						sys_status, ivector, cc_status);
+
 	switch (cc_status & 0x0F) {
 	case 0x00: anx7625_tcpm->cc1 = TYPEC_CC_OPEN  ; break;
 	case 0x01: anx7625_tcpm->cc1 = TYPEC_CC_RD    ; break;
@@ -179,12 +204,12 @@ int anx7625_tcpm_change(int sys_status, int ivector, int cc_status)
 	anx7625_tcpm->vbus = (sys_status & BIT(3))? 1: 0;  // TODO to verify
 
 	if (ivector & BIT(4)) {
-		//CC status change
+		DBG_PRINT("CC status change\n");
 		tcpm_cc_change(anx7625_tcpm->port);
 	}
 	
 	if (ivector & BIT(3)) {
-		//VBUS change
+		DBG_PRINT("VBUS change\n");
 		tcpm_vbus_change(anx7625_tcpm->port);
 		/*
 		// TODO to verify
@@ -265,7 +290,9 @@ static int anx7625_tcpm_get_cc(struct tcpc_dev *tcpc,
 {
 	*cc1 = anx7625_tcpm->cc1;
 	*cc2 = anx7625_tcpm->cc2;
-	DBG_PRINT("cc1 %d, cc2 %d\n", anx7625_tcpm->cc1, anx7625_tcpm->cc2);
+	DBG_PRINT("cc1 %d %s, cc2 %d %s\n",
+	          anx7625_tcpm->cc1, str_cc_status[anx7625_tcpm->cc1],
+	          anx7625_tcpm->cc2, str_cc_status[anx7625_tcpm->cc2]);
 	return 0;
 }
 
@@ -310,23 +337,13 @@ static int anx7625_tcpm_set_pd_rx(struct tcpc_dev *tcpc, bool enable)
 	return 0;
 }
 
+/**
+ */
 static int anx7625_tcpm_set_roles(struct tcpc_dev *tcpc, bool attached,
 			   enum typec_role role, enum typec_data_role data)
 {
-	/*
-	 
-enum typec_data_role {
-	TYPEC_DEVICE,
-	TYPEC_HOST,
-};
-
-enum typec_role {
-	TYPEC_SINK,
-	TYPEC_SOURCE,
-};
-	 
-	 */
-	DBG_PRINT("attached %d, role %d, data %d\n", attached, role, data);
+	DBG_PRINT("attached %d, role %s, data %s\n",
+	          attached, str_role[role], str_data_role[data]);
 	return 0;
 }
 

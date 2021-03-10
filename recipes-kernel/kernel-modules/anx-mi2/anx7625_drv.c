@@ -2190,7 +2190,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (ivector & BIT(5))
 		printk("anx: - Data role change\n");
 	if (ivector & BIT(6))
-		printk("anx: - As  power consumer, update the max of RDOs V and W after PD negotiation\n");
+		printk("anx: - As power consumer, update the max of RDOs V and W after PD negotiation\n");
 	if (ivector & BIT(7))
 		printk("anx: - DP HPD change\n");
 
