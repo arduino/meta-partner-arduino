@@ -58,10 +58,10 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #define DISABLE_PD
 
 struct anx7625_data *anx7625_ctx;
-#ifndef DISABLE_PD
+//#ifndef DISABLE_PD
 void handle_msg_rcv_intr(void);
 void send_initialized_setting(void);
-#endif
+//#endif
 
 #define ENABLE_TCPM
 
@@ -2166,13 +2166,14 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
 				 TCPC_INTR_ALERT_1);
 
-#ifndef DISABLE_PD
 	printk("anx: TCPC_INTR_ALERT_1 %08X\n", itype);
 	if (itype & TCPC_INTR_RECEIVED_MSG) {
 		/*Received interface message*/
+		printk("anx: Received interface message\n");
+//#ifndef DISABLE_PD
 		handle_msg_rcv_intr();
+//#endif
 	}
-#endif
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
 				   INTERFACE_CHANGE_INT);
 
@@ -2230,8 +2231,8 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (!(sys_status & BIT(7)))
 		printk("anx: - DP HPD low\n");
 
-        cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
-        printk("anx: comms - CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n",
+	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
+	printk("anx: comms - CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n",
 	       cc_status & 0x0F, cc_status & 0xF0);
 
 	switch (cc_status & 0x0F) {
