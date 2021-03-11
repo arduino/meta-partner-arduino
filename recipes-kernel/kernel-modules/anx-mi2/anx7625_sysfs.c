@@ -1,4 +1,7 @@
 /**
+ * 
+ * cd /sys/devices/platform/soc@0/soc@0:bus@30800000/30a20000.i2c/i2c-0/0-0058
+ * echo help > cmd
  */
 
 #include <linux/device.h>
@@ -19,7 +22,7 @@ int anx7625_reg_write(struct anx7625_data *ctx,
 #define DEBUG 1
 
 #ifdef DEBUG
-#define DBG_PRINT(fmt, ...) 	printk(KERN_ERR "TCPM:%s:"fmt, __func__, ##__VA_ARGS__)
+#define DBG_PRINT(fmt, ...) 	printk(KERN_ERR "SYSFS:%s:"fmt, __func__, ##__VA_ARGS__)
 #endif
 
 
@@ -57,8 +60,6 @@ void WriteReg(unsigned char DevAddr, unsigned char RegAddr, unsigned char RegVal
 	anx7625_reg_write(anx7625_ctx, anx_i2c_get(DevAddr), RegAddr, RegVal);
 }
 
-
-
 s8 get_data_role(void)
 {
 	u8 status;
@@ -77,7 +78,6 @@ s8 get_power_role(void)
 	return (status & VBUS_STATUS) == 0;
 }
 
-
 /**
  */
 ssize_t anx7625_send_pd_cmd(struct device *dev,
@@ -92,22 +92,18 @@ ssize_t anx7625_send_pd_cmd(struct device *dev,
 	case TYPE_PWR_SRC_CAP:
 		send_pd_msg(TYPE_PWR_SRC_CAP, 0, 0);
 		break;
-
 	case TYPE_DP_SNK_IDENTITY:
 		send_pd_msg(TYPE_DP_SNK_IDENTITY, 0, 0);
 		break;
-
 	case TYPE_PSWAP_REQ:
 		send_pd_msg(TYPE_PSWAP_REQ, 0, 0);
 		break;
 	case TYPE_DSWAP_REQ:
 		send_pd_msg(TYPE_DSWAP_REQ, 0, 0);
 		break;
-
 	case TYPE_GOTO_MIN_REQ:
 		send_pd_msg(TYPE_GOTO_MIN_REQ, 0, 0);
 		break;
-
 	case TYPE_PWR_OBJ_REQ:
 		interface_send_request();
 		break;
@@ -123,7 +119,6 @@ ssize_t anx7625_send_pd_cmd(struct device *dev,
 	case TYPE_HARD_RST:
 		send_pd_msg(TYPE_HARD_RST, 0, 0);
 		break;
-
 	}
 	return count;
 }
@@ -161,7 +156,6 @@ ssize_t anx7625_rd_reg(struct device *dev,
 
 	result = sscanf(buf, "%x  %x", &v_addr, &cmd);
 	pr_info("reg[%x] = %x\n", cmd, ReadReg(v_addr, cmd));
-
 	return count;
 }
 
@@ -486,18 +480,18 @@ ssize_t anx7625_debug(struct device *dev,
 }
 
 static struct device_attribute anx7625_device_attrs[] = {
-	__ATTR(pdcmd,    S_IWUSR, NULL                  , anx7625_send_pd_cmd),
-	__ATTR(rdreg,    S_IWUSR, NULL                  , anx7625_rd_reg),
-	__ATTR(wrreg,    S_IWUSR, NULL                  , anx7625_wr_reg),
-	__ATTR(dumpreg,  S_IWUSR, NULL                  , anx7625_dump_register),
-	__ATTR(prole,    S_IRUGO, anx7625_get_power_role, NULL),
-	__ATTR(drole,    S_IRUGO, anx7625_get_data_role , NULL),
-	__ATTR(pswap,    S_IRUGO, anx7625_send_pswap    , NULL),
-	__ATTR(dswap,    S_IRUGO, anx7625_send_dswap    , NULL),
-	__ATTR(dpcdr,    S_IWUSR, NULL                  , anx7625_dpcd_read),
-	__ATTR(dpcdw,    S_IWUSR, NULL                  , anx7625_dpcd_write),
+	__ATTR(pdcmd   , S_IWUSR, NULL                  , anx7625_send_pd_cmd),
+	__ATTR(rdreg   , S_IWUSR, NULL                  , anx7625_rd_reg),
+	__ATTR(wrreg   , S_IWUSR, NULL                  , anx7625_wr_reg),
+	__ATTR(dumpreg , S_IWUSR, NULL                  , anx7625_dump_register),
+	__ATTR(prole   , S_IRUGO, anx7625_get_power_role, NULL),
+	__ATTR(drole   , S_IRUGO, anx7625_get_data_role , NULL),
+	__ATTR(pswap   , S_IRUGO, anx7625_send_pswap    , NULL),
+	__ATTR(dswap   , S_IRUGO, anx7625_send_dswap    , NULL),
+	__ATTR(dpcdr   , S_IWUSR, NULL                  , anx7625_dpcd_read),
+	__ATTR(dpcdw   , S_IWUSR, NULL                  , anx7625_dpcd_write),
 	__ATTR(dumpedid, S_IRUGO, anx7625_dump_edid     , NULL),
-	__ATTR(cmd,      S_IWUSR, NULL                  , anx7625_debug)
+	__ATTR(cmd     , S_IWUSR, NULL                  , anx7625_debug)
 };
 
 /**

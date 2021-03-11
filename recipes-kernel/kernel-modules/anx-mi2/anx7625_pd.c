@@ -85,50 +85,6 @@ u8 send_hard_reset(void);
 
 void send_initialized_setting(void);
 
-/*control cmd*/
-#define interface_pr_swap() \
-	interface_send_msg_timeout(TYPE_PSWAP_REQ, 0, 0, INTERFACE_TIMEOUT)
-#define interface_dr_swap() \
-	interface_send_msg_timeout(TYPE_DSWAP_REQ, 0, 0, INTERFACE_TIMEOUT)
-#define interface_vconn_swap() \
-	interface_send_msg_timeout(TYPE_VCONN_SWAP_REQ, 0, 0, INTERFACE_TIMEOUT)
-#define interface_get_dp_caps() \
-	interface_send_msg_timeout(TYPE_GET_DP_SNK_CAP, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_gotomin() \
-	interface_send_msg_timeout(TYPE_GOTO_MIN_REQ, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_soft_rst() \
-	interface_send_msg_timeout(TYPE_SOFT_RST, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_hard_rst() \
-	interface_send_msg_timeout(TYPE_HARD_RST, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_restart() \
-	interface_send_msg_timeout(TYPE_RESTART, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_accept() \
-	interface_send_msg_timeout(TYPE_ACCEPT, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_reject() \
-	interface_send_msg_timeout(TYPE_REJECT, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_dp_enter() \
-	interface_send_msg_timeout(TYPE_DP_ALT_ENTER, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_dp_exit() \
-	interface_send_msg_timeout(TYPE_DP_ALT_EXIT, 0, 0, INTERFACE_TIMEOUT)
-#define interface_send_src_cap() \
-	interface_send_msg_timeout(TYPE_PWR_SRC_CAP, pd_src_pdo,\
-	pd_src_pdo_cnt * 4, INTERFACE_TIMEOUT)
-#define interface_send_snk_cap() \
-	interface_send_msg_timeout(TYPE_PWR_SNK_CAP, pd_snk_pdo,\
-	pd_snk_pdo_cnt * 4, INTERFACE_TIMEOUT)
-#define interface_send_src_dp_cap() \
-	interface_send_msg_timeout(TYPE_DP_SNK_IDENTITY, src_dp_caps,\
-	4, INTERFACE_TIMEOUT)
-#define interface_config_dp_caps() \
-	interface_send_msg_timeout(TYPE_DP_SNK_CFG, configure_DP_caps,\
-	4, INTERFACE_TIMEOUT)
-#define interface_send_request() \
-	interface_send_msg_timeout(TYPE_PWR_OBJ_REQ, pd_rdo,\
-	4, INTERFACE_TIMEOUT)
-#define interface_send_vdm_data(buf, len)	\
-	interface_send_msg_timeout(TYPE_VDM, buf, len, INTERFACE_TIMEOUT)
-
-
 	
 #define PDO_FIXED_FLAGS (PDO_FIXED_DUAL_ROLE | PDO_FIXED_DATA_SWAP)
 	
