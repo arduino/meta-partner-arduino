@@ -385,6 +385,7 @@ struct s_edid_data {
 /***************** Display End *****************/
 
 struct anx7625_platform_data {
+	struct gpio_desc *gpio_vbus_ctrl;
 	struct gpio_desc *gpio_p_on;
 	struct gpio_desc *gpio_reset;
 	struct gpio_desc *gpio_cbl_det;
@@ -434,5 +435,109 @@ struct anx7625_data {
 	struct notifier_block event_nb;
 	struct platform_device *audio_pdev;
 };
+
+
+/**
+ * ANX7625 PD
+ */
+#define INTERFACE_TIMEOUT 30
+
+
+/*control cmd*/
+#define interface_pr_swap() \
+	interface_send_msg_timeout(TYPE_PSWAP_REQ, 0, 0, INTERFACE_TIMEOUT)
+#define interface_dr_swap() \
+	interface_send_msg_timeout(TYPE_DSWAP_REQ, 0, 0, INTERFACE_TIMEOUT)
+#define interface_vconn_swap() \
+	interface_send_msg_timeout(TYPE_VCONN_SWAP_REQ, 0, 0, INTERFACE_TIMEOUT)
+#define interface_get_dp_caps() \
+	interface_send_msg_timeout(TYPE_GET_DP_SNK_CAP, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_gotomin() \
+	interface_send_msg_timeout(TYPE_GOTO_MIN_REQ, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_soft_rst() \
+	interface_send_msg_timeout(TYPE_SOFT_RST, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_hard_rst() \
+	interface_send_msg_timeout(TYPE_HARD_RST, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_restart() \
+	interface_send_msg_timeout(TYPE_RESTART, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_accept() \
+	interface_send_msg_timeout(TYPE_ACCEPT, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_reject() \
+	interface_send_msg_timeout(TYPE_REJECT, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_dp_enter() \
+	interface_send_msg_timeout(TYPE_DP_ALT_ENTER, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_dp_exit() \
+	interface_send_msg_timeout(TYPE_DP_ALT_EXIT, 0, 0, INTERFACE_TIMEOUT)
+#define interface_send_src_cap() \
+	interface_send_msg_timeout(TYPE_PWR_SRC_CAP, pd_src_pdo,\
+	pd_src_pdo_cnt * 4, INTERFACE_TIMEOUT)
+#define interface_send_snk_cap() \
+	interface_send_msg_timeout(TYPE_PWR_SNK_CAP, pd_snk_pdo,\
+	pd_snk_pdo_cnt * 4, INTERFACE_TIMEOUT)
+#define interface_send_src_dp_cap() \
+	interface_send_msg_timeout(TYPE_DP_SNK_IDENTITY, src_dp_caps,\
+	4, INTERFACE_TIMEOUT)
+#define interface_config_dp_caps() \
+	interface_send_msg_timeout(TYPE_DP_SNK_CFG, configure_DP_caps,\
+	4, INTERFACE_TIMEOUT)
+#define interface_send_request() \
+	interface_send_msg_timeout(TYPE_PWR_OBJ_REQ, pd_rdo,\
+	4, INTERFACE_TIMEOUT)
+#define interface_send_vdm_data(buf, len)	\
+	interface_send_msg_timeout(TYPE_VDM, buf, len, INTERFACE_TIMEOUT)
+
+enum PD_MSG_TYPE {
+	TYPE_PWR_SRC_CAP = 0x00,
+	TYPE_PWR_SNK_CAP = 0x01,
+	TYPE_DP_SNK_IDENTITY = 0x02,
+	TYPE_SVID = 0x03,
+	TYPE_GET_DP_SNK_CAP = 0x04,
+	TYPE_ACCEPT = 0x05,
+	TYPE_REJECT = 0x06,
+	TYPE_PSWAP_REQ = 0x10,
+	TYPE_DSWAP_REQ = 0x11,
+	TYPE_GOTO_MIN_REQ = 0x12,
+	TYPE_VCONN_SWAP_REQ = 0x13,
+	TYPE_VDM = 0x14,
+	TYPE_DP_SNK_CFG = 0x15,
+	TYPE_PWR_OBJ_REQ = 0x16,
+	TYPE_PD_STATUS_REQ = 0x17,
+	TYPE_DP_ALT_ENTER = 0x19,
+	TYPE_DP_ALT_EXIT = 0x1A,
+	TYPE_GET_SNK_CAP = 0x1B,
+	TYPE_SOP_PRIME = 0x1C,
+	TYPE_SOP_DOUBLE_PRIME = 0x1D,
+	TYPE_RESPONSE_TO_REQ = 0xF0,
+	TYPE_SOFT_RST = 0xF1,
+	TYPE_HARD_RST = 0xF2,
+	TYPE_RESTART = 0xF3,
+	TYPE_EXT_SRC_CAP = 0xA1, /* Source_Capabilities_Extended*/
+	TYPE_EXT_SRC_STS = 0xA2, /* Source_Status*/
+	TYPE_EXT_GET_BATT_CAP  = 0xA3, /* Get_Battery_Cap*/
+	TYPE_EXT_GET_BATT_STS = 0xA4, /* Get_Battery_ Status*/
+	TYPE_EXT_BATT_CAP = 0xA5, /* Battery_Capabilities*/
+	TYPE_EXT_GET_MFR_INFO = 0xA6, /* Get_Manufacturer_Info*/
+	TYPE_EXT_MFR_INFO = 0xA7, /* Manufacturer_Info*/
+	TYPE_EXT_PDFU_REQUEST = 0xA8, /* FW update Request*/
+	TYPE_EXT_PDFU_RESPONSE = 0xA9, /* FW update Response*/
+	TYPE_EXT_BATT_STS = 0xAA, /* PD_DATA_BATTERY_STATUS*/
+	TYPE_EXT_ALERT = 0xAB, /* PD_DATA_ALERT*/
+	TYPE_EXT_NOT_SUPPORTED = 0xAC, /* PD_CTRL_NOT_SUPPORTED*/
+	TYPE_EXT_GET_SRC_CAP = 0xAD, /* PD_CTRL_GET_SOURCE_CAP_EXTENDED*/
+	TYPE_EXT_GET_SRC_STS = 0xAE, /* PD_CTRL_GET_STATUS*/
+	TYPE_EXT_FR_SWAP = 0xAF,  /* PD_CTRL_FR_SWAP*/
+	TYPE_FR_SWAP_SIGNAL = 0xB0, /* Fast Role Swap signal*/
+};
+
+
+/**
+ */
+void handle_msg_rcv_intr(void);
+void send_initialized_setting(void);
+u8 send_pd_msg(enum PD_MSG_TYPE type, const char *buf, u8 size);
+u8 interface_send_msg_timeout(u8 type, u8 *pbuf, u8 len, int timeout_ms);
+u8 send_power_swap(void);
+u8 send_data_swap(void);
+
 
 #endif  /* __ANX7625_H__ */

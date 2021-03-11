@@ -13,6 +13,7 @@ SRC_URI = " \
   file://anx7625.h \
   file://anx7625_pd.c \
   file://anx7625_tcpm.c \
+  file://anx7625_sysfs.c \
   file://COPYING \
 "
 

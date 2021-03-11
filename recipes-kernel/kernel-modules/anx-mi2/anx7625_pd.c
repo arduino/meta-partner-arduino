@@ -33,7 +33,6 @@ int anx7625_write_and_or(struct anx7625_data *ctx,
 #define INTR_MASK_SETTING 0x0
 #define INTERACE_TIMEOUT_MS 26
 
-#define INTERFACE_TIMEOUT 30
 
 #define InterfaceSendBuf_Addr 0xc0
 #define InterfaceRecvBuf_Addr 0xe0
@@ -49,49 +48,6 @@ int anx7625_write_and_or(struct anx7625_data *ctx,
 //#define PR_CONSUMER_GOT_POWER     0x40
 //#define HPD_STATUS_CHANGE         0x80
 
-
-enum PD_MSG_TYPE {
-	TYPE_PWR_SRC_CAP = 0x00,
-	TYPE_PWR_SNK_CAP = 0x01,
-	TYPE_DP_SNK_IDENTITY = 0x02,
-	TYPE_SVID = 0x03,
-	TYPE_GET_DP_SNK_CAP = 0x04,
-	TYPE_ACCEPT = 0x05,
-	TYPE_REJECT = 0x06,
-	TYPE_PSWAP_REQ = 0x10,
-	TYPE_DSWAP_REQ = 0x11,
-	TYPE_GOTO_MIN_REQ = 0x12,
-	TYPE_VCONN_SWAP_REQ = 0x13,
-	TYPE_VDM = 0x14,
-	TYPE_DP_SNK_CFG = 0x15,
-	TYPE_PWR_OBJ_REQ = 0x16,
-	TYPE_PD_STATUS_REQ = 0x17,
-	TYPE_DP_ALT_ENTER = 0x19,
-	TYPE_DP_ALT_EXIT = 0x1A,
-	TYPE_GET_SNK_CAP = 0x1B,
-	TYPE_SOP_PRIME = 0x1C,
-	TYPE_SOP_DOUBLE_PRIME = 0x1D,
-	TYPE_RESPONSE_TO_REQ = 0xF0,
-	TYPE_SOFT_RST = 0xF1,
-	TYPE_HARD_RST = 0xF2,
-	TYPE_RESTART = 0xF3,
-	TYPE_EXT_SRC_CAP = 0xA1, /* Source_Capabilities_Extended*/
-	TYPE_EXT_SRC_STS = 0xA2, /* Source_Status*/
-	TYPE_EXT_GET_BATT_CAP  = 0xA3, /* Get_Battery_Cap*/
-	TYPE_EXT_GET_BATT_STS = 0xA4, /* Get_Battery_ Status*/
-	TYPE_EXT_BATT_CAP = 0xA5, /* Battery_Capabilities*/
-	TYPE_EXT_GET_MFR_INFO = 0xA6, /* Get_Manufacturer_Info*/
-	TYPE_EXT_MFR_INFO = 0xA7, /* Manufacturer_Info*/
-	TYPE_EXT_PDFU_REQUEST = 0xA8, /* FW update Request*/
-	TYPE_EXT_PDFU_RESPONSE = 0xA9, /* FW update Response*/
-	TYPE_EXT_BATT_STS = 0xAA, /* PD_DATA_BATTERY_STATUS*/
-	TYPE_EXT_ALERT = 0xAB, /* PD_DATA_ALERT*/
-	TYPE_EXT_NOT_SUPPORTED = 0xAC, /* PD_CTRL_NOT_SUPPORTED*/
-	TYPE_EXT_GET_SRC_CAP = 0xAD, /* PD_CTRL_GET_SOURCE_CAP_EXTENDED*/
-	TYPE_EXT_GET_SRC_STS = 0xAE, /* PD_CTRL_GET_STATUS*/
-	TYPE_EXT_FR_SWAP = 0xAF,  /* PD_CTRL_FR_SWAP*/
-	TYPE_FR_SWAP_SIGNAL = 0xB0, /* Fast Role Swap signal*/
-};
 
 /*Comands status*/
 enum interface_status {
@@ -125,7 +81,6 @@ u8 send_reject(void);
 u8 send_soft_reset(void);
 u8 send_hard_reset(void);
 
-u8 interface_send_msg_timeout(u8 type, u8 *pbuf, u8 len, int timeout_ms);
 
 
 void send_initialized_setting(void);

@@ -101,6 +101,7 @@ static int anx7625_tcpm_pd_transmit(struct tcpc_dev *tcpc,
 			     enum tcpm_transmit_type type,
 			     const struct pd_message *msg);
 
+
 /**
  */
 int anx7625_tcpm_probe(void)
@@ -413,6 +414,9 @@ static int anx7625_tcpm_start_toggling(struct tcpc_dev *tcpc,
 	if (ret < 0) {
 		return ret;
 	}
+
+	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.rx_p0_client,
+					OCM_DEBUG_REG_8, 1<<STOP_MAIN_OCM);
 
 	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.tcpc_client,
 					TCPC_COMMAND, 0x99);

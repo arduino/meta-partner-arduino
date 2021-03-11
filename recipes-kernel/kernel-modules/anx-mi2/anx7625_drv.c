@@ -39,6 +39,18 @@
 #define NO_RESET_GPIO
 #define IRQ_CHECK
 
+/*VBUS Control logic status.*/
+#define EN_VBUS_CTL
+#define ENABLE_VBUS_OUTPUT  0
+#define DISABLE_VBUS_OUTPUT 1
+
+#define EN_SYSFS
+#ifdef EN_SYSFS
+int anx7625_sysfs_create(struct device *dev);
+int anx7625_sysfs_destory(struct device *dev);
+#endif
+
+
 #define DEBUG 1
 
 #ifdef DEBUG
@@ -58,10 +70,6 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #define DISABLE_PD
 
 struct anx7625_data *anx7625_ctx;
-//#ifndef DISABLE_PD
-void handle_msg_rcv_intr(void);
-void send_initialized_setting(void);
-//#endif
 
 #define ENABLE_TCPM
 
@@ -1187,7 +1195,8 @@ static int sp_tx_edid_read(struct anx7625_data *ctx, u8 *pedid_blocks_buf)
 	return (blocks_num + 1);
 }
 
-static void anx7625_power_on(struct anx7625_data *ctx)
+//static
+void anx7625_power_on(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
 #if 0
@@ -1227,7 +1236,8 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 #endif
 }
 
-static void anx7625_power_standby(struct anx7625_data *ctx)
+//static
+void anx7625_power_standby(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
 #if 0
@@ -1422,6 +1432,10 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 #if 0
 	/* portenta: VBUS_USBC off (gpio = 1) */
 	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
+#endif
+#ifdef EN_VBUS_CTL
+	platform->pdata.gpio_vbus_ctrl = devm_gpiod_get_optional(dev, "usbc_pwr",
+	                                                         GPIOD_OUT_LOW);
 #endif
 #ifndef NO_POWER_GPIO
 	/* keep the ANX powered off: power/reset gpios are active high  */
@@ -2078,6 +2092,19 @@ static void anx7625_unregister_i2c_dummy_clients(struct anx7625_data *ctx)
 	i2c_unregister_device(ctx->i2c.tcpc_client);
 }
 
+void anx7625_vbus_control(bool on)
+{
+#ifdef EN_VBUS_CTL
+	if (on) {
+		gpiod_set_value(anx7625_ctx->pdata.gpio_vbus_ctrl, ENABLE_VBUS_OUTPUT);
+	} else {
+		gpiod_set_value(anx7625_ctx->pdata.gpio_vbus_ctrl, DISABLE_VBUS_OUTPUT);
+	}
+#endif
+}
+
+
+
 static int sys_sta_bak;
 
 static irqreturn_t anx7625_cable_irq(int irq, void *data)
@@ -2113,6 +2140,7 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
 
 		anx7625_power_standby(ctx);
 		atomic_set(&ctx->power_status, 0);
+		anx7625_vbus_control(0);
 		sys_sta_bak = 0;
 		mutex_unlock(&ctx->lock);
 		printk("anx: cable isr done\n");
@@ -2184,8 +2212,10 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 		printk("anx: - Reserved\n");
 	if (ivector & BIT(2))
 		printk("anx: - VCONN change\n");
-	if (ivector & BIT(3))
+	if (ivector & BIT(3)) {
 		printk("anx: - VBUS change\n");
+		anx7625_vbus_control(ivector & BIT(3));
+	}
 	if (ivector & BIT(4))
 		printk("anx: - CC status change\n");
 	if (ivector & BIT(5))
@@ -2405,6 +2435,10 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	anx7625_comm_isr(0, platform);
 #endif
 
+#ifdef EN_SYSFS
+	anx7625_sysfs_create(dev);
+#endif
+
 	printk("anx probed\n");
 
 	return 0;
@@ -2419,6 +2453,10 @@ free_platform:
 static int anx7625_i2c_remove(struct i2c_client *client)
 {
 	struct anx7625_data *platform = i2c_get_clientdata(client);
+
+#ifdef EN_SYSFS
+	anx7625_sysfs_destory(&platform->client->dev);
+#endif
 
 #ifdef ENABLE_TCPM
 	anx7625_tcpm_release();

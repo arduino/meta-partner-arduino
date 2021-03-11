@@ -1,6 +1,7 @@
 anx-mi2-objs := anx7625_drv.o \
             anx7625_pd.o \
-            anx7625_tcpm.o
+            anx7625_tcpm.o \
+            anx7625_sysfs.o
 
 obj-m += anx-mi2.o
 
