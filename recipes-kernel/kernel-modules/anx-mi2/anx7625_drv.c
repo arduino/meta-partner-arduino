@@ -76,7 +76,7 @@ struct anx7625_data *anx7625_ctx;
 #ifdef ENABLE_TCPM
 int anx7625_tcpm_probe(void);
 int anx7625_tcpm_release(void);
-int anx7625_tcpm_change(int sys_status, int ivector, int cc_status);
+int anx7625_tcpm_change(int sys_status, int ivector, int cc_status, int itype);
 #endif
 
 /*
@@ -2152,14 +2152,15 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
 	printk("anx: cable isr done\n");
 
 #ifdef ENABLE_TCPM
-	{
-	int sys_status, ivector, cc_status;
+	/*{
+	int sys_status, ivector, cc_status, itype;
 
 	sys_status = anx7625_read_hpd_status_p0(ctx);
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, INTERFACE_CHANGE_INT);
 	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
-	anx7625_tcpm_change(sys_status, ivector, cc_status);
-	}
+	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_INTR_ALERT_1);
+	anx7625_tcpm_change(sys_status, ivector, cc_status, itype);
+	}*/
 #endif
 
 	mutex_unlock(&ctx->lock);
@@ -2198,9 +2199,9 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (itype & TCPC_INTR_RECEIVED_MSG) {
 		/*Received interface message*/
 		printk("anx: Received interface message\n");
-//#ifndef DISABLE_PD
+#ifndef DISABLE_PD
 		handle_msg_rcv_intr();
-//#endif
+#endif
 	}
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
 				   INTERFACE_CHANGE_INT);
@@ -2314,7 +2315,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	printk("anx: comm isr done ---------------------------------\n");
 
 #ifdef ENABLE_TCPM
-	anx7625_tcpm_change(sys_status, ivector, cc_status);
+	anx7625_tcpm_change(sys_status, ivector, cc_status, itype);
 #endif
 
 	mutex_unlock(&ctx->lock);

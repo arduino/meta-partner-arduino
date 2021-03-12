@@ -49,15 +49,6 @@ int anx7625_write_and_or(struct anx7625_data *ctx,
 //#define HPD_STATUS_CHANGE         0x80
 
 
-/*Comands status*/
-enum interface_status {
-	CMD_SUCCESS,
-	CMD_REJECT,
-	CMD_FAIL,
-	CMD_BUSY,
-	CMD_STATUS
-};
-
 /***************
  */
 
@@ -231,9 +222,9 @@ char *interface_to_str(unsigned char header_type);
  */
 void handle_msg_rcv_intr(void)
 {
-	if ((~INTR_MASK_SETTING) & RECEIVED_MSG)
+	if ((~INTR_MASK_SETTING) & RECEIVED_MSG) {
 		polling_interface_msg(INTERACE_TIMEOUT_MS);
-
+	}
 	// TODO per ora non serve (fa solo pduf???) pd_ext_message_handling();
 }
 

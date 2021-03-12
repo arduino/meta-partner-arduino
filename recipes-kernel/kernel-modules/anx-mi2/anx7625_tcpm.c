@@ -33,6 +33,11 @@ int anx7625_write_and_or(struct anx7625_data *ctx,
 #define OCM_DEBUG_REG_8             0x88
 #define STOP_MAIN_OCM           6
 
+
+#define InterfaceSendBuf_Addr 0xc0
+#define InterfaceRecvBuf_Addr 0xe0
+
+
 #define DEBUG 1
 
 #ifdef DEBUG
@@ -369,7 +374,63 @@ void anx7625_DRP_Enable(void)
 
 /**
  */
-int anx7625_tcpm_change(int sys_status, int ivector, int cc_status)
+int anx7625_pd_msg_get(struct pd_message *pMsg)
+{
+	u8 rbuf[32];
+	int ret;
+	u8 checksum;
+	int i;
+
+	char strlog[256];
+	int lenlog;
+
+	DBG_PRINT("read block from InterfaceRecvBuf_Addr!\n");
+	ret = anx7625_reg_block_read(anx7625_ctx, anx7625_ctx->i2c.rx_p0_client,
+				InterfaceRecvBuf_Addr, 32, (unsigned char *)rbuf);
+	if (ret<0) {
+		DBG_PRINT("read block from InterfaceRecvBuf_Addr CMD_FAIL!\n");
+		return CMD_FAIL;
+	}
+
+	DBG_PRINT("rbuf[0] = %d\n", rbuf[0]);
+	if (rbuf[0] == 0) {
+		DBG_PRINT("ERROR: len is zero\n");
+		return CMD_FAIL;
+	}
+	ret = anx7625_reg_write(anx7625_ctx, anx7625_ctx->i2c.rx_p0_client,
+													InterfaceRecvBuf_Addr, 0);
+	if (ret<0) {
+		return CMD_FAIL;
+	}
+
+	lenlog = sprintf(strlog, "len: %d,", rbuf[0] + 2);
+	checksum = 0;
+	for (i = 0; i < rbuf[0] + 2; i++) {
+		checksum += rbuf[i];
+		lenlog += sprintf(strlog + lenlog, " %02X", rbuf[i]);
+	}
+	DBG_PRINT("%s\n", strlog);
+
+	if (checksum != 0) {
+		DBG_PRINT("checksum error!\n");
+		return CMD_FAIL;
+	}			
+//				DBG_PRINT(">>(%02X) %s\n", rbuf[1], interface_to_str(rbuf[1]));
+/*
+	msg.header = PD_HEADER_LE(type, port->pwr_role,
+		port->data_role,
+		port->negotiated_rev,
+		port->message_id, 0);
+*/
+	pMsg->header = 0;//(rbuf << 8) | rbuf;
+	pMsg->payload[0] = 0;
+	return CMD_SUCCESS;
+}
+
+/**
+ * TODO do external function in anx7625_pd
+ */
+int anx7625_tcpm_change(int sys_status, int ivector, int cc_status, int itype)
 {
 	DBG_PRINT("sys_status %X, ivector %X, cc_status %X\n",
 						sys_status, ivector, cc_status);
@@ -413,6 +474,15 @@ int anx7625_tcpm_change(int sys_status, int ivector, int cc_status)
 		} else {
 			tcpm_tcpc_reset(anx7625_tcpm->port);
 		}*/
+	}
+
+	if (itype & TCPC_INTR_RECEIVED_MSG) {
+		struct pd_message msg;
+		int ret;
+		ret = anx7625_pd_msg_get(&msg);
+		if (ret == CMD_SUCCESS) {
+		//	tcpm_pd_receive(anx7625_tcpm->port, &msg);
+		}
 	}
 	return 0;
 }

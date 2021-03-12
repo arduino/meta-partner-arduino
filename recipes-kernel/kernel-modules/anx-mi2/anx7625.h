@@ -529,6 +529,15 @@ enum PD_MSG_TYPE {
 	TYPE_FR_SWAP_SIGNAL = 0xB0, /* Fast Role Swap signal*/
 };
 
+/*Comands status*/
+enum interface_status {
+	CMD_SUCCESS,
+	CMD_REJECT,
+	CMD_FAIL,
+	CMD_BUSY,
+	CMD_STATUS
+};
+
 
 /**
  */
