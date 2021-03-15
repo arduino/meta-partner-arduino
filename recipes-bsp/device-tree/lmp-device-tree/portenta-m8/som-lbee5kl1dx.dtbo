@@ -1,0 +1,77 @@
+/**
+ * Copyright 2020
+ *   BT       232 with RTS CTS and modem reset
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm.dtsi"
+
+//#define UART1_BT
+//#define UART1_RS232
+#define UART1_RS485_H
+//#define UART1_RS485_F
+
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			pinctrl_uart1: uart1grp {
+				fsl,pins = <
+					MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX     0x140
+					MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX     0x140
+					MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B  0x140
+					MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B  0x140
+					MX8MM_IOMUXC_SD1_DATA4_GPIO2_IO6        0x19      // BT_REG_ON
+				>;
+			};
+		};
+	};
+
+	modem_reset: modem-reset {
+		compatible = "gpio-reset";
+		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+		reset-delay-us = <2000>;
+		reset-post-delay-ms = <40>;
+		#reset-cells = <0>;
+	};
+
+	fragment@1 {
+		target = <&uart1>;
+		__overlay__ {
+			uart-has-rtscts;
+			resets = <&modem_reset>;
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <&usdhc1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			pinctrl-names = "default", "state_100mhz", "state_200mhz";
+			pinctrl-0 = <&pinctrl_usdhc1>, <&pinctrl_usdhc1_gpio>;
+			pinctrl-1 = <&pinctrl_usdhc1_100mhz>, <&pinctrl_usdhc1_gpio>;
+			pinctrl-2 = <&pinctrl_usdhc1_200mhz>, <&pinctrl_usdhc1_gpio>;
+			bus-width = <4>;
+			vmmc-supply = <&reg_sd1_vmmc>;
+			pm-ignore-notify;
+			keep-power-in-suspend;
+			non-removable;
+			status = "okay";
+
+			brcmf: bcrmf@1 {
+				reg = <1>;
+				compatible = "brcm,bcm4329-fmac";
+				interrupt-parent = <&gpio2>;
+				interrupts = <9 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "host-wake";
+			};
+		};
+	};
+};
