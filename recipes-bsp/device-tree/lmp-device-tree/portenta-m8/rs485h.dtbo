@@ -1,0 +1,74 @@
+/**
+ * Copyright 2020
+ * RS485 Half Duplex
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm.dtsi"
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			pinctrl_uart1: uart1grp {
+				fsl,pins = <
+					MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX     0x140
+					MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX     0x140
+					MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B  0x140
+					MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B  0x140
+				>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&uart1>;
+		__overlay__ {
+			uart-has-rtscts;
+			//rts-gpios;
+			linux,rs485-enabled-at-boot-time;
+			rs485-rts-delay = <200 200>;  // in milliseconds
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <&gpio5>;
+		__overlay__ {
+			ren {
+				gpio-hog;
+				gpios = <27 0>;
+				output-low;
+				line-name = "REn-gpio";
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&gpio1>;
+		__overlay__ {
+			HF {
+				gpio-hog;
+				gpios = <1 0>;
+				output-high;
+				line-name = "HF-gpio";
+			};
+			SERIAL_TYPE {
+				gpio-hog;
+				gpios = <13 0>;
+				output-high;
+				line-name = "SERIAL_TYPE-gpio";
+			};
+			SERIAL_EN {
+				gpio-hog;
+				gpios = <14 0>;
+				output-high;
+				line-name = "SERIAL_EN-gpio";
+			};
+		};
+	};
+};
