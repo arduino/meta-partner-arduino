@@ -19,7 +19,7 @@
  *   RS485_F  485 half duplex CTS controls tx enable
 
  */
-#define UART1_BT
+//#define UART1_BT
 //#define UART1_RS232
 //#define UART1_RS485_H
 //#define UART1_RS485_F
