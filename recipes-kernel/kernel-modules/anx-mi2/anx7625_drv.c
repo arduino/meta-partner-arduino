@@ -35,9 +35,9 @@
 #include <sound/soc.h>
 #include "anx7625.h"
 
-#define NO_POWER_GPIO
-#define NO_RESET_GPIO
-#define IRQ_CHECK
+//#define NO_POWER_GPIO
+//#define NO_RESET_GPIO
+//#define IRQ_CHECK
 
 /*VBUS Control logic status.*/
 #define EN_VBUS_CTL
@@ -67,7 +67,7 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #endif
 #endif
 
-#define DISABLE_PD
+//#define DISABLE_PD
 
 struct anx7625_data *anx7625_ctx;
 
