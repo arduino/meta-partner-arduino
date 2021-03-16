@@ -45,6 +45,7 @@ CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     modemmanager \
     i2c-tools \
+    stress-ng \
     ${EXTERNAL_MODULES} \
 "
 
