@@ -6,13 +6,7 @@
 /dts-v1/;
 /plugin/;
 
-#include "imx8mm.dtsi"
-
-//#define UART1_BT
-//#define UART1_RS232
-#define UART1_RS485_H
-//#define UART1_RS485_F
-
+#include "imx8mm-pinfunc.h"
 
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
@@ -75,7 +69,7 @@
 
 	modem_reset: modem-reset {
 		compatible = "gpio-reset";
-		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+//TODO		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
 		reset-delay-us = <2000>;
 		reset-post-delay-ms = <40>;
 		#reset-cells = <0>;
@@ -112,7 +106,7 @@
 				reg = <1>;
 				compatible = "brcm,bcm4329-fmac";
 				interrupt-parent = <&gpio2>;
-				interrupts = <9 IRQ_TYPE_LEVEL_HIGH>;
+//TODO				interrupts = <9 IRQ_TYPE_LEVEL_HIGH>;
 				interrupt-names = "host-wake";
 			};
 		};

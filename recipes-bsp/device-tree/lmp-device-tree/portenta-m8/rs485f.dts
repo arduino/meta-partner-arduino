@@ -6,7 +6,7 @@
 /dts-v1/;
 /plugin/;
 
-#include "imx8mm.dtsi"
+#include "imx8mm-pinfunc.h"
 
 /**
  * UART1 configuration
