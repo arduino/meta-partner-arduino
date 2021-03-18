@@ -6,6 +6,9 @@
 /dts-v1/;
 /plugin/;
 
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
 #include "imx8mm-pinfunc.h"
 
 / {
@@ -69,7 +72,7 @@
 
 	modem_reset: modem-reset {
 		compatible = "gpio-reset";
-//TODO		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
 		reset-delay-us = <2000>;
 		reset-post-delay-ms = <40>;
 		#reset-cells = <0>;
@@ -106,7 +109,7 @@
 				reg = <1>;
 				compatible = "brcm,bcm4329-fmac";
 				interrupt-parent = <&gpio2>;
-//TODO				interrupts = <9 IRQ_TYPE_LEVEL_HIGH>;
+				interrupts = <9 IRQ_TYPE_LEVEL_HIGH>;
 				interrupt-names = "host-wake";
 			};
 		};
