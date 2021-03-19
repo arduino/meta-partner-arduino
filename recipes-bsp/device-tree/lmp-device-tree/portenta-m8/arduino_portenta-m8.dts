@@ -55,14 +55,6 @@
 		};
 	};
 
-	modem_reset: modem-reset {
-		compatible = "gpio-reset";
-		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
-		reset-delay-us = <2000>;
-		reset-post-delay-ms = <40>;
-		#reset-cells = <0>;
-	};
-
 	pcie0_refclk: pcie0-refclk {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -361,7 +353,6 @@
 	fsl,ext-reset-output;
 	status = "okay";
 };
-
 
 &iomuxc {
 	pinctrl-names = "default";
