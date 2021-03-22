@@ -1,0 +1,5 @@
+# Here list the overlays
+# you want to load using a space as separator
+# e.g. overlays=name_ov1 name_ov2
+# default is no overlay loaded (overlays=)
+overlays=
