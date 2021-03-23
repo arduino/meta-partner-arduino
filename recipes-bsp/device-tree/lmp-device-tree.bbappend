@@ -12,6 +12,7 @@ SRC_URI_append_portenta-m8 = " \
     file://rs232.dts \
     file://rs485h.dts \
     file://rs485f.dts \
+    file://ov_carrier_breakout_uart2.dts \
 "
 COMPATIBLE_MACHINE_portenta-m8 = ".*"
 
