@@ -37,6 +37,7 @@
 						MX8MM_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K  0x141 // REF_CLK_32K
 					>;
 				};
+
 				pinctrl_usdhc1: usdhc1grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_SD1_CLK_USDHC1_CLK		0x190

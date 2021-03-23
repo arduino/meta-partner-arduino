@@ -24,6 +24,14 @@
 						MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX   0x140
 					>;
 				};
+
+				pinctrl_hog: hoggrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO01_GPIO1_IO1   0x44 /* J2 59 PWM1 H/Fn     */
+						MX8MM_IOMUXC_GPIO1_IO13_GPIO1_IO13  0x44 /* J2 61 PWM2 485/232n */
+						MX8MM_IOMUXC_GPIO1_IO14_GPIO1_IO14  0x44 /* J2 63 PWM3 EN_485   */
+					>;
+				};
 			};
 		};
 	};
