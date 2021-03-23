@@ -1,6 +1,9 @@
 /**
- * Copyright 2020
- * RS232    232 with only tx and rx
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable RS232 on Arduino eNUC carrier board
+ * where SP330 ic is used.
+ * no RTS CTS only TX RX
  */
 
 /dts-v1/;

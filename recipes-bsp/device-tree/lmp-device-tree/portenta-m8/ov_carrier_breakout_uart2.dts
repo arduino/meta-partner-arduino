@@ -1,7 +1,8 @@
 /**
  * Portenta-M8 dtb overlay file
- * Copyright 2020
+ * Arduino 2021
  * Enable UART2 on Arduino Breakout carrier board
+ * no RTS CTS only TX RX
  */
 
 /dts-v1/;

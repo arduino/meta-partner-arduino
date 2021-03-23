@@ -1,6 +1,10 @@
 /**
- * Copyright 2020
- *   BT       232 with RTS CTS and modem reset
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable modem LBEE5KL1DX serial on Arduino eNUC carrier board
+ * with RTS CTS and modem reset
+ * Gpios:
+ * gpio-reset controls modem reset active low
  */
 
 /dts-v1/;
@@ -8,7 +12,6 @@
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
-
 #include "imx8mm-pinfunc.h"
 
 / {
@@ -24,14 +27,14 @@
 						MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX     0x140
 						MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B  0x140
 						MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B  0x140
-						MX8MM_IOMUXC_SD1_DATA4_GPIO2_IO6        0x19      // BT_REG_ON
+						MX8MM_IOMUXC_SD1_DATA4_GPIO2_IO6        0x19 // BT_REG_ON
 					>;
 				};
 
 				pinctrl_usdhc1_gpio: usdhc1grpgpio {
 					fsl,pins = <
-						MX8MM_IOMUXC_SD1_RESET_B_GPIO2_IO10         0x41    // WL_REG_ON
-						MX8MM_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K  0x141   // REF_CLK_32K
+						MX8MM_IOMUXC_SD1_RESET_B_GPIO2_IO10         0x41 // WL_REG_ON
+						MX8MM_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K  0x141 // REF_CLK_32K
 					>;
 				};
 				pinctrl_usdhc1: usdhc1grp {

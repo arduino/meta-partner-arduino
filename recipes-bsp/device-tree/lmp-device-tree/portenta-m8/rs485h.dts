@@ -1,6 +1,12 @@
 /**
- * Copyright 2020
- * RS485 Half Duplex
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable RS485 half duplex on Arduino eNUC carrier board
+ * where SP330 ic is used.
+ * Gpios:
+ * DE controls tx
+ * REn controls rx
+ * behaviour is always rx except while transmitting
  */
 
 /dts-v1/;
@@ -19,8 +25,6 @@
 					fsl,pins = <
 						MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX     0x140
 						MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX     0x140
-						MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B  0x140
-						MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B  0x140
 					>;
 				};
 			};
@@ -32,26 +36,17 @@
 		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_uart1>;
-			uart-has-rtscts;
 			linux,rs485-enabled-at-boot-time;
-			rs485-rts-delay = <200 200>;  // in milliseconds
+			//rs485-rx-during-tx;
+			rs485-rts-delay = <1 1>;  // In milliseconds
 			status = "okay";
-		};
+			cts-gpios = <&gpio5 27 GPIO_ACTIVE_LOW>; // RTS -> REn
+			rts-gpios = <&gpio5 26 GPIO_ACTIVE_HIGH>; // CTS -> DE
+			status = "okay";
+			};
 	};
 
 	fragment@2 {
-		target = <&gpio5>;
-		__overlay__ {
-			ren {
-				gpio-hog;
-				gpios = <27 0>;
-				output-low;
-				line-name = "REn-gpio";
-			};
-		};
-	};
-
-	fragment@3 {
 		target = <&gpio1>;
 		__overlay__ {
 			HF {

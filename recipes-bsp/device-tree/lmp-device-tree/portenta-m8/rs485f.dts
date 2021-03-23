@@ -1,21 +1,19 @@
 /**
- * Copyright 2020
- * RS485 Full Duplex
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable RS485 full duplex on Arduino eNUC carrier board
+ * where SP330 ic is used.
+ * Gpios:
+ * DE controls tx and is always high (active)
+ * REn controls rx and is always low (active)
+ * this means this interface cannot be used in a bus configuration
+ * but only point to point (similar to rs232 but more robust to noise)
  */
 
 /dts-v1/;
 /plugin/;
 
 #include "imx8mm-pinfunc.h"
-
-/**
- * UART1 configuration
- *   BT       232 with RTS CTS and modem reset
- *   RS232    232 with only tx and rx
- *   RS485_H  485 full duplex
- *   RS485_F  485 half duplex CTS controls tx enable
- */
-
 
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
