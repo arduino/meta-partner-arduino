@@ -6,12 +6,14 @@
  * Gpios:
  * DE controls tx
  * REn controls rx
- * behaviour is always rx except while transmitting
+ * behaviour is always rx except while transmitting. Direction
+ * is handled by driver with gpios, no direct hardware control
  */
 
 /dts-v1/;
 /plugin/;
 
+#include <dt-bindings/gpio/gpio.h>
 #include "imx8mm-pinfunc.h"
 
 / {
@@ -38,12 +40,11 @@
 			pinctrl-0 = <&pinctrl_uart1>;
 			linux,rs485-enabled-at-boot-time;
 			//rs485-rx-during-tx;
-			rs485-rts-delay = <1 1>;  // In milliseconds
+			rs485-rts-delay = <1 1>;  /* In milliseconds */
+			cts-gpios = <&gpio5 27 GPIO_ACTIVE_LOW>; /* RTS -> REn */
+			rts-gpios = <&gpio5 26 GPIO_ACTIVE_HIGH>; /* CTS -> DE */
 			status = "okay";
-			cts-gpios = <&gpio5 27 GPIO_ACTIVE_LOW>; // RTS -> REn
-			rts-gpios = <&gpio5 26 GPIO_ACTIVE_HIGH>; // CTS -> DE
-			status = "okay";
-			};
+		};
 	};
 
 	fragment@2 {
