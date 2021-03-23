@@ -5,8 +5,8 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 DTB_OVERLAYS = " \
     file://overlays.txt \
+    file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart2.dts \
-    file://ov_carrier_enuc_lbee5kl1dx.dts \
     file://ov_carrier_enuc_rs232_sp330.dts \
     file://ov_carrier_enuc_rs485f_sp330.dts \
     file://ov_carrier_enuc_rs485h_sp330.dts \

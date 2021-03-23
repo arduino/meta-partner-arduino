@@ -1,7 +1,7 @@
 /**
  * Portenta-M8 dtb overlay file
  * Arduino 2021
- * Enable modem LBEE5KL1DX serial on Arduino eNUC carrier board
+ * Enable modem LBEE5KL1DX serial on Arduino Portenta-M8 SoM
  * with RTS CTS and modem reset
  * Gpios:
  * gpio-reset controls modem reset active low
