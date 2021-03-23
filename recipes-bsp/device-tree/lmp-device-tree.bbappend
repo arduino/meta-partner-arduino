@@ -3,16 +3,20 @@ inherit devicetree
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI_append_portenta-m8 = " \
+DTB_OVERLAYS = " \
     file://overlays.txt \
-    file://anx7625.dtsi \
-    file://envie_enuc_carrier.dtsi \
-    file://arduino_portenta-m8.dts \
-    file://som-lbee5kl1dx.dts \
-    file://rs232.dts \
-    file://rs485h.dts \
-    file://rs485f.dts \
     file://ov_carrier_breakout_uart2.dts \
+    file://ov_carrier_enuc_lbee5kl1dx.dts \
+    file://ov_carrier_enuc_rs232_sp330.dts \
+    file://ov_carrier_enuc_rs485f_sp330.dts \
+    file://ov_carrier_enuc_rs485h_sp330.dts \
+"
+
+SRC_URI_append_portenta-m8 = " \
+    file://anx7625.dtsi \
+    file://arduino_portenta-m8.dts \
+    file://envie_enuc_carrier.dtsi \
+    ${DTB_OVERLAYS} \
 "
 COMPATIBLE_MACHINE_portenta-m8 = ".*"
 
