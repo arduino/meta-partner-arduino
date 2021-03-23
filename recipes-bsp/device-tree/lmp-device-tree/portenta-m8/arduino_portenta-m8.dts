@@ -9,7 +9,7 @@
 
 #include "anx7625.dtsi"
 
-#include "envie_enuc_carrier.dtsi"
+//#include "envie_enuc_carrier.dtsi"
 
 / {
 	model = "Arduino i.MX8MM Portenta board";

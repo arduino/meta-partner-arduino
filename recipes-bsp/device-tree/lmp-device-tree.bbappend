@@ -4,6 +4,7 @@ inherit devicetree
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI_append_portenta-m8 = " \
+    file://overlays.txt \
     file://anx7625.dtsi \
     file://envie_enuc_carrier.dtsi \
     file://arduino_portenta-m8.dts \
@@ -13,3 +14,11 @@ SRC_URI_append_portenta-m8 = " \
     file://rs485f.dts \
 "
 COMPATIBLE_MACHINE_portenta-m8 = ".*"
+
+do_install_append() {
+    install -Dm 0644 ${WORKDIR}/overlays.txt ${D}/boot/devicetree/overlays.txt
+}
+
+FILES_${PN} += " \
+    /boot/devicetree/overlays.txt \
+"
