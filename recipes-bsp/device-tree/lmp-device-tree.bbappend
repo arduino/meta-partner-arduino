@@ -9,6 +9,7 @@ DTB_OVERLAYS = " \
     file://ov_carrier_breakout_uart2.dts \
     file://ov_carrier_breakout_i2c0.dts \
     file://ov_carrier_breakout_usbfs.dts \
+    file://ov_carrier_breakout_uart0.dts \
     file://ov_carrier_enuc_rs232_sp330.dts \
     file://ov_carrier_enuc_rs485f_sp330.dts \
     file://ov_carrier_enuc_rs485h_sp330.dts \
