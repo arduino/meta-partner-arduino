@@ -1,0 +1,25 @@
+From 8cfd6d70d8a61fbd73c41946367ae28b7ccad5f9 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Wed, 24 Mar 2021 12:59:42 +0100
+Subject: [PATCH] Bug: rx uart1 doesn't work with DMA channels
+
+---
+ arch/arm64/boot/dts/freescale/imx8mm.dtsi | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mm.dtsi b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
+index f22417f4abbf..94beb4038ebb 100755
+--- a/arch/arm64/boot/dts/freescale/imx8mm.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
+@@ -888,8 +888,6 @@
+ 				clocks = <&clk IMX8MM_CLK_UART1_ROOT>,
+ 					 <&clk IMX8MM_CLK_UART1_ROOT>;
+ 				clock-names = "ipg", "per";
+-				dmas = <&sdma1 22 4 0>, <&sdma1 23 4 0>;
+-				dma-names = "rx", "tx";
+ 				status = "disabled";
+ 			};
+ 
+-- 
+2.25.1
+
