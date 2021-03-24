@@ -2,4 +2,15 @@
 # you want to load using a space as separator
 # e.g. overlays=name_ov1 name_ov2
 # default is no overlay loaded (overlays=)
+
+# breakout board
+breakout_ovl=ov_carrier_breakout_gpio \
+ov_carrier_breakout_i2c2 \
+ov_carrier_breakout_pwm \
+ov_carrier_breakout_spi0 \
+ov_carrier_breakout_uart2 \
+ov_carrier_breakout_uart3
+
+#overlays=${breakout_ovl}
+
 overlays=
