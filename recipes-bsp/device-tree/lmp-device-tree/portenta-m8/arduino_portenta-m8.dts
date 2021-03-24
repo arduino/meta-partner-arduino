@@ -539,9 +539,9 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs_adc>;
-	num-cs = <1>;
-	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+	pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs_adc &pinctrl_ecspi2_cs>;
+	num-cs = <2>;
+	cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>, <&gpio5 13 GPIO_ACTIVE_LOW>;
 	status = "okay";
 
 	ads7959: ads7959@0 {

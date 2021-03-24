@@ -1,0 +1,65 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_pwm1 {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO01_PWM1_OUT     0x140
+					>;
+				};
+				pinctrl_pwm2 {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO13_PWM2_OUT     0x140
+					>;
+				};
+				pinctrl_pwm3 {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO14_PWM3_OUT     0x140
+					>;
+				};
+				pinctrl_pwm4 {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO15_PWM4_OUT     0x140
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		&pwm1 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pwm1>;
+			status = "okay";
+		};
+
+		&pwm2 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pwm2>;
+			status = "okay";
+		};
+
+		&pwm3 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pwm3>;
+			status = "okay";
+		};
+
+		&pwm4 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pwm4>;
+			status = "okay";
+		};
+	};
+};
