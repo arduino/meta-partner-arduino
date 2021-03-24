@@ -1,0 +1,27 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable USBFS on Arduino Breakout carrier board
+ * Usb port is configured as host only
+ * and is routed to a Type-A female connector soldered
+ * on the board.
+ * VBUS is active by default.
+ * Optional jumper config:
+ * J12 closed: enable VBUS control via GPIO5 (active low)
+ * J13 closed: enable VBUS_FLAG monitor via GPIO2 (active low)
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@1 {
+		target = <&usbotg2>;
+		__overlay__ {
+			dr_mode = "host";
+			status = "okay";
+		};
+	};
+};
