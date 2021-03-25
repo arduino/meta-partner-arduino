@@ -1,14 +1,13 @@
 /**
- * Copyright 2020
+ * Portenta-M8 dtb main som overlay file
+ * Arduino 2021
  */
 
 /dts-v1/;
 
 #include <dt-bindings/usb/pd.h>
 #include "imx8mm.dtsi"
-
 #include "anx7625.dtsi"
-
 //#include "envie_enuc_carrier.dtsi"
 
 / {
@@ -69,18 +68,6 @@
 		gpio = <&gpio2 10 GPIO_ACTIVE_HIGH>;
 		off-on-delay-us = <20000>;
 		startup-delay-us = <100>;
-		enable-active-high;
-	};
-
-	reg_usdhc2_vmmc: regulator-usdhc2 {
-		compatible = "regulator-fixed";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_reg_usdhc2_vmmc>;
-		regulator-name = "VSD_3V3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
-		off-on-delay-us = <20000>;
 		enable-active-high;
 	};
 
@@ -298,22 +285,6 @@
 	status = "disabled";
 };
 
-&usdhc2 {
-#if 0
-	pinctrl-names = "default", "state_100mhz", "state_200mhz";
-	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
-	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
-	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
-#else
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
-#endif
-	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
-	bus-width = <4>;
-	vmmc-supply = <&reg_usdhc2_vmmc>;
-	status = "okay";
-};
-
 &usdhc3 {
 #if 0
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
@@ -392,54 +363,6 @@
 				MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX		0x140
 				MX8MM_IOMUXC_ECSPI1_SS0_UART3_DCE_RTS_B		0x140
 				MX8MM_IOMUXC_ECSPI1_MISO_UART3_DCE_CTS_B	0x140
-			>;
-		};
-
-		pinctrl_reg_usdhc2_vmmc: regusdhc2vmmc {
-			fsl,pins = <
-				MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19	0x41
-			>;
-		};
-
-		pinctrl_usdhc2_gpio: usdhc2grpgpio {
-			fsl,pins = <
-				MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12    0x1c4
-			>;
-		};
-
-		pinctrl_usdhc2: usdhc2grp {
-			fsl,pins = <
-				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK		0x190
-				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD		0x1d0
-				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0	0x1d0
-				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1	0x1d0
-				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2	0x1d0
-				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3	0x1d0
-				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT	0x1d0
-			>;
-		};
-
-		pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
-			fsl,pins = <
-				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK		0x194
-				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD		0x1d4
-				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0	0x1d4
-				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1	0x1d4
-				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2	0x1d4
-				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3	0x1d4
-				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT	0x1d0
-			>;
-		};
-
-		pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
-			fsl,pins = <
-				MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK		0x196
-				MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD		0x1d6
-				MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0	0x1d6
-				MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1	0x1d6
-				MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2	0x1d6
-				MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3	0x1d6
-				MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT	0x1d0
 			>;
 		};
 

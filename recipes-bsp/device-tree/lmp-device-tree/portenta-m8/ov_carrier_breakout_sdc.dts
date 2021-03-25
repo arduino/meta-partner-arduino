@@ -1,0 +1,115 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable SDC on Arduino Breakout carrier board
+ * This will allow you to use an sd card.
+ * Can be configured to normal or high speed by using 
+ * the define SDC_HS.
+ * Signals:
+ * - RST can be used to control an ext. regulator for sd card supply
+ *   is configured as active high and enabled by default
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include "imx8mm-pinfunc.h"
+
+//#define SDC_HS /* Decomment to enable high speed sd cards */
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_reg_usdhc2_vmmc: regusdhc2vmmc {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_RESET_B_GPIO2_IO19    0x41
+					>;
+				};
+
+				pinctrl_usdhc2_gpio: usdhc2grpgpio {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12       0x1c4
+					>;
+				};
+
+				pinctrl_usdhc2: usdhc2grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x190
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d0
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d0
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d0
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d0
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d0
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+
+				pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x194
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d4
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d4
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d4
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d4
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d4
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+
+				pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x196
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d6
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d6
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d6
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d6
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d6
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&usdhc2>;
+		__overlay__ {
+			#if defined(SDC_HS)
+				pinctrl-names = "default", "state_100mhz", "state_200mhz";
+				pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+				pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
+				pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+			#else
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+			#endif
+				cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
+				bus-width = <4>;
+				vmmc-supply = <&reg_usdhc2_vmmc>;
+				status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			reg_usdhc2_vmmc: regulator-usdhc2 {
+				compatible = "regulator-fixed";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_reg_usdhc2_vmmc>;
+				regulator-name = "VSD_3V3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
+				off-on-delay-us = <20000>;
+				enable-active-high;
+			};
+		};
+	};
+};
+
