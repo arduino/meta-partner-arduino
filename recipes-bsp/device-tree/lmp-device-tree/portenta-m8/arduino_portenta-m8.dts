@@ -10,6 +10,8 @@
 #include "anx7625.dtsi"
 //#include "envie_enuc_carrier.dtsi"
 
+#define EMMC_HS /* Decomment to enable high speed emmc flash */
+
 / {
 	model = "Arduino i.MX8MM Portenta board";
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
@@ -251,12 +253,6 @@
 	status = "okay";
 };
 
-&uart1 {
-	assigned-clocks = <&clk IMX8MM_CLK_UART1>;
-	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
-	status = "disabled";
-};
-
 &uart3 { /* console */
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_uart3>;
@@ -266,7 +262,7 @@
 	status = "okay";
 };
 
-&usbotg1 {
+&usbotg1 { /* usbc */
 	dr_mode = "otg";
 	hnp-disable;
 	srp-disable;
@@ -281,12 +277,8 @@
 	};
 };
 
-&usdhc1 {
-	status = "disabled";
-};
-
-&usdhc3 {
-#if 0
+&usdhc3 { /* emmc flash */
+#if defined(EMMC_HS)
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc3>;
 	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
@@ -310,11 +302,10 @@
 &iomuxc {
 	pinctrl-names = "default";
 	imx8mm {
-
-	pinctrl_fec1: fec1grp {
+		pinctrl_fec1: fec1grp {
 			fsl,pins = <
-				MX8MM_IOMUXC_ENET_MDC_ENET1_MDC			0x3
-				MX8MM_IOMUXC_ENET_MDIO_ENET1_MDIO		0x3
+				MX8MM_IOMUXC_ENET_MDC_ENET1_MDC				0x3
+				MX8MM_IOMUXC_ENET_MDIO_ENET1_MDIO			0x3
 				MX8MM_IOMUXC_ENET_TD3_ENET1_RGMII_TD3		0x1f
 				MX8MM_IOMUXC_ENET_TD2_ENET1_RGMII_TD2		0x1f
 				MX8MM_IOMUXC_ENET_TD1_ENET1_RGMII_TD1		0x1f
@@ -368,48 +359,48 @@
 
 		pinctrl_usdhc3: usdhc3grp {
 			fsl,pins = <
-				MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x190
-				MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD		0x1d0
+				MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK			0x190
+				MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD			0x1d0
 				MX8MM_IOMUXC_NAND_DATA04_USDHC3_DATA0		0x1d0
 				MX8MM_IOMUXC_NAND_DATA05_USDHC3_DATA1		0x1d0
 				MX8MM_IOMUXC_NAND_DATA06_USDHC3_DATA2		0x1d0
 				MX8MM_IOMUXC_NAND_DATA07_USDHC3_DATA3		0x1d0
-				MX8MM_IOMUXC_NAND_RE_B_USDHC3_DATA4		0x1d0
+				MX8MM_IOMUXC_NAND_RE_B_USDHC3_DATA4			0x1d0
 				MX8MM_IOMUXC_NAND_CE2_B_USDHC3_DATA5		0x1d0
 				MX8MM_IOMUXC_NAND_CE3_B_USDHC3_DATA6		0x1d0
-				MX8MM_IOMUXC_NAND_CLE_USDHC3_DATA7		0x1d0
+				MX8MM_IOMUXC_NAND_CLE_USDHC3_DATA7			0x1d0
 				MX8MM_IOMUXC_NAND_CE1_B_USDHC3_STROBE 		0x190
 			>;
 		};
 
 		pinctrl_usdhc3_100mhz: usdhc3grp100mhz {
 			fsl,pins = <
-				MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x194
-				MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD		0x1d4
+				MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK			0x194
+				MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD			0x1d4
 				MX8MM_IOMUXC_NAND_DATA04_USDHC3_DATA0		0x1d4
 				MX8MM_IOMUXC_NAND_DATA05_USDHC3_DATA1		0x1d4
 				MX8MM_IOMUXC_NAND_DATA06_USDHC3_DATA2		0x1d4
 				MX8MM_IOMUXC_NAND_DATA07_USDHC3_DATA3		0x1d4
-				MX8MM_IOMUXC_NAND_RE_B_USDHC3_DATA4		0x1d4
+				MX8MM_IOMUXC_NAND_RE_B_USDHC3_DATA4			0x1d4
 				MX8MM_IOMUXC_NAND_CE2_B_USDHC3_DATA5		0x1d4
 				MX8MM_IOMUXC_NAND_CE3_B_USDHC3_DATA6		0x1d4
-				MX8MM_IOMUXC_NAND_CLE_USDHC3_DATA7		0x1d4
+				MX8MM_IOMUXC_NAND_CLE_USDHC3_DATA7			0x1d4
 				MX8MM_IOMUXC_NAND_CE1_B_USDHC3_STROBE 		0x194
 			>;
 		};
 
 		pinctrl_usdhc3_200mhz: usdhc3grp200mhz {
 			fsl,pins = <
-				MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x196
-				MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD		0x1d6
+				MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK			0x196
+				MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD			0x1d6
 				MX8MM_IOMUXC_NAND_DATA04_USDHC3_DATA0		0x1d6
 				MX8MM_IOMUXC_NAND_DATA05_USDHC3_DATA1		0x1d6
 				MX8MM_IOMUXC_NAND_DATA06_USDHC3_DATA2		0x1d6
 				MX8MM_IOMUXC_NAND_DATA07_USDHC3_DATA3		0x1d6
-				MX8MM_IOMUXC_NAND_RE_B_USDHC3_DATA4		0x1d6
+				MX8MM_IOMUXC_NAND_RE_B_USDHC3_DATA4			0x1d6
 				MX8MM_IOMUXC_NAND_CE2_B_USDHC3_DATA5		0x1d6
 				MX8MM_IOMUXC_NAND_CE3_B_USDHC3_DATA6		0x1d6
-				MX8MM_IOMUXC_NAND_CLE_USDHC3_DATA7		0x1d6
+				MX8MM_IOMUXC_NAND_CLE_USDHC3_DATA7			0x1d6
 				MX8MM_IOMUXC_NAND_CE1_B_USDHC3_STROBE 		0x196
 			>;
 		};
@@ -421,11 +412,13 @@
 				MX8MM_IOMUXC_ECSPI2_MISO_ECSPI2_MISO        0x82
 			>;
 		};
+
 		pinctrl_ecspi2_cs: ecspi2cs {
 			fsl,pins = <
 				MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13          0x40000
 			>;
 		};
+
 		pinctrl_ecspi2_cs_adc: ecspi2csadc {
 			fsl,pins = <
 				MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12          0x40000
@@ -434,7 +427,7 @@
 
 		pinctrl_wdog: wdoggrp {
 			fsl,pins = <
-				MX8MM_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B	0xc6
+				MX8MM_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B		0xc6
 			>;
 		};
 	};

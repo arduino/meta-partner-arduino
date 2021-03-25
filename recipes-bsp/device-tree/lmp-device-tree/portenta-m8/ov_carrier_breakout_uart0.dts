@@ -8,6 +8,7 @@
 /dts-v1/;
 /plugin/;
 
+#include <dt-bindings/clock/imx8mm-clock.h>
 #include "imx8mm-pinfunc.h"
 
 / {
@@ -34,6 +35,8 @@
 		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_uart1>;
+			assigned-clocks = <&clk IMX8MM_CLK_UART1>;
+			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 			uart-has-rtscts;
 			status = "okay";
 		};
