@@ -78,15 +78,20 @@
 		};
 	};
 
-	modem_reset: modem-reset {
-		compatible = "gpio-reset";
-		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
-		reset-delay-us = <2000>;
-		reset-post-delay-ms = <40>;
-		#reset-cells = <0>;
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			modem_reset: modem-reset {
+				compatible = "gpio-reset";
+				reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
+				reset-delay-us = <2000>;
+				reset-post-delay-ms = <40>;
+				#reset-cells = <0>;
+			};
+		};
 	};
 
-	fragment@1 {
+	fragment@2 {
 		target = <&uart1>;
 		__overlay__ {
 			pinctrl-names = "default";
@@ -99,7 +104,7 @@
 		};
 	};
 
-	fragment@2 {
+	fragment@3 {
 		target = <&usdhc1>;
 		__overlay__ {
 			#address-cells = <1>;
