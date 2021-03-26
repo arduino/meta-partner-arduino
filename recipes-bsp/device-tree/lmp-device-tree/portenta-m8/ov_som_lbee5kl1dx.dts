@@ -1,10 +1,13 @@
 /**
  * Portenta-M8 dtb overlay file
  * Arduino 2021
- * Enable modem LBEE5KL1DX serial on Arduino Portenta-M8 SoM
- * with RTS CTS and modem reset
+ * Enable modem LBEE5KL1DX (Wlan+Bluetooth) on Arduino Portenta-M8 SoM.
+ * For the bluetooth functionality a serial port is created
+ * with RTS CTS.
+ * For the wifi functionality a sdio interface is used.
  * Gpios:
- * gpio-reset controls modem reset active low
+ * - GPIO2.6 controls bluetooth reset
+ * - GPIO2.10 controls wifi reset
  */
 
 /dts-v1/;
