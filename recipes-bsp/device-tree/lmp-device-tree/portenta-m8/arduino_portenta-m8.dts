@@ -10,7 +10,7 @@
 #include "anx7625.dtsi"
 //#include "envie_enuc_carrier.dtsi"
 
-#define EMMC_HS /* Decomment to enable high speed emmc flash */
+//#define EMMC_HS /* Decomment to enable high speed emmc flash */
 
 / {
 	model = "Arduino i.MX8MM Portenta board";
