@@ -6,6 +6,8 @@
 /dts-v1/;
 /plugin/;
 
+#include "imx8mm-pinfunc.h"
+
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
@@ -38,25 +40,35 @@
 	};
 
 	fragment@1 {
-		&pwm1 {
+		target = <&pwm1>;
+		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pwm1>;
 			status = "okay";
 		};
+	};
 
-		&pwm2 {
+	fragment@2 {
+		target = <&pwm2>;
+		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pwm2>;
 			status = "okay";
 		};
+	};
 
-		&pwm3 {
+	fragment@3 {
+		target = <&pwm3>;
+		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pwm3>;
 			status = "okay";
 		};
+	};
 
-		&pwm4 {
+	fragment@4 {
+		target = <&pwm4>;
+		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pwm4>;
 			status = "okay";

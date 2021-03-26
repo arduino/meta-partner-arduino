@@ -6,6 +6,7 @@
 /dts-v1/;
 /plugin/;
 
+#include <dt-bindings/clock/imx8mm-clock.h>
 #include "imx8mm-pinfunc.h"
 
 / {
