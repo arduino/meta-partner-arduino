@@ -1,15 +1,28 @@
-# Here list the overlays
-# you want to load using a space as separator
+# Here list the overlays you want
+# to load using a space as separator
 # e.g. overlays=name_ov1 name_ov2
-# default is no overlay loaded (overlays=)
+# Default is no overlay loaded (overlays=)
 
-# breakout board
+# Som board definition
+som_ovl=ov_som_lbee5kl1dx
+
+#overlays=${som_ovl}
+
+# Breakout carrier board definition
 breakout_ovl=ov_carrier_breakout_gpio \
+ov_carrier_breakout_i2c0 \
+ov_carrier_breakout_i2c1 \
 ov_carrier_breakout_i2c2 \
+ov_carrier_breakout_i2s \
+ov_carrier_breakout_pdm \
 ov_carrier_breakout_pwm \
+ov_carrier_breakout_sdc \
+ov_carrier_breakout_spdif \
 ov_carrier_breakout_spi0 \
+ov_carrier_breakout_uart0 \
 ov_carrier_breakout_uart2 \
-ov_carrier_breakout_uart3
+ov_carrier_breakout_uart3 \
+ov_carrier_breakout_usbfs
 
 #overlays=${breakout_ovl}
 
