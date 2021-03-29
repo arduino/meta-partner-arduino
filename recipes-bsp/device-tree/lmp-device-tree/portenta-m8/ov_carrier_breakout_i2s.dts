@@ -71,16 +71,21 @@
 				};
 
 				simple-audio-card,codec {
-					sound-dai = <&dummycodec>;
+					sound-dai = <&codecdummy1>;
 					clocks = <&clk IMX8MM_CLK_SAI3_ROOT>;
 				};
 			};
+		};
+	};
 
-			dummycodec: simple-audio-card,codec {
+	fragment@3 {
+		target-path = "/";
+		__overlay__ {
+			codecdummy1: codec1 {
 				#sound-dai-cells = <0>;
 				compatible = "linux,snd-soc-dummy";
+				status = "okay";
 			};
 		};
 	};
 };
-
