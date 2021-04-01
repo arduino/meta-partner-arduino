@@ -1,9 +1,6 @@
-
-inherit devicetree
-
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-DTB_OVERLAYS = " \
+DTB_OVERLAYS_portenta-m8 = " \
     file://overlays.txt \
     file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart0.dts \
@@ -33,10 +30,10 @@ SRC_URI_append_portenta-m8 = " \
 "
 COMPATIBLE_MACHINE_portenta-m8 = ".*"
 
-do_install_append() {
+do_install_append_portenta-m8() {
     install -Dm 0644 ${WORKDIR}/overlays.txt ${D}/boot/devicetree/overlays.txt
 }
 
-FILES_${PN} += " \
-    /boot/devicetree/overlays.txt \
+FILES_${PN}_portenta-m8 += " \
+    /boot/devicetree/* \
 "
