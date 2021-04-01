@@ -2642,7 +2642,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +}
 +
 +#ifdef CONFIG_FEC_MXC
-+#define FEC_RST_PAD       IMX_GPIO_NR(3, 6)4
++#define FEC_RST_PAD       IMX_GPIO_NR(3, 6)
 +
 +static void setup_iomux_fec(void)
 +{
