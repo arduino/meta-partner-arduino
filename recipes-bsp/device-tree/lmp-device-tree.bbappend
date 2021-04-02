@@ -12,6 +12,7 @@ DTB_OVERLAYS_portenta-m8 = " \
     file://ov_carrier_breakout_spi0.dts \
     file://ov_carrier_breakout_spdif.dts \
     file://ov_carrier_breakout_i2s.dts \
+    file://ov_carrier_breakout_sai.dts \
     file://ov_carrier_breakout_pdm.dts \
     file://ov_carrier_breakout_sdc.dts \
     file://ov_carrier_breakout_usbfs.dts \

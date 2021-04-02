@@ -14,6 +14,7 @@ ov_carrier_breakout_i2c0 \
 ov_carrier_breakout_i2c1 \
 ov_carrier_breakout_i2c2 \
 ov_carrier_breakout_i2s \
+ov_carrier_breakout_sai \
 ov_carrier_breakout_pdm \
 ov_carrier_breakout_pwm \
 ov_carrier_breakout_sdc \
