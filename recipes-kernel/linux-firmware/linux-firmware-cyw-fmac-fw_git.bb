@@ -27,12 +27,3 @@ FILES_${PN} = " \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.clm_blob \
 "
-
-RCONFLICTS_${PN} = "\
-    linux-firmware-bcm43430 \
-    linux-firmware-raspbian-bcm43430 \
-"
-RREPLACES_${PN} = "\
-    linux-firmware-bcm43430 \
-    linux-firmware-raspbian-bcm43430 \
-"
