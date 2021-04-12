@@ -30,7 +30,7 @@
 		// 1: internal_panel; !=1: external????
 		panel_flags = <2>;
 
-		usbc_pwr-gpios = <&gpio4 9 0x0>;
+		usbc_pwr-gpios = <&gpio4 9 0x0>;    // VBUS EN
 		enable-gpios = <&gpio4 21 0x0>;     // VIDEO_EN
 		reset-gpios = <&gpio4 27 0x0>;      // VIDEO_RSTN
 		cbl_det-gpios = <&gpio4 22 0x0>;    // VIDEO_CABLE
@@ -83,7 +83,7 @@
 };
 
 / {
-	sound {
+	sound-anx7625 {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,name = "anx7625";
