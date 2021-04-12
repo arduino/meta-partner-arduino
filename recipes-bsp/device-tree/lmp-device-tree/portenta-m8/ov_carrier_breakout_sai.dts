@@ -59,18 +59,9 @@
 				compatible = "simple-audio-card";
 				simple-audio-card,name = "sai-audio";
 				simple-audio-card,format = "left_j";
-				simple-audio-card,bitclock-master = <&dailink0_master>;
-				simple-audio-card,frame-master = <&dailink0_master>;
-				simple-audio-card,widgets =
-					"Microphone", "Microphone Jack",
-					"Headphone", "Headphone Jack",
-					"Speaker", "External Speaker";
-				simple-audio-card,routing =
-					"MIC_IN", "Microphone Jack",
-					"Headphone Jack", "HP_OUT",
-					"External Speaker", "LINE_OUT";
+				simple-audio-card,mclk-fs = <512>;
 
-				dailink0_master: simple-audio-card,cpu {
+				simple-audio-card,cpu {
 					sound-dai = <&sai5>;
 					dai-tdm-slot-num = <2>;
 					dai-tdm-slot-width = <32>;
@@ -78,7 +69,6 @@
 
 				simple-audio-card,codec {
 					sound-dai = <&codecdummy2>;
-					clocks = <&clk IMX8MM_CLK_SAI5_ROOT>;
 				};
 			};
 		};
