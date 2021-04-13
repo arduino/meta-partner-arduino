@@ -1,0 +1,28 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable USBFS on Arduino eNUC carrier board
+ * Usb port is configured as host only
+ * and is routed to a hub USB2514B/M2
+ * on the board.
+ * The hub then connects two USB type-A female ports
+ * and the SARA-R4 modem.
+ * The hub is configured one shot in u-boot
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@1 {
+		target = <&usbotg2>;
+		__overlay__ {
+			dr_mode = "host";
+			picophy,pre-emp-curr-control = <3>;
+			picophy,dc-vol-level-adjust = <7>;
+			status = "okay";
+		};
+	};
+};
