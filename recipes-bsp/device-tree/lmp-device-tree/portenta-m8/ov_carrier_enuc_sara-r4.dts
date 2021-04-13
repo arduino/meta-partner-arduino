@@ -3,7 +3,7 @@
  * Arduino 2021
  * Enable SARA-R4 modem serial port on Arduino eNUC carrier board
  * no RTS CTS only TX RX.
- * In order for the modem to work usb hub overlay need to be included.
+ * In order for the modem to work ov_carrier_enuc_usbfs overlay need to be included.
  * Gpios:
  * - Reset pin active low
  * - Power on pin active high
