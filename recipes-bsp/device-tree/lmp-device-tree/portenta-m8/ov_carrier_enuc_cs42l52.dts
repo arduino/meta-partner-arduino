@@ -2,6 +2,8 @@
  * Portenta-M8 dtb overlay file
  * Arduino 2021
  * Enable cs42l52 codec on Arduino eNUC carrier board
+ * This overlay has a dependency on bq24195 overlay, you need
+ * to include it in order for this to work
  */
 
 /dts-v1/;
