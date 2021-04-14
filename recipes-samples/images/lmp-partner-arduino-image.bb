@@ -35,6 +35,24 @@ CORE_IMAGE_BASE_INSTALL += " \
 "
 
 # Arduino additions
+
+BOOT = " \
+    lmp-device-tree \
+"
+
+BRINGUP = " \
+    i2c-tools \
+    usbutils \
+    python3-pyserial \
+    opkg \
+    minicom \
+    stress-ng \
+    portenta-m8-bringup \
+"
+# imx-test
+# bcm43xx-utils
+# brcm-patchram-plus
+
 EXTERNAL_MODULES = " \
     bq24195 \
     cs42l52 \
@@ -44,8 +62,8 @@ EXTERNAL_MODULES = " \
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     modemmanager \
-    i2c-tools \
-    stress-ng \
+    ${BOOT} \
+    ${BRINGUP} \
     ${EXTERNAL_MODULES} \
 "
 
