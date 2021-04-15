@@ -9,7 +9,8 @@ som_ovl=ov_som_lbee5kl1dx
 #overlays=${som_ovl}
 
 # Breakout carrier board definition
-breakout_ovl=ov_carrier_breakout_gpio \
+breakout_ovl=ov_som_lbee5kl1dx \
+ov_carrier_breakout_gpio \
 ov_carrier_breakout_i2c0 \
 ov_carrier_breakout_i2c1 \
 ov_carrier_breakout_i2c2 \
@@ -20,11 +21,20 @@ ov_carrier_breakout_pwm \
 ov_carrier_breakout_sdc \
 ov_carrier_breakout_spdif \
 ov_carrier_breakout_spi0 \
-ov_carrier_breakout_uart0 \
 ov_carrier_breakout_uart2 \
 ov_carrier_breakout_uart3 \
 ov_carrier_breakout_usbfs
 
 #overlays=${breakout_ovl}
+
+# eNUC carrier board definition
+anuc_ovl=ov_som_lbee5kl1dx \
+ov_carrier_enuc_bq24195 \
+ov_carrier_enuc_usbfs \
+ov_carrier_enuc_cs42l52 \
+ov_carrier_enuc_sara-r4 \
+ov_carrier_enuc_lora
+
+#overlays=${anuc_ovl}
 
 overlays=
