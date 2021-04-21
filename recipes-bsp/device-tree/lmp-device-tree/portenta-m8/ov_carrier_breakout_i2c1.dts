@@ -17,7 +17,7 @@
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
-				pinctrl_i2c2 {
+				pinctrl_i2c2: i2c2grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_I2C2_SCL_I2C2_SCL      0x400001c3
 						MX8MM_IOMUXC_I2C2_SDA_I2C2_SDA      0x400001c3

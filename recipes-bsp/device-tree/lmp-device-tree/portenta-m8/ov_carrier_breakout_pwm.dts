@@ -15,22 +15,22 @@
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
-				pinctrl_pwm1 {
+				pinctrl_pwm1: pwm1grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_GPIO1_IO01_PWM1_OUT     0x140
 					>;
 				};
-				pinctrl_pwm2 {
+				pinctrl_pwm2: pwm2grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_GPIO1_IO13_PWM2_OUT     0x140
 					>;
 				};
-				pinctrl_pwm3 {
+				pinctrl_pwm3: pwm3grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_GPIO1_IO14_PWM3_OUT     0x140
 					>;
 				};
-				pinctrl_pwm4 {
+				pinctrl_pwm4: pwm4grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_GPIO1_IO15_PWM4_OUT     0x140
 					>;
