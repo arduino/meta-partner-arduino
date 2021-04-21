@@ -47,7 +47,6 @@ BRINGUP = " \
     opkg \
     minicom \
     stress-ng \
-    portenta-m8-bringup \
 "
 # imx-test
 # bcm43xx-utils
