@@ -61,6 +61,7 @@ EXTERNAL_MODULES = " \
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     modemmanager \
+    usb-modeswitch \
     ${BOOT} \
     ${BRINGUP} \
     ${EXTERNAL_MODULES} \
