@@ -135,8 +135,8 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 +
 +	chosen {
-+		bootargs = "console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200";
-+		stdout-patch = &uart3;
++		bootargs = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200";
++		stdout-patch = &uart2;
 +	};
 +
 +	reg_usdhc2_vmmc: regulator-usdhc2 {
@@ -310,9 +310,9 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +	status = "okay";
 +};
 +
-+&uart3 { /* console */
++&uart2 { /* console */
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart3>;
++	pinctrl-0 = <&pinctrl_uart2>;
 +	status = "okay";
 +};
 +
@@ -422,10 +422,10 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +		>;
 +	};
 +
-+	pinctrl_uart3: uart3grp {
++	pinctrl_uart2: uart2grp {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX 0x49
-+			MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX 0x49
++			MX8MM_IOMUXC_UART2_RXD_UART2_DCE_RX 0x49
++			MX8MM_IOMUXC_UART2_TXD_UART2_DCE_TX 0x49
 +		>;
 +	};
 +
@@ -2580,8 +2580,8 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +#define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
 +
 +static iomux_v3_cfg_t const uart_pads[] = {
-+	IMX8MM_PAD_ECSPI1_SCLK_UART3_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
-+	IMX8MM_PAD_ECSPI1_MOSI_UART3_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MM_PAD_UART2_RXD_UART2_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MM_PAD_UART2_TXD_UART2_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
 +};
 +
 +static iomux_v3_cfg_t const wdog_pads[] = {
@@ -3471,8 +3471,8 @@ Index: git/include/configs/portenta-m8.h
 +	"fdt_addr=0x43000000\0"			\
 +	"fdt_high=0xffffffffffffffff\0" \
 +	"mtdparts=" MFG_NAND_PARTITION "\0" \
-+	"console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200\0" \
-+	"bootargs=console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200 ubi.mtd=5 "  \
++	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
++	"bootargs=console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ubi.mtd=5 "  \
 +		"root=ubi0:nandrootfs rootfstype=ubifs "		     \
 +		MFG_NAND_PARTITION \
 +		"\0" \
@@ -3486,7 +3486,7 @@ Index: git/include/configs/portenta-m8.h
 +	JAILHOUSE_ENV \
 +	"script=boot.scr\0" \
 +	"image=Image\0" \
-+	"console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200\0" \
++	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
 +	"fdt_addr=0x43000000\0"			\
 +	"fdt_high=0xffffffffffffffff\0"		\
 +	"boot_fit=no\0" \
@@ -3582,7 +3582,7 @@ Index: git/include/configs/portenta-m8.h
 +#define CONFIG_SYS_MEMTEST_START	PHYS_SDRAM
 +#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + (PHYS_SDRAM_SIZE >> 1))
 +
-+#define CONFIG_MXC_UART_BASE		UART3_BASE_ADDR
++#define CONFIG_MXC_UART_BASE		UART2_BASE_ADDR
 +
 +/* Monitor Command Prompt */
 +#define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
