@@ -584,22 +584,7 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 	{"ADC Right Mux", "Input4B", "AIN4R"},
 	{"ADC Left Mux", "PGA Input Left", "PGA Left"},
 	{"ADC Right Mux", "PGA Input Right" , "PGA Right"},
-#if 0
-	{"PGA Left", "Switch", "AIN1L"},
-	{"PGA Right", "Switch", "AIN1R"},
-	{"PGA Left", "Switch", "AIN2L"},
-	{"PGA Right", "Switch", "AIN2R"},
-	{"PGA Left", "Switch", "AIN3L"},
-	{"PGA Right", "Switch", "AIN3R"},
-	{"PGA Left", "Switch", "AIN4L"},
-	{"PGA Right", "Switch", "AIN4R"},
 
-	{"PGA Left", "Switch", "PGA MICA"},
-	{"PGA MICA", NULL, "MICA"},
-
-	{"PGA Right", "Switch", "PGA MICB"},
-	{"PGA MICB", NULL, "MICB"},
-#else
 	{"PGA Left", NULL, "AIN1L"},
 	{"PGA Right", NULL, "AIN1R"},
 	{"PGA Left", NULL, "AIN2L"},
@@ -614,7 +599,7 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 
 	{"PGA Right", NULL, "PGA MICB"},
 	{"PGA MICB", NULL, "MICB"},
-#endif
+
 	{"HPOUTA", NULL, "HP Left Amp"},
 	{"HPOUTB", NULL, "HP Right Amp"},
 	{"HP Left Amp", NULL, "Bypass Left"},
@@ -737,6 +722,7 @@ static int cs42l52_set_sysclk(struct snd_soc_dai *codec_dai,
 
 	if ((freq >= CS42L52_MIN_CLK) && (freq <= CS42L52_MAX_CLK)) {
 		cs42l52->sysclk = freq;
+		dev_info(component->dev, "%s %d cs42l52->sysclk=%d\n", __func__, __LINE__, cs42l52->sysclk);
 	} else {
 		dev_err(component->dev, "Invalid freq parameter\n");
 		return -EINVAL;
@@ -829,9 +815,12 @@ static int cs42l52_pcm_hw_params(struct snd_pcm_substream *substream,
 	u32 clk = 0;
 	int index;
 
-	index = cs42l52_get_clk(cs42l52->sysclk, params_rate(params));
+	index = cs42l52_get_clk(cs42l52->mclk, params_rate(params));
+	dev_info(component->dev, "%s %d index=%d\n", __func__, __LINE__, index);
+	dev_info(component->dev, "%s %d cs42l52->sysclk=%d\n", __func__, __LINE__, cs42l52->sysclk);
 	if (index >= 0) {
 		cs42l52->sysclk = clk_map_table[index].mclk;
+		dev_info(component->dev, "%s %d cs42l52->sysclk=%d\n", __func__, __LINE__, cs42l52->sysclk);
 
 		clk |= (clk_map_table[index].speed << CLK_SPEED_SHIFT) |
 		(clk_map_table[index].group << CLK_32K_SR_SHIFT) |
@@ -1054,6 +1043,7 @@ static int cs42l52_probe(struct snd_soc_component *component)
 	cs42l52_init_beep(component);
 
 	cs42l52->sysclk = CS42L52_DEFAULT_CLK;
+	dev_info(component->dev, "%s %d cs42l52->sysclk=%d\n", __func__, __LINE__, cs42l52->sysclk);
 	cs42l52->config.format = CS42L52_DEFAULT_FORMAT;
 
 	return 0;
@@ -1150,6 +1140,10 @@ static int cs42l52_i2c_probe(struct i2c_client *i2c_client,
 			if (of_property_read_u32(i2c_client->dev.of_node,
 				"cirrus,chgfreq-divisor", &val32) >= 0)
 				pdata->chgfreq = val32;
+
+			if (of_property_read_u32(i2c_client->dev.of_node,
+				"cirrus,mclk", &val32) >= 0)
+				cs42l52->mclk = val32;
 
 			pdata->reset_gpio =
 				of_get_named_gpio(i2c_client->dev.of_node,
