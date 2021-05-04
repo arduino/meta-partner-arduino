@@ -26,6 +26,7 @@ DTB_OVERLAYS_portenta-m8 = " \
     file://ov_carrier_enuc_sara-r4.dts \
     file://ov_carrier_enuc_lora.dts \
     file://ov_carrier_enuc_usbfs.dts \
+    file://ov_carrier_max_cs42l52.dts \
 "
 
 SRC_URI_append_portenta-m8 = " \
