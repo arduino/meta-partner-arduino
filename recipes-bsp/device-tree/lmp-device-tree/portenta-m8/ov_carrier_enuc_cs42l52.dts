@@ -110,6 +110,7 @@
 				cirrus,chgfreq-divisor = <0x05>;
 				cirrus.mica-differential-cfg;
 				cirrus,micbias-lvl = <5>;
+				cirrus,mclk = <24000000>;
 			};
 		};
 	};
