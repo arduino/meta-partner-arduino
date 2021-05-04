@@ -31,7 +31,7 @@
 
 				pinctrl_gpio_cs42l52: gpiocs42l52grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8       0xC0000041
+						MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8       0x16
 					>;
 				};
 			};
