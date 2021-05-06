@@ -263,18 +263,12 @@
 };
 
 &usbotg1 { /* usbc */
-	dr_mode = "otg";
+	dr_mode = "host";
 	hnp-disable;
 	srp-disable;
 	adp-disable;
 	usb-role-switch;
 	status = "okay";
-
-	port {
-		usb1_drd_sw: endpoint {
-			remote-endpoint = <&typec1_dr_sw>;
-		};
-	};
 };
 
 &usdhc3 { /* emmc flash */
