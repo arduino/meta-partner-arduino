@@ -90,6 +90,7 @@
 	pinctrl-0 = <&pinctrl_fec1>;
 	phy-mode = "rgmii-id";
 	phy-handle = <&ethphy0>;
+	phy-reset-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
 	fsl,magic-packet;
 	status = "okay";
 
@@ -100,6 +101,8 @@
 		ethphy0: ethernet-phy@0 {
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <1>;
+			interrupt-parent = <&gpio3>;
+			interrupts = <7 0>;
 		};
 	};
 };
@@ -312,6 +315,8 @@
 				MX8MM_IOMUXC_ENET_RXC_ENET1_RGMII_RXC		0x91
 				MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL	0x91
 				MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL	0x1f
+				MX8MM_IOMUXC_NAND_DATA00_GPIO3_IO6			0x16
+				MX8MM_IOMUXC_NAND_DATA01_GPIO3_IO7			0x41
 			>;
 		};
 
