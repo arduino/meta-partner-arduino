@@ -62,17 +62,6 @@
 		clock-frequency = <100000000>;
 	};
 
-	reg_sd1_vmmc: sd1_regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "WLAN_EN";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		gpio = <&gpio2 10 GPIO_ACTIVE_HIGH>;
-		off-on-delay-us = <20000>;
-		startup-delay-us = <100>;
-		enable-active-high;
-	};
-
 	reg_2v5: regulator-2v5 {
 		compatible = "regulator-fixed";
 		regulator-name = "2v5";
