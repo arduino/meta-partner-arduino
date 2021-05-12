@@ -40,19 +40,20 @@
 		ledR {
 			label = "ledR";
 			gpios = <&gpio5 2 GPIO_ACTIVE_LOW>;
-			default-state = "on";
+			default-state = "off";
 		};
 
 		ledG {
 			label = "ledG";
 			gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
-			default-state = "on";
+			default-state = "off";
 		};
 
 		ledB {
 			label = "ledB";
 			gpios = <&gpio4 29 GPIO_ACTIVE_LOW>;
-			default-state = "on";
+			linux,default-trigger = "heartbeat";
+			default-state = "off";
 		};
 	};
 
