@@ -3,7 +3,7 @@
  * Arduino 2021
  * Enable SAI (another I2S) on Arduino Breakout carrier board
  * A generic sound card is also created together
- * with a dummy codec. In this way the alsa interface
+ * with a dummy codec using bt-sco driver. In this way the alsa interface
  * streams i2s signals without the need to have
  * a real codec device connected.
  * The i2s signals are configured with left_j format.
@@ -79,7 +79,7 @@
 		__overlay__ {
 			codecdummy2: codec2 {
 				#sound-dai-cells = <0>;
-				compatible = "linux,snd-soc-dummy";
+				compatible = "linux,bt-sco";
 				status = "okay";
 			};
 		};
