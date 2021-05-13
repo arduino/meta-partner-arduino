@@ -25,8 +25,8 @@
 					fsl,pins = <
 						MX8MM_IOMUXC_UART2_RXD_UART2_DCE_RX       0x140
 						MX8MM_IOMUXC_UART2_TXD_UART2_DCE_TX       0x140
-						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9    0xC0000041 /* RST active low */
-						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11   0xC0000041 /* POWER_ON active high */
+						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9         0x44 /* RST active low */
+						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11        0x44 /* POWER_ON active high */
 					>;
 				};
 			};
