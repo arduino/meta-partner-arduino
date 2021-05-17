@@ -6,4 +6,4 @@ PACKAGECONFIG_append_pn-networkmanager_portenta-m8 = " modemmanager"
 PACKAGECONFIG_append_pn-weston-init_portenta-m8 = " no-idle-timeout"
 
 # Use legacy kernel fit-image node separator so current devices won't break
-FIT_NODE_SEPARATORt_portenta-m8 = "@"
+FIT_NODE_SEPARATOR_portenta-m8 = "@"
