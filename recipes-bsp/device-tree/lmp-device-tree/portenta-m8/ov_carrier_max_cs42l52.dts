@@ -22,8 +22,14 @@
 			imx8mm {
 				pinctrl_sai3: sai3grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI3_TXFS_SAI3_TX_SYNC     0xd6
-						MX8MM_IOMUXC_SAI3_TXC_SAI3_TX_BCLK      0xd6
+						//MX8MM_IOMUXC_SAI3_TXFS_SAI3_TX_SYNC     0xd6
+						//MX8MM_IOMUXC_SAI3_TXC_SAI3_TX_BCLK      0xd6
+						//MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28       0x101 // Input pull down
+						//MX8MM_IOMUXC_SAI3_RXC_GPIO4_IO29        0x101 // Input pull down
+						MX8MM_IOMUXC_SAI3_TXFS_GPIO4_IO31       0x101 // Not used now in slave, input pull down
+						MX8MM_IOMUXC_SAI3_TXC_GPIO5_IO0         0x101 // Not used now in slave, input pull down
+						MX8MM_IOMUXC_SAI3_RXFS_SAI3_RX_SYNC     0xd6  // New SCKLR in slave mode
+						MX8MM_IOMUXC_SAI3_RXC_SAI3_RX_BCLK      0xd6 // New SCLK in slave mode
 						MX8MM_IOMUXC_SAI3_TXD_SAI3_TX_DATA0     0xd6
 						MX8MM_IOMUXC_SAI3_RXD_SAI3_RX_DATA0     0xd6
 					>;
@@ -46,7 +52,7 @@
 			pinctrl-0 = <&pinctrl_sai3>;
 			assigned-clocks = <&clk IMX8MM_CLK_SAI3>;
 			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-			assigned-clock-rates = <12288000>;
+			assigned-clock-rates = <12000000>;
 			status = "okay";
 		};
 	};
@@ -100,13 +106,13 @@
 					"External Speaker", "SPKOUTA",
 					"External Speaker", "SPKOUTB";
 
-				dailink0_master: simple-audio-card,cpu {
+				simple-audio-card,cpu {
 					sound-dai = <&sai3>;
 					dai-tdm-slot-num = <2>;
-					dai-tdm-slot-width = <32>;
+					dai-tdm-slot-width = <31>;
 				};
 
-				simple-audio-card,codec {
+				dailink0_master: simple-audio-card,codec {
 					sound-dai = <&cs42l52>;
 					clocks = <&clk IMX8MM_CLK_SAI3_ROOT>;
 				};
