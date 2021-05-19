@@ -25,3 +25,6 @@ FILES_${PN} = " \
     ${nonarch_base_libdir}/firmware/LICENCE.cyw-fmac-nvram \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
 "
+
+COMPATIBLE_MACHINE ?= "^$"
+COMPATIBLE_MACHINE_portenta-m8 = ".*"

@@ -27,3 +27,6 @@ FILES_${PN} = " \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.clm_blob \
 "
+
+COMPATIBLE_MACHINE ?= "^$"
+COMPATIBLE_MACHINE_portenta-m8 = ".*"

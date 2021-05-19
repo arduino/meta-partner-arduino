@@ -42,3 +42,6 @@ RREPLACES_${PN} = "\
     linux-firmware-bcm43430 \
     linux-firmware-raspbian-bcm43430 \
 "
+
+COMPATIBLE_MACHINE ?= "^$"
+COMPATIBLE_MACHINE_portenta-m8 = ".*"
