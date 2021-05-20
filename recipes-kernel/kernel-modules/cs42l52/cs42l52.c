@@ -736,6 +736,8 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	struct cs42l52_private *cs42l52 = snd_soc_component_get_drvdata(component);
 	u8 iface = 0;
 
+	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
+
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBM_CFM:
 		iface = CS42L52_IFACE_CTL1_MASTER;
@@ -746,6 +748,8 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	default:
 		return -EINVAL;
 	}
+
+	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
 
 	 /* interface format */
 	switch (fmt & SND_SOC_DAIFMT_FORMAT_MASK) {
@@ -769,6 +773,8 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 		return -EINVAL;
 	}
 
+	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
+
 	/* clock inversion */
 	switch (fmt & SND_SOC_DAIFMT_INV_MASK) {
 	case SND_SOC_DAIFMT_NB_NF:
@@ -784,7 +790,10 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	default:
 		return -EINVAL;
 	}
+
+	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
 	cs42l52->config.format = iface;
+	dev_info(component->dev, "%s %d cs42l52->config.format=0x%02X\n", __func__, __LINE__, cs42l52->config.format);
 	snd_soc_component_write(component, CS42L52_IFACE_CTL1, cs42l52->config.format);
 
 	return 0;
@@ -1152,6 +1161,8 @@ static int cs42l52_i2c_probe(struct i2c_client *i2c_client,
 		cs42l52->pdata = *pdata;
 	}
 
+	dev_info(&i2c_client->dev, "%s %d\n", __func__, __LINE__);
+
 	if (cs42l52->pdata.reset_gpio) {
 		ret = devm_gpio_request_one(&i2c_client->dev,
 					    cs42l52->pdata.reset_gpio,
@@ -1165,6 +1176,8 @@ static int cs42l52_i2c_probe(struct i2c_client *i2c_client,
 		gpio_set_value_cansleep(cs42l52->pdata.reset_gpio, 0);
 		gpio_set_value_cansleep(cs42l52->pdata.reset_gpio, 1);
 	}
+
+	dev_info(&i2c_client->dev, "%s %d\n", __func__, __LINE__);
 
 	i2c_set_clientdata(i2c_client, cs42l52);
 
