@@ -12,6 +12,7 @@
 /dts-v1/;
 /plugin/;
 
+#include <dt-bindings/clock/imx8mm-clock.h>
 #include "imx8mm-pinfunc.h"
 
 / {
@@ -21,10 +22,10 @@
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
-				pinctrl_uart2: uart2grp {
+				pinctrl_uart3: uart3grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_UART2_RXD_UART2_DCE_RX       0x140
-						MX8MM_IOMUXC_UART2_TXD_UART2_DCE_TX       0x140
+						MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX     0x140
+						MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX     0x140
 						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9         0x44 /* RST active low */
 						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11        0x44 /* POWER_ON active high */
 					>;
@@ -34,10 +35,12 @@
 	};
 
 	fragment@1 {
-		target = <&uart2>;
+		target = <&uart3>;
 		__overlay__ {
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_uart2>;
+			pinctrl-0 = <&pinctrl_uart3>;
+			assigned-clocks = <&clk IMX8MM_CLK_UART3>;
+			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 			status = "okay";
 		};
 	};
