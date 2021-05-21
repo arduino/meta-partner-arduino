@@ -40,6 +40,18 @@
 		ledR {
 			label = "ledR";
 			gpios = <&gpio5 2 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		ledG {
+			label = "ledG";
+			gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		ledB {
+			label = "ledB";
+			gpios = <&gpio4 29 GPIO_ACTIVE_LOW>;
 			linux,default-trigger = "heartbeat";
 			default-state = "off";
 		};
@@ -298,6 +310,8 @@
 		pinctrl_gpio_led: gpioledgrp {
 			fsl,pins = <
 				MX8MM_IOMUXC_SAI3_MCLK_GPIO5_IO2	0x19
+				MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28	0x19
+				MX8MM_IOMUXC_SAI3_RXC_GPIO4_IO29	0x19
 			>;
 		};
 
