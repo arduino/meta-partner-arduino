@@ -1,12 +1,7 @@
 /**
  * Portenta-M8 dtb overlay file
  * Arduino 2021
- * Enable SARA-R4 modem serial port on Arduino eNUC carrier board
- * no RTS CTS only TX RX.
- * In order for the modem to work ov_carrier_enuc_usbfs overlay need to be included.
- * Gpios:
- * - Reset pin active low
- * - Power on pin active high
+ * Enable UART1 on Arduino Breakout carrier board
  */
 
 /dts-v1/;
@@ -26,8 +21,8 @@
 					fsl,pins = <
 						MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX     0x140
 						MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX     0x140
-						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9         0x44 /* RST active low */
-						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11        0x44 /* POWER_ON active high */
+						MX8MM_IOMUXC_ECSPI1_SS0_UART3_DCE_RTS_B   0x140
+						MX8MM_IOMUXC_ECSPI1_MISO_UART3_DCE_CTS_B  0x140
 					>;
 				};
 			};
@@ -41,6 +36,7 @@
 			pinctrl-0 = <&pinctrl_uart3>;
 			assigned-clocks = <&clk IMX8MM_CLK_UART3>;
 			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+			/* fsl,uart-has-rtscts; */
 			status = "okay";
 		};
 	};

@@ -4,7 +4,7 @@ DTB_OVERLAYS_portenta-m8 = " \
     file://overlays.txt \
     file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart0.dts \
-    file://ov_carrier_breakout_uart2.dts \
+    file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_uart3.dts \
     file://ov_carrier_breakout_i2c0.dts \
     file://ov_carrier_breakout_i2c1.dts \

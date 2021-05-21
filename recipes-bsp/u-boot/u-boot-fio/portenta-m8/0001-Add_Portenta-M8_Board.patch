@@ -136,7 +136,7 @@ Index: git/arch/arm/dts/portenta-m8.dts
 +
 +	chosen {
 +		bootargs = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200";
-+		stdout-patch = &uart2;
++		stdout-path = &uart2;
 +	};
 +
 +	reg_usdhc2_vmmc: regulator-usdhc2 {
@@ -2632,7 +2632,7 @@ Index: git/board/arduino/portenta-m8/portenta-m8.c
 +
 +	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
 +
-+	init_uart_clk(2);
++	init_uart_clk(1);
 +
 +#ifdef CONFIG_NAND_MXS
 +	setup_gpmi_nand(); /* SPL will call the board_early_init_f */
