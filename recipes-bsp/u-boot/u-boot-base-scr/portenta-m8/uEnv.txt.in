@@ -9,7 +9,7 @@ fdtovaddr=0x43600000
 bootcmd_ovl_load=${ovlload} ${ovltype} ${ovldev}:${ovlpart} ${loadaddr} ${ovlpath}/overlays.txt;\
                  env import -t ${loadaddr} ${filesize}
 bootcmd_dtb=fatload ${devtype} ${devnum}:1 ${fdt_addr} ${fdt_file}
-bootcmd_ovy=fdt addr ${fdt_addr}; fdt resize 0x1000; \
+bootcmd_ovy=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
             for ov in ${overlays}; do; \
               echo overlaying ${ov}... \
               ${ovlload} ${ovltype} ${ovldev}:${ovlpart} ${fdtovaddr} ${ovlpath}/${ov}.dtbo && \
