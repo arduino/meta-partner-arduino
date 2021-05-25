@@ -7,7 +7,6 @@
  * Author: Georgi Vlaev <joe@nucleusys.com>
  * Author: Brian Austin <brian.austin@cirrus.com>
  */
-#define DEBUG
 
 #include <linux/module.h>
 #include <linux/moduleparam.h>
@@ -54,7 +53,7 @@ struct  cs42l52_private {
 
 static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_PWRCTL1, 0x9F },	/* r02 PWRCTL 1 */
-	{ CS42L52_PWRCTL2, 0x06 },	/* r03 PWRCTL 2 */ /* M.P. Bit0 is PDN_BIAS. Bit0=0 means is powered up */
+	{ CS42L52_PWRCTL2, 0x07 },	/* r03 PWRCTL 2 */
 	{ CS42L52_PWRCTL3, 0xFF },	/* r04 PWRCTL 3 */
 	{ CS42L52_CLK_CTL, 0xA0 },	/* r05 Clocking Ctl */
 	{ CS42L52_IFACE_CTL1, 0x00 },	/* r06 Interface Ctl 1 */
@@ -102,6 +101,7 @@ static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_SPK_STATUS, 0x00 },	/* r31 Speaker Status */
 	{ CS42L52_TEM_CTL, 0x3B },	/* r32 Temp Ctl */
 	{ CS42L52_THE_FOLDBACK, 0x00 },	/* r33 Foldback */
+	{ CS42L52_CHARGE_PUMP, 0x05 }, /* r34 Charge Pump */
 };
 
 static bool cs42l52_readable_register(struct device *dev, unsigned int reg)
@@ -524,9 +524,8 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 	SND_SOC_DAPM_PGA("PGA MICA", CS42L52_PWRCTL2, 1, 1, NULL, 0),
 	SND_SOC_DAPM_PGA("PGA MICB", CS42L52_PWRCTL2, 2, 1, NULL, 0),
 
-	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 0, NULL, 0), /* M.P. SND_SOC_DAPM_SUPPLY(wname, wreg, wshift, winvert, wevent, wflags) where winvert is used to set default reg value */
-
-	SND_SOC_DAPM_PGA("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
+	SND_SOC_DAPM_SUPPLY("Mic Bias", CS42L52_PWRCTL2, 0, 1, NULL, 0),
+	SND_SOC_DAPM_SUPPLY("Charge Pump", CS42L52_PWRCTL1, 7, 1, NULL, 0),
 
 	SND_SOC_DAPM_AIF_IN("AIFINL", NULL,  0,
 			SND_SOC_NOPM, 0, 0),
@@ -563,16 +562,13 @@ static const struct snd_soc_dapm_widget cs42l52_dapm_widgets[] = {
 static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 
 	{"Capture", NULL, "AIFOUTL"},
-	{"Capture", NULL, "AIFOUTL"},
+	{"Capture", NULL, "AIFOUTR"},
 
 	{"AIFOUTL", NULL, "Output Mux"},
 	{"AIFOUTR", NULL, "Output Mux"},
 
-	{"Output Mux", "ADC", "ADC Left"},
-	{"Output Mux", "ADC", "ADC Right"},
-
-	{"ADC Left", NULL, "ADC Left Mux"},
-	{"ADC Right", NULL, "ADC Right Mux"},
+	{"Output Mux", "ADC", "ADC Left Mux"},
+	{"Output Mux", "ADC", "ADC Right Mux"},
 
 	{"ADC Left Mux", "Input1A", "AIN1L"},
 	{"ADC Right Mux", "Input1B", "AIN1R"},
@@ -608,11 +604,6 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 	{"Bypass Right", "Switch", "PGA Right"},
 	{"HP Left Amp", "Switch", "DAC Left"},
 	{"HP Right Amp", "Switch", "DAC Right"},
-
-	{"Charge Pump", NULL, "HPOUTA"},
-	{"Charge Pump", NULL, "HPOUTB"},
-	{"HP Left Amp", NULL, "Charge Pump"},
-	{"HP Right Amp", NULL, "Charge Pump"},
 
 	{"SPKOUTA", NULL, "SPK Left Amp"},
 	{"SPKOUTB", NULL, "SPK Right Amp"},
@@ -734,9 +725,8 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 {
 	struct snd_soc_component *component = codec_dai->component;
 	struct cs42l52_private *cs42l52 = snd_soc_component_get_drvdata(component);
+	int ret = 0;
 	u8 iface = 0;
-
-	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
 
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBM_CFM:
@@ -748,8 +738,6 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	default:
 		return -EINVAL;
 	}
-
-	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
 
 	 /* interface format */
 	switch (fmt & SND_SOC_DAIFMT_FORMAT_MASK) {
@@ -773,8 +761,6 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 		return -EINVAL;
 	}
 
-	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
-
 	/* clock inversion */
 	switch (fmt & SND_SOC_DAIFMT_INV_MASK) {
 	case SND_SOC_DAIFMT_NB_NF:
@@ -790,11 +776,12 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	default:
 		return -EINVAL;
 	}
-
-	dev_info(component->dev, "%s %d iface=0x%02X\n", __func__, __LINE__, iface);
 	cs42l52->config.format = iface;
-	dev_info(component->dev, "%s %d cs42l52->config.format=0x%02X\n", __func__, __LINE__, cs42l52->config.format);
-	snd_soc_component_write(component, CS42L52_IFACE_CTL1, cs42l52->config.format);
+	ret = snd_soc_component_write(component, CS42L52_IFACE_CTL1, cs42l52->config.format);
+	if (ret < 0) {
+		dev_err(component->dev, "Error in %s at line %d ret=%d\n", __func__, __LINE__, ret);
+		return ret;
+	}
 
 	return 0;
 }
@@ -823,6 +810,7 @@ static int cs42l52_pcm_hw_params(struct snd_pcm_substream *substream,
 	struct cs42l52_private *cs42l52 = snd_soc_component_get_drvdata(component);
 	u32 clk = 0;
 	int index;
+	int ret = 0;
 
 	index = cs42l52_get_clk(cs42l52->mclk, params_rate(params));
 	dev_info(component->dev, "%s %d index=%d\n", __func__, __LINE__, index);
@@ -837,7 +825,11 @@ static int cs42l52_pcm_hw_params(struct snd_pcm_substream *substream,
 		(clk_map_table[index].ratio << CLK_RATIO_SHIFT) |
 		clk_map_table[index].mclkdiv2;
 
-		snd_soc_component_write(component, CS42L52_CLK_CTL, clk);
+		ret =  snd_soc_component_write(component, CS42L52_CLK_CTL, clk);
+		if (ret < 0) {
+			dev_err(component->dev, "Error in %s at line %d ret=%d\n", __func__, __LINE__, ret);
+			return ret;
+		}
 	} else {
 		dev_err(component->dev, "can't get correct mclk\n");
 		return -EINVAL;
@@ -850,6 +842,7 @@ static int cs42l52_set_bias_level(struct snd_soc_component *component,
 					enum snd_soc_bias_level level)
 {
 	struct cs42l52_private *cs42l52 = snd_soc_component_get_drvdata(component);
+	int ret = 0;
 
 	switch (level) {
 	case SND_SOC_BIAS_ON:
@@ -863,14 +856,18 @@ static int cs42l52_set_bias_level(struct snd_soc_component *component,
 			regcache_cache_only(cs42l52->regmap, false);
 			regcache_sync(cs42l52->regmap);
 		}
-		snd_soc_component_write(component, CS42L52_PWRCTL1, CS42L52_PWRCTL1_PDN_ALL);
+		ret = snd_soc_component_write(component, CS42L52_PWRCTL1, CS42L52_PWRCTL1_PDN_ALL);
 		break;
 	case SND_SOC_BIAS_OFF:
-		snd_soc_component_write(component, CS42L52_PWRCTL1, CS42L52_PWRCTL1_PDN_ALL);
+		ret = snd_soc_component_write(component, CS42L52_PWRCTL1, CS42L52_PWRCTL1_PDN_ALL);
 		regcache_cache_only(cs42l52->regmap, true);
 		break;
 	}
 
+	if (ret < 0) {
+		dev_err(component->dev, "Error in %s at line %d ret=%d\n", __func__, __LINE__, ret);
+		return ret;
+	}
 	return 0;
 }
 
@@ -1096,7 +1093,7 @@ static const struct regmap_config cs42l52_regmap = {
 	.reg_bits = 8,
 	.val_bits = 8,
 
-	.max_register = CS42L52_MAX_REGISTER,
+	.max_register = CS42L52_MAX_REGISTER_MAP_INCR,
 	.reg_defaults = cs42l52_reg_defaults,
 	.num_reg_defaults = ARRAY_SIZE(cs42l52_reg_defaults),
 	.readable_reg = cs42l52_readable_register,
@@ -1161,8 +1158,6 @@ static int cs42l52_i2c_probe(struct i2c_client *i2c_client,
 		cs42l52->pdata = *pdata;
 	}
 
-	dev_info(&i2c_client->dev, "%s %d\n", __func__, __LINE__);
-
 	if (cs42l52->pdata.reset_gpio) {
 		ret = devm_gpio_request_one(&i2c_client->dev,
 					    cs42l52->pdata.reset_gpio,
@@ -1176,8 +1171,6 @@ static int cs42l52_i2c_probe(struct i2c_client *i2c_client,
 		gpio_set_value_cansleep(cs42l52->pdata.reset_gpio, 0);
 		gpio_set_value_cansleep(cs42l52->pdata.reset_gpio, 1);
 	}
-
-	dev_info(&i2c_client->dev, "%s %d\n", __func__, __LINE__);
 
 	i2c_set_clientdata(i2c_client, cs42l52);
 
