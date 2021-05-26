@@ -567,8 +567,11 @@ static const struct snd_soc_dapm_route cs42l52_audio_map[] = {
 	{"AIFOUTL", NULL, "Output Mux"},
 	{"AIFOUTR", NULL, "Output Mux"},
 
-	{"Output Mux", "ADC", "ADC Left Mux"},
-	{"Output Mux", "ADC", "ADC Right Mux"},
+	{"Output Mux", "ADC", "ADC Left"},
+	{"Output Mux", "ADC", "ADC Right"},
+
+	{"ADC Left", NULL, "ADC Left Mux"},
+	{"ADC Right", NULL, "ADC Right Mux"},
 
 	{"ADC Left Mux", "Input1A", "AIN1L"},
 	{"ADC Right Mux", "Input1B", "AIN1R"},
