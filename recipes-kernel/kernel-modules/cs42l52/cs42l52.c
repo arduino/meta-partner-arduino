@@ -80,7 +80,7 @@ static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_BEEP_FREQ, 0x00 },	/* r1C Beep Freq on Time */
 	{ CS42L52_BEEP_VOL, 0x00 },	/* r1D Beep Volume off Time */
 	{ CS42L52_BEEP_TONE_CTL, 0x00 },	/* r1E Beep Tone Cfg. */
-	{ CS42L52_TONE_CTL, 0x00 },	/* r1F Tone Ctl */
+	{ CS42L52_TONE_CTL, 0x88 },	/* r1F Tone Ctl */
 	{ CS42L52_MASTERA_VOL, 0x00 },	/* r20 Master A Volume */
 	{ CS42L52_MASTERB_VOL, 0x00 },	/* r21 Master B Volume */
 	{ CS42L52_HPA_VOL, 0x00 },	/* r22 Headphone A Volume */
@@ -93,7 +93,7 @@ static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_LIMITER_AT_RATE, 0xC0 },	/* r29 Limiter Attack Rate */
 	{ CS42L52_ALC_CTL, 0x00 },	/* r2A ALC Ctl 1 Attack Rate */
 	{ CS42L52_ALC_RATE, 0x3F },	/* r2B ALC Release Rate */
-	{ CS42L52_ALC_THRESHOLD, 0x3f },	/* r2C ALC Thresholds */
+	{ CS42L52_ALC_THRESHOLD, 0x00 },	/* r2C ALC Thresholds */
 	{ CS42L52_NOISE_GATE_CTL, 0x00 },	/* r2D Noise Gate Ctl */
 	{ CS42L52_CLK_STATUS, 0x00 },	/* r2E Overflow and Clock Status */
 	{ CS42L52_BATT_COMPEN, 0x00 },	/* r2F battery Compensation */
@@ -101,7 +101,7 @@ static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_SPK_STATUS, 0x00 },	/* r31 Speaker Status */
 	{ CS42L52_TEM_CTL, 0x3B },	/* r32 Temp Ctl */
 	{ CS42L52_THE_FOLDBACK, 0x00 },	/* r33 Foldback */
-	{ CS42L52_CHARGE_PUMP, 0x05 }, /* r34 Charge Pump */
+	{ CS42L52_CHARGE_PUMP, 0x5f }, /* r34 Charge Pump */
 };
 
 static bool cs42l52_readable_register(struct device *dev, unsigned int reg)
