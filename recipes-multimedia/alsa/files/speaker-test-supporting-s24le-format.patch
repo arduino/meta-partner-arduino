@@ -1,0 +1,41 @@
+Signed-off-by: Pierre-Louis Bossart <pierre-louis.bossart at linux.intel.com>
+---
+ speaker-test/speaker-test.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/speaker-test/speaker-test.c b/speaker-test/speaker-test.c
+index 773af0a..fd13d88 100644
+--- a/speaker-test/speaker-test.c
++++ b/speaker-test/speaker-test.c
+@@ -285,6 +285,8 @@ static const int	supported_formats[] = {
+   SND_PCM_FORMAT_FLOAT_LE,
+   SND_PCM_FORMAT_S24_3LE,
+   SND_PCM_FORMAT_S24_3BE,
++  SND_PCM_FORMAT_S24_LE,
++  SND_PCM_FORMAT_S24_BE,
+   SND_PCM_FORMAT_S32_LE,
+   SND_PCM_FORMAT_S32_BE,
+   -1
+@@ -338,6 +340,20 @@ static void do_generate(uint8_t *frames, int channel, int count,
+         *samp8++ = BE_INT(res.i) >> 8;
+         *samp8++ = BE_INT(res.i) >> 16;
+         break;
++      case SND_PCM_FORMAT_S24_LE:
++        res.i >>= 8;
++        *samp8++ = LE_INT(res.i);
++        *samp8++ = LE_INT(res.i) >> 8;
++        *samp8++ = LE_INT(res.i) >> 16;
++        *samp8++ = 0;
++        break;
++      case SND_PCM_FORMAT_S24_BE:
++        res.i >>= 8;
++        *samp8++ = 0;
++        *samp8++ = BE_INT(res.i);
++        *samp8++ = BE_INT(res.i) >> 8;
++        *samp8++ = BE_INT(res.i) >> 16;
++        break;
+       case SND_PCM_FORMAT_S32_LE:
+ 	*samp32++ = LE_INT(res.i);
+         break;
+-- 
+2.25.1
