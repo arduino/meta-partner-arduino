@@ -54,7 +54,7 @@ struct  cs42l52_private {
 static const struct reg_default cs42l52_reg_defaults[] = {
 	{ CS42L52_PWRCTL1, 0x9F },	/* r02 PWRCTL 1 */
 	{ CS42L52_PWRCTL2, 0x06 },	/* r03 PWRCTL 2 */
-	{ CS42L52_PWRCTL3, 0xFF },	/* r04 PWRCTL 3 */
+	{ CS42L52_PWRCTL3, 0x5F },	/* r04 PWRCTL 3 */
 	{ CS42L52_CLK_CTL, 0xA0 },	/* r05 Clocking Ctl */
 	{ CS42L52_IFACE_CTL1, 0x00 },	/* r06 Interface Ctl 1 */
 	{ CS42L52_ADC_PGA_A, 0x80 },	/* r08 Input A Select */
