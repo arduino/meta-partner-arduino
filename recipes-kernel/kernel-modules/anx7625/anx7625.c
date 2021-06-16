@@ -1442,11 +1442,6 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	return;
 }
 
-static int anx7625_read_hpd_status_p0(struct anx7625_data *ctx)
-{
-	return anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, SYSTEM_STSTUS);
-}
-
 static void dp_hpd_change_handler(struct anx7625_data *ctx, bool on)
 {
 	struct device *dev = &ctx->client->dev;
@@ -2074,7 +2069,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	                  INTERFACE_CHANGE_INT,
 	                  ivector &(~ivector));
 
-	sys_status = anx7625_read_hpd_status_p0(ctx);
+	sys_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, SYSTEM_STSTUS);
 	printk("anx: comms - system status (0x45) 0x%x:\n", sys_status);
 
 	if (sys_status & BIT(0))
@@ -2108,7 +2103,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 
 	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
 	printk("anx: comms - CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n",
-	       cc_status & 0x0F, cc_status & 0xF0);
+	       cc_status & 0x0F, (cc_status >> 4) & 0x0F);
 
 	switch (cc_status & 0x0F) {
 	case 0:
@@ -2133,7 +2128,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 		printk("anx: CC1: Reserved\n");
 	}
 
-	switch (cc_status & 0xF0) {
+	switch ((cc_status >> 4) & 0x0F) {
 	case 0:
 		printk("anx: CC2: SRC.Open\n");
 		break;
