@@ -35,6 +35,9 @@
 #include <sound/soc.h>
 #include "anx7625.h"
 
+//#define DISABLE_PD
+//#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
+
 #define DEBUG 1
 
 #ifdef DEBUG
@@ -50,10 +53,6 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #endif
 #endif
-
-
-
-
 
 /*
  * There is a sync issue while access I2C register between AP(CPU) and
@@ -1105,27 +1104,18 @@ static int sp_tx_edid_read(struct anx7625_data *ctx, u8 *pedid_blocks_buf)
 static void anx7625_power_on(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
-#if 0
-	struct gpio_desc *pwr;
-#endif
+
 	if (!ctx->pdata.low_power_mode) {
 		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode!\n");
 		return;
 	}
-
-#if 0
-	/* portenta: VBUS_USBC on (0) */
-	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_LOW);
-	if (!IS_ERR(pwr)) {
-		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC: %d\n",
-		                     gpiod_get_value(pwr));
-		devm_gpiod_put(dev, pwr);
-		usleep_range(1000, 1100);
-	} else
-		DRM_DEV_DEBUG_DRIVER(dev, "power on, VBUS_USBC failed %ld\n",
-		                     PTR_ERR(pwr));
-#else
-	DRM_DEV_DEBUG_DRIVER(dev, "power on\n");
+#ifdef GPIO_VBUS_CONTROL
+	/* @TODO: we can't simply enable VBUS here, we need to enable it after
+	 * 1) workmode UFP/DFP has been defined
+	 * 2) power role has been negotiated
+	/* VBUS_USBC on (gpio = 0) */
+	gpiod_set_value(ctx->pdata.gpio_vbus_on, 0);
+	usleep_range(10000, 10100);
 #endif
 	/* 10ms: as per data sheet */
 	gpiod_set_value(ctx->pdata.gpio_p_on, 1);
@@ -1134,39 +1124,33 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 	/* 10ms: as per data sheet */
 	gpiod_set_value(ctx->pdata.gpio_reset, 1);
 	usleep_range(10000, 10100);
+
+	DRM_DEV_DEBUG_DRIVER(dev, "power on\n");
 }
 
 static void anx7625_power_standby(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
-#if 0
-	struct gpio_desc *pwr;
-#endif
+
 	if (!ctx->pdata.low_power_mode) {
 		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode!\n");
 		return;
 	}
-
+#ifdef GPIO_VBUS_CONTROL
+	/* @TODO: we can't simply enable VBUS here, we need to enable it after
+	 * 1) workmode UFP/DFP has been defined
+	 * 2) power role has been negotiated
+	/* VBUS_USBC off (gpio = 1) */
+	gpiod_set_value(ctx->pdata.gpio_vbus_on, 1);
+	usleep_range(10000, 10100);
+#endif
 	gpiod_set_value(ctx->pdata.gpio_reset, 0);
 	usleep_range(1000, 1100);
 
 	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 	usleep_range(1000, 1100);
-#if 0
-	/* portenta: VBUS_USBC off (1) */
-	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
-	if (!IS_ERR(pwr) ) {
-		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC: %d\n",
-		                     gpiod_get_value(pwr));
-		devm_gpiod_put(dev, pwr);
-		usleep_range(1000, 1100);
-	} else
-		DRM_DEV_DEBUG_DRIVER(dev, "power off, VBUS_USBC failed %ld\n",
-		                     PTR_ERR(pwr));
-#else
-	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
-#endif
 
+	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
 }
 
 static void anx7625_config(struct anx7625_data *ctx)
@@ -1199,12 +1183,21 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	/* Maximum Power in 500mW units: 15W */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         MAX_POWER_SETTING,
-	                         30);
+	                         0x1E);
 
-	/* Minimum Power in 500mW units: 1W */
+	/* Minimum Power in 500mW units: 2.5W */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         MIN_POWER_SETTING,
-	                         00);
+	                         0x05);
+
+	/* Try sink or source @TODO: need to read default policy from dts */
+	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
+	                         AUTO_PD_MODE,
+	                         TRYSNK_EN);
+	/*ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
+	                         AUTO_PD_MODE,
+	                         TRYSOURCE_EN);*/
+
 	if (ret < 0)
 		DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
 	else
@@ -1218,10 +1211,15 @@ static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 	struct device *dev = &ctx->client->dev;
 	int ret;
 
+	/* When PD is disabled, OCM will stop sending cbl_det interrupts */
+
+	/* reset main ocm */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                        OCM_DEBUG_REG_8, OCM_MAIN_RESET);
+	/* disable PD */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         AP_AV_STATUS, AP_DISABLE_PD);
+	/* release main ocm */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         OCM_DEBUG_REG_8, OCM_MAIN_RELEASE);
 
@@ -1248,33 +1246,12 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 	if ((ret & FLASH_LOAD_STA_CHK) != FLASH_LOAD_STA_CHK)
 		return -ENODEV;
 
-	ret = anx7625_chip_register_init(ctx);
-
-	DRM_DEV_DEBUG_DRIVER(dev, "Firmware ver %02x%02x,",
-	                     anx7625_reg_read(ctx,
-	                                      ctx->i2c.rx_p0_client,
-	                                      OCM_FW_VERSION),
-
-	                     anx7625_reg_read(ctx,
-	                                      ctx->i2c.rx_p0_client,
-	                                      OCM_FW_REVERSION));
-
-	DRM_DEV_DEBUG_DRIVER(dev, "Chipid %02x%02x,",
-	                     anx7625_reg_read(ctx,
-	                                      ctx->i2c.tcpc_client,
-	                                      0x03),
-	                     anx7625_reg_read(ctx,
-	                                      ctx->i2c.tcpc_client,
-	                                      0x02));
-
-	DRM_DEV_DEBUG_DRIVER(dev, "Driver version %s\n",
-	                     ANX7625_DRV_VERSION);
-
 	return ret;
 }
 
 static void anx7625_power_on_init(struct anx7625_data *ctx)
 {
+	struct device *dev = &ctx->client->dev;
 	int retry_count, i;
 
 	for (retry_count = 0; retry_count < 5; retry_count++) {
@@ -1283,6 +1260,32 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 
 		for (i = 0; i < OCM_LOADING_TIME; i++) {
 			if (!anx7625_ocm_loading_check(ctx))
+#ifdef DISABLE_PD
+				anx7625_disable_pd_protocol(ctx);
+#endif
+				// chip_register_init();
+				// send_initialized_setting();
+				anx7625_chip_register_init(ctx);
+
+				DRM_DEV_DEBUG_DRIVER(dev, "Firmware ver %02x%02x,",
+									 anx7625_reg_read(ctx,
+													  ctx->i2c.rx_p0_client,
+													  OCM_FW_VERSION),
+
+									 anx7625_reg_read(ctx,
+													  ctx->i2c.rx_p0_client,
+													  OCM_FW_REVERSION));
+
+				DRM_DEV_DEBUG_DRIVER(dev, "Chipid %02x%02x,",
+									 anx7625_reg_read(ctx,
+													  ctx->i2c.tcpc_client,
+													  0x03),
+									 anx7625_reg_read(ctx,
+													  ctx->i2c.tcpc_client,
+													  0x02));
+
+				DRM_DEV_DEBUG_DRIVER(dev, "Driver version %s\n",
+									 ANX7625_DRV_VERSION);
 				return;
 			usleep_range(1000, 1100);
 		}
@@ -1317,17 +1320,12 @@ static void anx7625_chip_control(struct anx7625_data *ctx, int state)
 static void anx7625_init_gpio(struct anx7625_data *platform)
 {
 	struct device *dev = &platform->client->dev;
-#if 0
-	struct gpio_desc *pwr;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "gpio initialization, VBUS_USBC=1\n");
-#else
 	DRM_DEV_DEBUG_DRIVER(dev, "gpio initialization\n");
-#endif
 
-#if 0
-	/* portenta: VBUS_USBC off (gpio = 1) */
-	pwr = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
+#ifdef GPIO_VBUS_CONTROL
+	/* VBUS_USBC off (gpio = 1) */
+	platform->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
 #endif
 	/* keep the ANX powered off: power/reset gpios are active high  */
 	platform->pdata.gpio_p_on = devm_gpiod_get_optional(dev, "enable",
@@ -1345,13 +1343,13 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 
 	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset) {
 		platform->pdata.low_power_mode = 1;
-#if 0
+#ifdef GPIO_VBUS_CONTROL
 		DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled, "
 		                     "VBUS_USBC(%d) = %d, "
 		                     "POWER_EN(%d) = %d, "
 		                     "RESET_N(%d) =  %d\n",
-		                     !IS_ERR(pwr) ? desc_to_gpio(pwr) : 0,
-		                     !IS_ERR(pwr) ? gpiod_get_value(pwr) : 0,
+		                     desc_to_gpio(platform->pdata.gpio_vbus_on),
+		                     gpiod_get_value(platform->pdata.gpio_vbus_on),
 		                     desc_to_gpio(platform->pdata.gpio_p_on),
 		                     gpiod_get_value(platform->pdata.gpio_p_on),
 		                     desc_to_gpio(platform->pdata.gpio_reset),
@@ -1367,18 +1365,11 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 #endif
 		atomic_set(&platform->power_status, 0);
 	} else {
-		/* this is untested, probably needs some work */
+		/* @TODO: this should never happens and is untested, probably needs some work */
 		platform->pdata.low_power_mode = 0;
 		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode.\n");
-		anx7625_disable_pd_protocol(platform);
 		atomic_set(&platform->power_status, 1);
 	}
-
-#if 0
-	/* return VBUS_USBC back to users */
-	if (!IS_ERR(pwr))
-		devm_gpiod_put(dev, pwr);
-#endif
 }
 
 static void anx7625_stop_dp_work(struct anx7625_data *ctx)
@@ -1388,8 +1379,8 @@ static void anx7625_stop_dp_work(struct anx7625_data *ctx)
 	ctx->hpd_high_cnt = 0;
 	ctx->hpd_status = 0;
 
-	if (!ctx->pdata.low_power_mode)
-		anx7625_disable_pd_protocol(ctx);
+	if (ctx->pdata.low_power_mode == 0)
+		anx7625_disable_pd_protocol(ctx); /* TODO: this is not done in Android driver */
 }
 
 static void anx7625_start_dp_work(struct anx7625_data *ctx)
@@ -2020,7 +2011,7 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
 static irqreturn_t anx7625_comm_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
-	int sys_status, itype, ivector, cc_status;
+	int sys_status, itype, ivector, cc_status, reg_val;
 
 #define STS_HPD_CHANGE \
 	(((sys_status & HPD_STATUS) != \

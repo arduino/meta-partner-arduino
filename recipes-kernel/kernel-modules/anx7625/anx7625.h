@@ -194,6 +194,8 @@
 #define OCM_FW_VERSION			0x31
 #define OCM_FW_REVERSION		0x32
 #define XTAL_FRQ_SEL			0x3F
+#define TRYSRC_EN				0x04
+#define TRYSNK_EN				0x08
 /* bit field positions */
 #define XTAL_FRQ_SEL_POS	5
 /* bit field values */
@@ -385,6 +387,7 @@ struct s_edid_data {
 /***************** Display End *****************/
 
 struct anx7625_platform_data {
+	struct gpio_desc *gpio_vbus_on;
 	struct gpio_desc *gpio_p_on;
 	struct gpio_desc *gpio_reset;
 	struct gpio_desc *gpio_cbl_det;
