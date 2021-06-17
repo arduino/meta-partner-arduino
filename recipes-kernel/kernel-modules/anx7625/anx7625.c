@@ -1163,6 +1163,9 @@ static void anx7625_config(struct anx7625_data *ctx)
 static int anx7625_chip_register_init(struct anx7625_data *ctx)
 {
 	int ret = 0;
+	uint8_t val = 0;
+
+	printk("[anx7625] %s %d\n", __func__, __LINE__);
 
 	/* interrupt vector mask bit as platform needed 0: enable 1: disable */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
@@ -1206,6 +1209,13 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	/*ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
 	                         AUTO_PD_MODE,
 	                         TRYSOURCE_EN);*/
+
+	/* Set Rp value to 3.0A */
+	ret |= anx7625_write_or(ctx, ctx->i2c.tcpc_client,
+	                         TCPC_ROLE_CONTROL,
+	                         BIT(5));
+	val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
+	printk("[anx7625] %s %d TCPC_ROLE_CONTROL=0x%02X\n", __func__, __LINE__, val);
 	return ret;
 }
 
@@ -1268,7 +1278,9 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 #endif
 				// chip_register_init();
 				// send_initialized_setting();
+				printk("[anx7625] %s %d\n", __func__, __LINE__);
 				ret = anx7625_chip_register_init(ctx);
+				printk("[anx7625] %s %d\n", __func__, __LINE__);
 				if (ret < 0)
 					DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
 				else
@@ -1381,6 +1393,8 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 
 static void anx7625_stop_dp_work(struct anx7625_data *ctx)
 {
+	printk("[anx7625] %s %d\n", __func__, __LINE__);
+
 	ctx->slimport_edid_p.edid_block_num = -1;
 	ctx->display_timing_valid = 0;
 	ctx->hpd_high_cnt = 0;
@@ -1398,6 +1412,8 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	u8 buf[MAX_DPCD_BUFFER_SIZE];
 	u8 hdcp_cap;
 	int ret;
+
+	printk("[anx7625] %s %d\n", __func__, __LINE__);
 
 	if (ctx->hpd_high_cnt >= 2) {
 		DRM_DEV_DEBUG_DRIVER(dev, "filter useless HPD\n");
@@ -2041,6 +2057,10 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	printk("anx: comm isr starts -------------------------------\n");
 	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
 	                         TCPC_INTR_ALERT_1);
+	printk("%s %d itype=0x%02X\n", __func__, __LINE__, itype);
+
+	reg_val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
+	printk("%s %d ROLE_CONTROL=0x%02X\n", __func__, __LINE__, reg_val);
 
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
 	                           INTERFACE_CHANGE_INT);
