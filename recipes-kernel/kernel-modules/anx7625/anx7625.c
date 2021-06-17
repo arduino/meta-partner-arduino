@@ -1162,7 +1162,6 @@ static void anx7625_config(struct anx7625_data *ctx)
 
 static int anx7625_chip_register_init(struct anx7625_data *ctx)
 {
-	struct device *dev = &ctx->client->dev;
 	int ret = 0;
 
 	/* interrupt vector mask bit as platform needed 0: enable 1: disable */
@@ -1190,6 +1189,16 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	                         MIN_POWER_SETTING,
 	                         0x05);
 
+	/* Maximum Voltage in 100mV units: 5V */
+	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
+	                         0x2C,
+	                         0x32);
+
+	/* Maximum Power in 500mW units: 15W */
+	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
+	                         MAX_POWER_SETTING,
+	                         0x2D);
+
 	/* Try sink or source @TODO: need to read default policy from dts */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
 	                         AUTO_PD_MODE,
@@ -1197,12 +1206,6 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	/*ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
 	                         AUTO_PD_MODE,
 	                         TRYSOURCE_EN);*/
-
-	if (ret < 0)
-		DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
-	else
-		DRM_DEV_DEBUG_DRIVER(dev, "init registers succeeded.\n");
-
 	return ret;
 }
 
@@ -1252,7 +1255,7 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 static void anx7625_power_on_init(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
-	int retry_count, i;
+	int retry_count, i, ret = 0;
 
 	for (retry_count = 0; retry_count < 5; retry_count++) {
 		anx7625_power_on(ctx);
@@ -1265,7 +1268,11 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 #endif
 				// chip_register_init();
 				// send_initialized_setting();
-				anx7625_chip_register_init(ctx);
+				ret = anx7625_chip_register_init(ctx);
+				if (ret < 0)
+					DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
+				else
+					DRM_DEV_DEBUG_DRIVER(dev, "init registers succeeded.\n");
 
 				DRM_DEV_DEBUG_DRIVER(dev, "Firmware ver %02x%02x,",
 									 anx7625_reg_read(ctx,
