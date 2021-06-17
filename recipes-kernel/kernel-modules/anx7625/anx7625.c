@@ -1199,8 +1199,8 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 
 	/* Maximum Power in 500mW units: 15W */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-	                         MAX_POWER_SETTING,
-	                         0x2D);
+	                         0x2C,
+	                         0x1E);
 
 	/* Try sink or source @TODO: need to read default policy from dts */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
@@ -1272,7 +1272,7 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 		anx7625_config(ctx);
 
 		for (i = 0; i < OCM_LOADING_TIME; i++) {
-			if (!anx7625_ocm_loading_check(ctx))
+			if (!anx7625_ocm_loading_check(ctx)) {
 #ifdef DISABLE_PD
 				anx7625_disable_pd_protocol(ctx);
 #endif
@@ -1306,6 +1306,7 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 				DRM_DEV_DEBUG_DRIVER(dev, "Driver version %s\n",
 									 ANX7625_DRV_VERSION);
 				return;
+			}
 			usleep_range(1000, 1100);
 		}
 		anx7625_power_standby(ctx);
