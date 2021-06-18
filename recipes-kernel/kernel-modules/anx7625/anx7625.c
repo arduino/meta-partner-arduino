@@ -1245,7 +1245,7 @@ static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
-	int ret;
+	int ret = -1;
 
 	/* Check interface workable */
 	ret = anx7625_reg_read(ctx,
@@ -1256,8 +1256,10 @@ static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
 		return ret;
 	}
 
-	if ((ret & FLASH_LOAD_STA_CHK) != FLASH_LOAD_STA_CHK)
-		return -ENODEV;
+	if ((ret & FLASH_LOAD_STA_CHK) == FLASH_LOAD_STA_CHK)
+		ret = 0;
+	else
+		ret = -ENODEV;
 
 	return ret;
 }
@@ -1272,7 +1274,8 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 		anx7625_config(ctx);
 
 		for (i = 0; i < OCM_LOADING_TIME; i++) {
-			if (!anx7625_ocm_loading_check(ctx)) {
+			/*Interface work? */
+			if (anx7625_ocm_loading_check(ctx) == 0) {
 #ifdef DISABLE_PD
 				anx7625_disable_pd_protocol(ctx);
 #endif
