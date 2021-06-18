@@ -1241,27 +1241,15 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	                         TRYSNK_EN);
 	/*ret |= anx7625_reg_write_or(ctx, ctx->i2c.rx_p0_client,
 	                         AUTO_PD_MODE,
-	                         TRYSOURCE_EN);*/
-
+	                         TRYSRC_EN);*/
 
 	/* Disable DRP */
 	ret |= anx7625_reg_write_and(ctx, ctx->i2c.tcpc_client,
 	                         TCPC_ROLE_CONTROL,
 	                         ~BIT(6));
 
-	/* Set Rp value to 3.0A */
-	ret |= anx7625_reg_write_and_or(ctx, ctx->i2c.tcpc_client,
-	                         TCPC_ROLE_CONTROL,
-	                         ~BIT(4), BIT(5));
-
-	val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
-	printk("[anx7625] %s %d TCPC_ROLE_CONTROL=0x%02X\n", __func__, __LINE__, val);
-
 	/* AUTO RDO ENABLE */
 	anx7625_enable_auto_rdo(ctx);
-
-	val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
-	printk("[anx7625] %s %d TCPC_ROLE_CONTROL=0x%02X\n", __func__, __LINE__, val);
 
 	return ret;
 }
