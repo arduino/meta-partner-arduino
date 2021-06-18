@@ -1727,10 +1727,10 @@ static enum drm_connector_status anx7625_detect(struct drm_connector *connector,
 
 	DRM_DEV_DEBUG_DRIVER(dev, "drm detect\n");
 
-	if (ctx->pdata.internal_panel)
+	if (ctx->pdata.internal_panel) // a panel is always connected
 		return connector_status_connected;
 
-	if (!ctx->hpd_status)
+	if (!ctx->hpd_status) // a panel on dp usbc depends on the usbc cable being present or not
 		return connector_status_disconnected;
 
 	return connector_status_connected;
