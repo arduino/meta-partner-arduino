@@ -1546,6 +1546,11 @@ static int anx7625_parse_dt(struct device *dev,
 	of_property_read_u32(dev->of_node, "panel_flags",
 	                     &pdata->panel_flags);
 
+	/* In this driver internal_panel is used to switch between panel
+	 * always connected and a usbc dp that is modeled as a panel which
+	 * can be present or not depending on the usbc cable (hpd_status) being
+	 * connected or not. @TODO: need to handle hpd_status depending on DiscIdentity
+	 * results. Hub may don't have dp port available. */
 	if (pdata->panel_flags == 1)
 		pdata->internal_panel = 1;
 
