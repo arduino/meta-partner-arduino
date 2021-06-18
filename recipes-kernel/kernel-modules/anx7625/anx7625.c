@@ -1160,6 +1160,39 @@ static void anx7625_config(struct anx7625_data *ctx)
 	                  XTAL_FRQ_27M);
 }
 
+/* Auto rdo means auto pd negotiation */
+static int anx7625_disable_auto_rdo(struct anx7625_data *ctx)
+{
+	int ret = 0;
+
+	ret |= anx7625_reg_write_and(ctx, ctx->i2c.rx_p0_client,
+	                        AUTO_PD_MODE,
+	                        ~AUTO_PD_ENABLE);
+	return ret;
+}
+
+/* Auto rdo means auto pd negotiation */
+static int anx7625_enable_auto_rdo(struct anx7625_data *ctx)
+{
+	int ret = 0;
+
+	ret |= anx7625_reg_write_or(ctx, ctx->i2c.rx_p0_client,
+	                        AUTO_PD_MODE,
+	                        AUTO_PD_ENABLE);
+	return ret;
+}
+
+/* GOTO_SAFE5V_EN disable */
+static int anx7625_disable_safe_5v_during_auto_rdo(struct anx7625_data *ctx)
+{
+	int ret = 0;
+
+	ret |= anx7625_reg_write_and(ctx, ctx->i2c.rx_p0_client,
+	                        AUTO_PD_MODE,
+	                        ~BIT(4));
+	return ret;
+}
+
 static int anx7625_chip_register_init(struct anx7625_data *ctx)
 {
 	int ret = 0;
@@ -1172,10 +1205,10 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	                        INTERFACE_CHANGE_INT_MASK,
 	                        INT_MASK_OFF);
 
-	/* AUTO_RDO_ENABLE */
-	ret |= anx7625_reg_write_or(ctx, ctx->i2c.rx_p0_client,
-	                        AUTO_PD_MODE,
-	                        AUTO_PD_ENABLE);
+	/* AUTO RDO DISABLE */
+	anx7625_disable_auto_rdo(ctx);
+
+	anx7625_disable_safe_5v_during_auto_rdo(ctx);
 
 	/* Maximum Voltage in 100mV units: 5V */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
@@ -1187,10 +1220,10 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	                         MAX_POWER_SETTING,
 	                         0x1E);
 
-	/* Minimum Power in 500mW units: 2.5W */
+	/* Minimum Power in 500mW units: 3.5W = 5V * 700mA */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         MIN_POWER_SETTING,
-	                         0x05);
+	                         0x07);
 
 	/* Maximum Voltage in 100mV units: 5V */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
@@ -1210,19 +1243,34 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	                         AUTO_PD_MODE,
 	                         TRYSOURCE_EN);*/
 
-	/* Set Rp value to 3.0A */
-	ret |= anx7625_reg_write_or(ctx, ctx->i2c.tcpc_client,
+
+	/* Disable DRP */
+	ret |= anx7625_reg_write_and(ctx, ctx->i2c.tcpc_client,
 	                         TCPC_ROLE_CONTROL,
-	                         BIT(5));
+	                         ~BIT(6));
+
+	/* Set Rp value to 3.0A */
+	ret |= anx7625_reg_write_and_or(ctx, ctx->i2c.tcpc_client,
+	                         TCPC_ROLE_CONTROL,
+	                         ~BIT(4), BIT(5));
+
 	val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
 	printk("[anx7625] %s %d TCPC_ROLE_CONTROL=0x%02X\n", __func__, __LINE__, val);
+
+	/* AUTO RDO ENABLE */
+	anx7625_enable_auto_rdo(ctx);
+
+	val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
+	printk("[anx7625] %s %d TCPC_ROLE_CONTROL=0x%02X\n", __func__, __LINE__, val);
+
 	return ret;
 }
 
-static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
+/* Pd disable means you are not gonna using pd negotiation */
+static int anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
-	int ret;
+	int ret = 0;
 
 	/* When PD is disabled, OCM will stop sending cbl_det interrupts */
 
@@ -1240,12 +1288,15 @@ static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature fail.\n");
 	else
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature succeeded.\n");
+
+	return ret;
 }
 
-static void anx7625_enable_pd_protocol(struct anx7625_data *ctx)
+/* Pd disable means you are not gonna using pd negotiation */
+static int anx7625_enable_pd_protocol(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
-	int ret;
+	int ret = 0;
 
 	/* When PD is enabled, OCM will begin sending cbl_det interrupts */
 
@@ -1263,6 +1314,8 @@ static void anx7625_enable_pd_protocol(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "enable PD feature fail.\n");
 	else
 		DRM_DEV_DEBUG_DRIVER(dev, "enable PD feature succeeded.\n");
+
+	return ret;
 }
 
 static int anx7625_ocm_loading_check(struct anx7625_data *ctx)
@@ -1299,13 +1352,14 @@ static void anx7625_power_on_init(struct anx7625_data *ctx)
 		for (i = 0; i < OCM_LOADING_TIME; i++) {
 			/*Interface work? */
 			if (anx7625_ocm_loading_check(ctx) == 0) {
-				anx7625_disable_pd_protocol(ctx); // avoid OCM to negotiate BEFORE init registers
+#ifdef DISABLE_PD
+				anx7625_disable_pd_protocol(ctx);
+#endif
 				ret = anx7625_chip_register_init(ctx);
 				if (ret < 0)
 					DRM_DEV_DEBUG_DRIVER(dev, "init registers failed.\n");
 				else
 					DRM_DEV_DEBUG_DRIVER(dev, "init registers succeeded.\n");
-				anx7625_enable_pd_protocol(ctx);
 
 				DRM_DEV_DEBUG_DRIVER(dev, "Firmware ver %02x%02x,",
 									 anx7625_reg_read(ctx,
