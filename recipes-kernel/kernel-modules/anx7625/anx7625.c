@@ -1198,8 +1198,6 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	int ret = 0;
 	uint8_t val = 0;
 
-	printk("[anx7625] %s %d\n", __func__, __LINE__);
-
 	/* interrupt vector mask bit as platform needed 0: enable 1: disable */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                        INTERFACE_CHANGE_INT_MASK,
@@ -1457,7 +1455,9 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 
 static void anx7625_stop_dp_work(struct anx7625_data *ctx)
 {
-	printk("[anx7625] %s %d\n", __func__, __LINE__);
+	struct device *dev = &ctx->client->dev;
+
+	DRM_DEV_DEBUG_DRIVER(dev, "%s %d\n", __func__, __LINE__);
 
 	ctx->slimport_edid_p.edid_block_num = -1;
 	ctx->display_timing_valid = 0;
@@ -1477,7 +1477,7 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	u8 hdcp_cap;
 	int ret;
 
-	printk("[anx7625] %s %d\n", __func__, __LINE__);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s %d\n", __func__, __LINE__);
 
 	if (ctx->hpd_high_cnt >= 2) {
 		DRM_DEV_DEBUG_DRIVER(dev, "filter useless HPD\n");
@@ -2056,31 +2056,140 @@ static int sys_sta_bak;
 static irqreturn_t anx7625_cable_irq(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
+	struct device *dev = &ctx->client->dev;
 	unsigned char val = gpiod_get_value(ctx->pdata.gpio_cbl_det);
 
 	if (atomic_read(&ctx->cable_connected) == val) {
-		printk("anx: cable irq NONE (status didnt change, must be spurious)\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable irq NONE (status didnt change, must be spurious)\n");
 		return IRQ_NONE;
 	}
 
 	atomic_set(&ctx->cable_connected, val);
-	printk("anx: cable irq (%s)\n", atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable irq (%s)\n", atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
 
 	return IRQ_WAKE_THREAD;
+}
+
+static void print_cc_status(struct anx7625_data *ctx, int cc_status)
+{
+	struct device *dev = &ctx->client->dev;
+
+	switch (cc_status & 0x0F) {
+	case 0:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: SRC.Open\n");
+		break;
+	case 1:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: SRC.Rd\n");
+		break;
+	case 2:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: SRC.Ra\n");
+		break;
+	case 4:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: SNK.default\n");
+		break;
+	case 8:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: SNK.power.1.5\n");
+		break;
+	case 12:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: SNK.power.3.0\n");
+		break;
+	default:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC1: Reserved\n");
+	}
+
+	switch ((cc_status >> 4) & 0x0F) {
+	case 0:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: SRC.Open\n");
+		break;
+	case 1:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: SRC.Rd\n");
+		break;
+	case 2:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: SRC.Ra\n");
+		break;
+	case 4:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: SNK.default\n");
+		break;
+	case 8:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: SNK.power.1.5\n");
+		break;
+	case 12:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: SNK.power.3.0\n");
+		break;
+	default:
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: CC2: Reserved\n");
+	}
+}
+
+static void print_sys_status(struct anx7625_data *ctx, int sys_status)
+{
+	struct device *dev = &ctx->client->dev;
+
+	if (sys_status & BIT(0))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Reserved\n");
+
+	if (sys_status & BIT(1))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Reserved \n");
+
+	if (sys_status & BIT(2))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VCONN status ON\n");
+	if (!(sys_status & BIT(2)))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VCONN status OFF\n");
+
+	if (sys_status & BIT(3))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VBUS power provider\n");
+	if (!(sys_status & BIT(3)))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VBUS power consumer\n");
+
+	if (sys_status & BIT(5))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data Role: DFP\n");
+	if (!(sys_status & BIT(5)))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data Role: UFP\n");
+
+	if (sys_status & BIT(6))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Reserved\n");
+
+	if (sys_status & BIT(7))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - DP HPD high\n");
+	if (!(sys_status & BIT(7)))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - DP HPD low\n");
+}
+
+static void print_ivector(struct anx7625_data *ctx, int ivector)
+{
+	struct device *dev = &ctx->client->dev;
+
+	if (ivector & BIT(0))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - MSG INT\n");
+	if (ivector & BIT(1))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Reserved\n");
+	if (ivector & BIT(2))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VCONN change\n");
+	if (ivector & BIT(3))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VBUS change\n");
+	if (ivector & BIT(4))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - CC status change\n");
+	if (ivector & BIT(5))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data role change\n");
+	if (ivector & BIT(6))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - As  power consumer, update the max of RDOs V and W after PD negotiation\n");
+	if (ivector & BIT(7))
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - DP HPD change\n");
 }
 
 static irqreturn_t anx7625_cable_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
+	struct device *dev = &ctx->client->dev;
 
 	mutex_lock(&ctx->lock);
 	/* as per data sheet */
 	msleep(10);
 
-	printk("anx: cable isr\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr\n");
 	if (!atomic_read(&ctx->cable_connected)) {
 		if (ctx->hpd_status) {
-			printk("anx: stop DP work\n");
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: stop DP work\n");
 			anx7625_stop_dp_work(ctx);
 		}
 
@@ -2088,13 +2197,13 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
 		atomic_set(&ctx->power_status, 0);
 		sys_sta_bak = 0;
 		mutex_unlock(&ctx->lock);
-		printk("anx: cable isr done\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
 		return IRQ_HANDLED;
 	}
 
 	if (!atomic_read(&ctx->power_status))
 		anx7625_chip_control(ctx, 1);
-	printk("anx: cable isr done\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
 	mutex_unlock(&ctx->lock);
 
 	return IRQ_HANDLED;
@@ -2103,6 +2212,7 @@ static irqreturn_t anx7625_cable_isr(int irq, void *data)
 static irqreturn_t anx7625_comm_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
+	struct device *dev = &ctx->client->dev;
 	int sys_status, itype, ivector, cc_status, reg_val;
 
 #define STS_HPD_CHANGE \
@@ -2111,132 +2221,43 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 
 	mutex_lock(&ctx->lock);
 	if (atomic_read(&ctx->power_status) < 1) {
-		printk("anx: comm irq NONE - no power, must be spurious\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm irq NONE - no power, must be spurious\n");
 		mutex_unlock(&ctx->lock);
 		return IRQ_NONE;
 	}
 
 	if (!atomic_read(&ctx->cable_connected)) {
-		printk("anx: comm irq NONE - cable not connected, "
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm irq NONE - cable not connected, "
 		       "must be spurious\n");
 		mutex_unlock(&ctx->lock);
 		return IRQ_NONE;
 	}
 
-	printk("anx: comm isr starts -------------------------------\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr starts -------------------------------\n");
 	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
 	                         TCPC_INTR_ALERT_1);
-	printk("%s %d itype=0x%02X\n", __func__, __LINE__, itype);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s %d itype=0x%02X\n", __func__, __LINE__, itype);
 
 	reg_val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
-	printk("%s %d ROLE_CONTROL=0x%02X\n", __func__, __LINE__, reg_val);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s %d ROLE_CONTROL=0x%02X\n", __func__, __LINE__, reg_val);
 
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
 	                           INTERFACE_CHANGE_INT);
-
-	printk("anx: comms - interrupt vector (0x44) 0x%x:\n", ivector);
-	if (ivector & BIT(0))
-		printk("anx: - MSG INT\n");
-	if (ivector & BIT(1))
-		printk("anx: - Reserved\n");
-	if (ivector & BIT(2))
-		printk("anx: - VCONN change\n");
-	if (ivector & BIT(3))
-		printk("anx: - VBUS change\n");
-	if (ivector & BIT(4))
-		printk("anx: - CC status change\n");
-	if (ivector & BIT(5))
-		printk("anx: - Data role change\n");
-	if (ivector & BIT(6))
-		printk("anx: - As  power consumer, update the max of RDOs V and W after PD negotiation\n");
-	if (ivector & BIT(7))
-		printk("anx: - DP HPD change\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comms - interrupt vector (0x44) 0x%x:\n", ivector);
+	print_ivector(ctx, ivector);
 
 	anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                  INTERFACE_CHANGE_INT,
 	                  ivector &(~ivector));
 
 	sys_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, SYSTEM_STSTUS);
-	printk("anx: comms - system status (0x45) 0x%x:\n", sys_status);
-
-	if (sys_status & BIT(0))
-		printk("anx: - Reserved\n");
-
-	if (sys_status & BIT(1))
-		printk("anx: - Reserved \n");
-
-	if (sys_status & BIT(2))
-		printk("anx: - VCONN status ON\n");
-	if (!(sys_status & BIT(2)))
-		printk("anx: - VCONN status OFF\n");
-
-	if (sys_status & BIT(3))
-		printk("anx: - VBUS power provider\n");
-	if (!(sys_status & BIT(3)))
-		printk("anx: - VBUS power consumer\n");
-
-	if (sys_status & BIT(5))
-		printk("anx: - Data Role: DFP\n");
-	if (!(sys_status & BIT(5)))
-		printk("anx: - Data Role: UFP\n");
-
-	if (sys_status & BIT(6))
-		printk("anx: - Reserved\n");
-
-	if (sys_status & BIT(7))
-		printk("anx: - DP HPD high\n");
-	if (!(sys_status & BIT(7)))
-		printk("anx: - DP HPD low\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comms - system status (0x45) 0x%x:\n", sys_status);
+	print_sys_status(ctx, sys_status);
 
 	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
-	printk("anx: comms - CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n",
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comms - CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n",
 	       cc_status & 0x0F, (cc_status >> 4) & 0x0F);
-
-	switch (cc_status & 0x0F) {
-	case 0:
-		printk("anx: CC1: SRC.Open\n");
-		break;
-	case 1:
-		printk("anx: CC1: SRC.Rd\n");
-		break;
-	case 2:
-		printk("anx: CC1: SRC.Ra\n");
-		break;
-	case 4:
-		printk("anx: CC1: SNK.default\n");
-		break;
-	case 8:
-		printk("anx: CC1: SNK.power.1.5\n");
-		break;
-	case 12:
-		printk("anx: CC1: SNK.power.3.0\n");
-		break;
-	default:
-		printk("anx: CC1: Reserved\n");
-	}
-
-	switch ((cc_status >> 4) & 0x0F) {
-	case 0:
-		printk("anx: CC2: SRC.Open\n");
-		break;
-	case 1:
-		printk("anx: CC2: SRC.Rd\n");
-		break;
-	case 2:
-		printk("anx: CC2: SRC.Ra\n");
-		break;
-	case 4:
-		printk("anx: CC2: SNK.default\n");
-		break;
-	case 8:
-		printk("anx: CC2: SNK.power.1.5\n");
-		break;
-	case 12:
-		printk("anx: CC2: SNK.power.3.0\n");
-		break;
-	default:
-		printk("anx: CC2: Reserved\n");
-	}
+	print_cc_status(ctx, cc_status);
 
 	if ((ivector & HPD_STATUS_CHANGE) || STS_HPD_CHANGE)
 		dp_hpd_change_handler(ctx, sys_status & HPD_STATUS);
@@ -2250,7 +2271,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (ctx->bridge_attached)
 		drm_helper_hpd_irq_event(ctx->connector.dev);
 
-	printk("anx: comm isr done ---------------------------------\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr done ---------------------------------\n");
 	mutex_unlock(&ctx->lock);
 
 	return IRQ_HANDLED;
@@ -2265,7 +2286,7 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	struct regulator *regulator;
 	int ret;
 
-	printk("anx probing ...\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx probing ...\n");
 
 	regulator = devm_regulator_get(dev, "vdda");
 	if (IS_ERR(regulator)) {
@@ -2340,7 +2361,7 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 		return ret;
 	}
 
-	printk("anx probed\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx probed\n");
 
 	return 0;
 
