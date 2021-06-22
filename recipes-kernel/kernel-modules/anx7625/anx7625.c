@@ -38,7 +38,7 @@
 //#define DISABLE_PD
 //#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
 
-#define DEBUG 1
+//#define DEBUG
 
 #ifdef DEBUG
 #ifdef DRM_DEV_DEBUG_DRIVER
