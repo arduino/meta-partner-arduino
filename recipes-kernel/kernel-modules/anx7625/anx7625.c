@@ -1125,9 +1125,13 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 	gpiod_set_value(ctx->pdata.gpio_reset, 1);
 	usleep_range(10000, 10100);
 
-	DRM_DEV_DEBUG_DRIVER(dev, "power on\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "entering on state\n");
 }
 
+/* As a note: standby means 3.0v, 1.8v, 1.0v rails are on and
+ * RESET_N = off
+ * POWER_EN = off. So that anx7625 is still powered and able
+ * to send interrupts to AP. */
 static void anx7625_power_standby(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
@@ -1137,7 +1141,7 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
 		return;
 	}
 #ifdef GPIO_VBUS_CONTROL
-	/* @TODO: we can't simply enable VBUS here, we need to enable it after
+	/* @TODO: we can't simply disable VBUS here, we need to disable it after
 	 * 1) workmode UFP/DFP has been defined
 	 * 2) power role has been negotiated
 	/* VBUS_USBC off (gpio = 1) */
@@ -1150,7 +1154,7 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
 	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
 	usleep_range(1000, 1100);
 
-	DRM_DEV_DEBUG_DRIVER(dev, "power off\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "standby mode on\n");
 }
 
 static void anx7625_config(struct anx7625_data *ctx)
