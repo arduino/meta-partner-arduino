@@ -1455,7 +1455,8 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 #endif
 		atomic_set(&platform->power_status, 0);
 	} else {
-		/* @TODO: this should never happens and is untested, probably needs some work */
+		/* @TODO: this could happens if no POWER_EN and RESET_N pins are provided, this means
+		 * anx7625 stays always on. This is untested, probably needs some work. */
 		platform->pdata.low_power_mode = 0;
 		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode.\n");
 		atomic_set(&platform->power_status, 1);
@@ -2372,6 +2373,25 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	if (ret < 0)
 		goto free_platform;
 
+	if (IS_ENABLED(CONFIG_OF))
+		platform->bridge.of_node = client->dev.of_node;
+
+	platform->bridge.funcs = &anx7625_bridge_funcs;
+	drm_bridge_add(&platform->bridge);
+
+	ret = anx7625_audio_init(dev, platform);
+	if (ret) {
+		DRM_DEV_DEBUG_DRIVER(dev, "can't initialize audio\n");
+		return ret;
+	}
+
+	/* Page 21 of AA-004342-DS-18_ANX7625_Datasheet.pdf
+	 * we need to power on -> init registers -> (ignore CABLE_DET interrupts) -> standby -> wait for CABLE_DET interrupts
+	 * in this way the analog part that is configured in init registers (in DRP mode: continuous toggle of Rp/Rd) is working even if no cable is connected */
+	anx7625_chip_control(platform, 1);
+	usleep_range(1000, 1010);
+	anx7625_chip_control(platform, 0);
+
 	ret = gpiod_to_irq(platform->pdata.gpio_cbl_det);
 	if (ret < 0)
 		goto free_platform;
@@ -2398,18 +2418,6 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	                                "anx7625-intr-comm", platform);
 	if (ret)
 		goto free_platform;
-
-	if (IS_ENABLED(CONFIG_OF))
-		platform->bridge.of_node = client->dev.of_node;
-
-	platform->bridge.funcs = &anx7625_bridge_funcs;
-	drm_bridge_add(&platform->bridge);
-
-	ret = anx7625_audio_init(dev, platform);
-	if (ret) {
-		DRM_DEV_DEBUG_DRIVER(dev, "can't initialize audio\n");
-		return ret;
-	}
 
 	DRM_DEV_DEBUG_DRIVER(dev, "anx probed\n");
 
