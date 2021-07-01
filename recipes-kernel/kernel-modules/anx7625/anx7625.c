@@ -37,6 +37,7 @@
 
 //#define DISABLE_PD
 //#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
+#define CABLE_DET_PIN_HAS_GLITCH
 
 //#define DEBUG
 
@@ -53,6 +54,10 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #endif
 #endif
+
+/* Start global static variables */
+static int sys_sta_bak;
+/* End global static variables */
 
 /*
  * There is a sync issue while access I2C register between AP(CPU) and
@@ -2055,25 +2060,6 @@ static void anx7625_unregister_i2c_dummy_clients(struct anx7625_data *ctx)
 	i2c_unregister_device(ctx->i2c.tcpc_client);
 }
 
-static int sys_sta_bak;
-
-static irqreturn_t anx7625_cable_irq(int irq, void *data)
-{
-	struct anx7625_data *ctx = (struct anx7625_data *)data;
-	struct device *dev = &ctx->client->dev;
-	unsigned char val = gpiod_get_value(ctx->pdata.gpio_cbl_det);
-
-	if (atomic_read(&ctx->cable_connected) == val) {
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable irq NONE (status didnt change, must be spurious)\n");
-		return IRQ_NONE;
-	}
-
-	atomic_set(&ctx->cable_connected, val);
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable irq (%s)\n", atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
-
-	return IRQ_WAKE_THREAD;
-}
-
 static void print_cc_status(struct anx7625_data *ctx, int cc_status)
 {
 	struct device *dev = &ctx->client->dev;
@@ -2181,63 +2167,123 @@ static void print_ivector(struct anx7625_data *ctx, int ivector)
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: - DP HPD change\n");
 }
 
+#ifdef CABLE_DET_PIN_HAS_GLITCH
+static unsigned char confirmed_cable_det(void *data)
+{
+	struct anx7625_data *ctx = (struct anx7625_data *)data;
+
+	unsigned int count = 10;
+	unsigned int cable_det_count = 0;
+	uint8_t val = 0;
+
+	do
+	{
+		val = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
+
+		if (val == 1)
+			cable_det_count++;
+		usleep_range(1000, 1100);
+	}
+	while (count--);
+
+	if (cable_det_count > 7)
+		return 1;
+	else if (cable_det_count < 2)
+		return 0;
+	else
+		return atomic_read(&ctx->power_status); // Here we're trying to suppress the glitch
+}
+#endif
+
 static irqreturn_t anx7625_cable_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 	struct device *dev = &ctx->client->dev;
+	uint8_t cable_connected = 0;
 
-	mutex_lock(&ctx->lock);
-	/* as per data sheet */
-	msleep(10);
+#ifdef CABLE_DET_PIN_HAS_GLITCH
+	cable_connected = confirmed_cable_det((void*)ctx);
+#else
+	cable_connected = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
+#endif
 
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr\n");
-	if (!atomic_read(&ctx->cable_connected)) {
-		if (ctx->hpd_status) {
-			DRM_DEV_DEBUG_DRIVER(dev, "anx: stop DP work\n");
-			anx7625_stop_dp_work(ctx);
-		}
-
-		anx7625_power_standby(ctx);
-		atomic_set(&ctx->power_status, 0);
-		sys_sta_bak = 0;
-		mutex_unlock(&ctx->lock);
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
-		return IRQ_HANDLED;
+	if(cable_connected==atomic_read(&ctx->power_status))
+	{
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr NONE (glitch detected)\n");
+		return IRQ_NONE;
+	}
+	else
+	{
+		atomic_set(&ctx->cable_connected, cable_connected);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr (%s)\n", atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
 	}
 
-	if (!atomic_read(&ctx->power_status))
-		anx7625_chip_control(ctx, 1);
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr acquiring lock\n");
+	mutex_lock(&ctx->lock);
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr lock acquired\n");
+
+	if(atomic_read(&ctx->power_status)==0)
+	{
+		if(atomic_read(&ctx->cable_connected))
+		{
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr power on\n");
+			anx7625_chip_control(ctx, 1);
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
+			mutex_unlock(&ctx->lock);
+			return IRQ_HANDLED;
+		}
+	}
+	else {
+		if(atomic_read(&ctx->cable_connected)==0)
+		{
+			if (ctx->hpd_status) {
+				DRM_DEV_DEBUG_DRIVER(dev, "anx: stop DP work\n");
+				anx7625_stop_dp_work(ctx);
+			}
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr power standby\n");
+			anx7625_power_standby(ctx);
+			atomic_set(&ctx->power_status, 0);
+			sys_sta_bak = 0;
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
+			mutex_unlock(&ctx->lock);
+			return IRQ_HANDLED;
+		}
+	}
+
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr unhandled case!\n");
 	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
 	mutex_unlock(&ctx->lock);
-
-	return IRQ_HANDLED;
+	return IRQ_NONE;
 }
 
 static irqreturn_t anx7625_comm_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 	struct device *dev = &ctx->client->dev;
+	int val = gpiod_get_value_cansleep(ctx->pdata.gpio_intr_comm);
 	int sys_status, itype, ivector, cc_status, reg_val;
+
+	DRM_DEV_DEBUG_DRIVER(dev, "gpio_intr_comm=%d\n", val);
 
 #define STS_HPD_CHANGE \
 	(((sys_status & HPD_STATUS) != \
 	 (sys_sta_bak & HPD_STATUS)) ? HPD_STATUS_CHANGE : 0)
 
-	mutex_lock(&ctx->lock);
-	if (atomic_read(&ctx->power_status) < 1) {
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm irq NONE - no power, must be spurious\n");
-		mutex_unlock(&ctx->lock);
+	if (atomic_read(&ctx->power_status)==0) {
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr NONE - no power, must be spurious\n");
 		return IRQ_NONE;
 	}
 
-	if (!atomic_read(&ctx->cable_connected)) {
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm irq NONE - cable not connected, "
+	if (atomic_read(&ctx->cable_connected)==0) { // @TODO: ctx->power_status should be equal to ctx->cable_connected by design...necessary?
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr NONE - cable not connected, "
 		       "must be spurious\n");
-		mutex_unlock(&ctx->lock);
 		return IRQ_NONE;
 	}
 
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr starts -------------------------------\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr acquiring lock\n");
+	mutex_lock(&ctx->lock);
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr lock acquired\n");
+
 	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
 	                         TCPC_INTR_ALERT_1);
 	DRM_DEV_DEBUG_DRIVER(dev, "%s %d itype=0x%02X\n", __func__, __LINE__, itype);
@@ -2275,7 +2321,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (ctx->bridge_attached)
 		drm_helper_hpd_irq_event(ctx->connector.dev);
 
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr done ---------------------------------\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr done\n");
 	mutex_unlock(&ctx->lock);
 
 	return IRQ_HANDLED;
@@ -2337,7 +2383,7 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	client->irq = ret;
 
 	ret = devm_request_threaded_irq(dev, platform->pdata.cbl_det_irq,
-	                                anx7625_cable_irq,
+	                                NULL,
 	                                anx7625_cable_isr,
 	                                IRQF_TRIGGER_FALLING |
 	                                IRQF_TRIGGER_RISING | IRQF_ONESHOT,
