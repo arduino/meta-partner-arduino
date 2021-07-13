@@ -2915,7 +2915,7 @@ Index: git/board/arduino/portenta-m8/spl.c
 ===================================================================
 --- /dev/null
 +++ git/board/arduino/portenta-m8/spl.c
-@@ -0,0 +1,289 @@
+@@ -0,0 +1,280 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright 2018-2019 NXP
@@ -3195,15 +3195,6 @@ Index: git/board/arduino/portenta-m8/spl.c
 +	spl_dram_init();
 +
 +	board_init_r(NULL, 0);
-+}
-+
-+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
-+{
-+	puts ("resetting ...\n");
-+
-+	reset_cpu(WDOG1_BASE_ADDR);
-+
-+	return 0;
 +}
 Index: git/configs/portenta-m8_defconfig
 ===================================================================
