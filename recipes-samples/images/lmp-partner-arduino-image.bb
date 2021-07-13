@@ -59,10 +59,3 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${BOOT} \
     ${BRINGUP} \
 "
-
-# Portenta-M8 has a Murata 1DX wifi/bt module which uses custom recipes
-# linux-firmware-cyw-fmac-fw, linux-firmware-cyw-fmac-nvram and linux-firmware-cyw-bt-patch.
-# Make sure we avoid default linux bcm43430 firmware
-CORE_IMAGE_BASE_INSTALL_remove_portenta-m8 = " \
-    linux-firmware-bcm43430 \
-"
