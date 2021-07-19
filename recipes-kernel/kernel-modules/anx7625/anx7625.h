@@ -393,8 +393,8 @@ struct anx7625_platform_data {
 	struct gpio_desc *gpio_cbl_det;
 	struct gpio_desc *gpio_intr_comm;
 	struct drm_panel *panel;
-	int cbl_det_irq;
 	u32 panel_flags;
+	int intp_irq;
 	u32 low_power_mode;
 	u32 internal_panel;
 	struct device_node *mipi_host_node;
@@ -419,12 +419,14 @@ struct anx7625_data {
 	atomic_t cable_connected;
 	int hpd_status;
 	int hpd_high_cnt;
+	/* Lock for work queue */
+	struct mutex lock;
 	struct i2c_client *client;
 	struct anx7625_i2c_client i2c;
 	struct i2c_client *last_client;
 	struct s_edid_data slimport_edid_p;
-	/* drm bridge mutex lock */
-	struct mutex lock;
+	struct work_struct work;
+	struct workqueue_struct *workqueue;
 	char edid_block;
 	struct display_timing dt;
 	u8 display_timing_valid;

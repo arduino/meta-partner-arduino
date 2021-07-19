@@ -16,6 +16,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
 #include <linux/types.h>
+#include <linux/workqueue.h>
 
 #include <linux/of_gpio.h>
 #include <linux/of_graph.h>
@@ -38,13 +39,16 @@
 #include <sound/pcm.h>
 #include <sound/soc.h>
 
+#include <linux/timer.h>
+
 #include "anx7625.h"
 
 //#define DISABLE_PD
 //#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
 #define CABLE_DET_PIN_HAS_GLITCH
+#define TIMER_CABLE_DET_POLL_DELAY (1 * HZ)
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #ifdef DRM_DEV_DEBUG_DRIVER
@@ -60,9 +64,39 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 #endif
 #endif
 
-/* Start global static variables */
+/* Global variables */
 static int sys_sta_bak;
-/* End global static variables */
+struct timer_list timer_cable_det;
+struct anx7625_data *ctx_timer_cable_det;
+
+#ifdef CABLE_DET_PIN_HAS_GLITCH
+/* There is a known issue with CABLE_DET signal, to be confirmed by Analogix. Cable detection is
+ * done by analog circuitry using the CC pin voltage level. When you have PD data passing on CC pin, this
+ * directly produces a noise on CABLE_DET signal. */
+static unsigned char confirmed_cable_det(struct anx7625_data *ctx)
+{
+	unsigned int count = 10;
+	unsigned int cable_det_count = 0;
+	uint8_t val = 0;
+
+	do
+	{
+		val = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
+
+		if (val == 1)
+			cable_det_count++;
+		usleep_range(1000, 1100);
+	}
+	while (count--);
+
+	if (cable_det_count > 7)
+		return 1;
+	else if (cable_det_count < 2)
+		return 0;
+	else
+		return atomic_read(&ctx->power_status);
+}
+#endif
 
 /*
  * There is a sync issue while access I2C register between AP(CPU) and
@@ -1407,19 +1441,19 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 		                     "POWER_EN(%d) = %d, "
 		                     "RESET_N(%d) =  %d\n",
 		                     desc_to_gpio(platform->pdata.gpio_vbus_on),
-		                     gpiod_get_value(platform->pdata.gpio_vbus_on),
+		                     gpiod_get_value_cansleep(platform->pdata.gpio_vbus_on),
 		                     desc_to_gpio(platform->pdata.gpio_p_on),
-		                     gpiod_get_value(platform->pdata.gpio_p_on),
+		                     gpiod_get_value_cansleep(platform->pdata.gpio_p_on),
 		                     desc_to_gpio(platform->pdata.gpio_reset),
-		                     gpiod_get_value(platform->pdata.gpio_reset));
+		                     gpiod_get_value_cansleep(platform->pdata.gpio_reset));
 #else
 		DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled, "
 		                     "POWER_EN(%d) = %d, "
 		                     "RESET_N(%d) =  %d\n",
 		                     desc_to_gpio(platform->pdata.gpio_p_on),
-		                     gpiod_get_value(platform->pdata.gpio_p_on),
+		                     gpiod_get_value_cansleep(platform->pdata.gpio_p_on),
 		                     desc_to_gpio(platform->pdata.gpio_reset),
-		                     gpiod_get_value(platform->pdata.gpio_reset));
+		                     gpiod_get_value_cansleep(platform->pdata.gpio_reset));
 #endif
 		atomic_set(&platform->power_status, 0);
 	} else {
@@ -1435,7 +1469,7 @@ static void anx7625_stop_dp_work(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "%s %d\n", __func__, __LINE__);
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: stop DP work\n");
 
 	ctx->slimport_edid_p.edid_block_num = -1;
 	ctx->hpd_status = 0;
@@ -1455,7 +1489,7 @@ static void anx7625_start_dp_work(struct anx7625_data *ctx)
 	int ret;
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "%s %d\n", __func__, __LINE__);
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: start DP work\n");
 
 	if (ctx->hpd_high_cnt >= 2) {
 		DRM_DEV_DEBUG_DRIVER(dev, "filter useless HPD\n");
@@ -2137,93 +2171,80 @@ static void print_ivector(struct anx7625_data *ctx, int ivector)
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: - DP HPD change\n");
 }
 
-#ifdef CABLE_DET_PIN_HAS_GLITCH
-static unsigned char confirmed_cable_det(void *data)
+/* Timer callback that periodically spawns the workqueue for CABLE_DET sampling and handling.
+ * No strict timing requirement on CABLE_DET sampling is needed. */
+static void timer_cable_det_poll(struct timer_list *unused)
 {
-	struct anx7625_data *ctx = (struct anx7625_data *)data;
+	struct anx7625_data *ctx = (struct anx7625_data *)ctx_timer_cable_det;
 
-	unsigned int count = 10;
-	unsigned int cable_det_count = 0;
-	uint8_t val = 0;
+	if (ctx->pdata.intp_irq)
+		queue_work(ctx->workqueue, &ctx->work);
 
-	do
-	{
-		val = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
-
-		if (val == 1)
-			cable_det_count++;
-		usleep_range(1000, 1100);
-	}
-	while (count--);
-
-	if (cable_det_count > 7)
-		return 1;
-	else if (cable_det_count < 2)
-		return 0;
-	else
-		return atomic_read(&ctx->power_status); // Here we're trying to suppress the glitch
+	mod_timer(&timer_cable_det, jiffies + TIMER_CABLE_DET_POLL_DELAY);
+	return;
 }
-#endif
 
-static irqreturn_t anx7625_cable_isr(int irq, void *data)
+static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 {
-	struct anx7625_data *ctx = (struct anx7625_data *)data;
 	struct device *dev = &ctx->client->dev;
-	uint8_t cable_connected = 0;
-
-#ifdef CABLE_DET_PIN_HAS_GLITCH
-	cable_connected = confirmed_cable_det((void*)ctx);
-#else
-	cable_connected = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
-#endif
-
-	if(cable_connected==atomic_read(&ctx->power_status))
-	{
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr NONE (glitch detected)\n");
-		return IRQ_NONE;
-	}
-	else
-	{
-		atomic_set(&ctx->cable_connected, cable_connected);
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr (%s)\n", atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
-	}
-
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr acquiring lock\n");
-	mutex_lock(&ctx->lock);
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr lock acquired\n");
 
 	if(atomic_read(&ctx->power_status)==0)
 	{
 		if(atomic_read(&ctx->cable_connected))
 		{
-			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr power on\n");
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: %s power on\n", __func__);
 			anx7625_chip_control(ctx, 1);
-			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
-			mutex_unlock(&ctx->lock);
-			return IRQ_HANDLED;
+			return 0;
 		}
 	}
 	else {
 		if(atomic_read(&ctx->cable_connected)==0)
 		{
 			if (ctx->hpd_status) {
-				DRM_DEV_DEBUG_DRIVER(dev, "anx: stop DP work\n");
 				anx7625_stop_dp_work(ctx);
 			}
-			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr power standby\n");
+			DRM_DEV_DEBUG_DRIVER(dev, "anx: %s power standby\n", __func__);
 			anx7625_power_standby(ctx);
 			atomic_set(&ctx->power_status, 0);
 			sys_sta_bak = 0;
-			DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
-			mutex_unlock(&ctx->lock);
-			return IRQ_HANDLED;
+			return 0;
 		}
 	}
 
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr unhandled case!\n");
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: cable isr done\n");
-	mutex_unlock(&ctx->lock);
-	return IRQ_NONE;
+	return 0;
+}
+
+/* Worqueue for CABLE_DET handling */
+static void anx7625_work_func(struct work_struct *work)
+{
+	struct anx7625_data *ctx = container_of(work,
+						struct anx7625_data, work);
+	struct device *dev = &ctx->client->dev;
+	uint8_t cable_connected = 0;
+
+#ifdef CABLE_DET_PIN_HAS_GLITCH
+	cable_connected = confirmed_cable_det(ctx);
+#else
+	cable_connected = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
+#endif
+
+	if((cable_connected==1 && (atomic_read(&ctx->power_status)>0)) || (cable_connected==0) && (atomic_read(&ctx->power_status)==0))
+	{
+		return;
+	}
+	else
+	{
+		atomic_set(&ctx->cable_connected, cable_connected);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s (%s)\n", __func__, atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s acquiring lock\n", __func__);
+		mutex_lock(&ctx->lock);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s lock acquired\n", __func__);
+		anx7625_handle_cable_det(ctx); // @TODO: handle return value from this function?
+		mutex_unlock(&ctx->lock);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s done\n", __func__);
+	}
+
+	return;
 }
 
 static irqreturn_t anx7625_comm_isr(int irq, void *data)
@@ -2244,7 +2265,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 		return IRQ_NONE;
 	}
 
-	if (atomic_read(&ctx->cable_connected)==0) { // @TODO: ctx->power_status should be equal to ctx->cable_connected by design...necessary?
+	if (atomic_read(&ctx->cable_connected)==0) {
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr NONE - cable not connected, "
 		       "must be spurious\n");
 		return IRQ_NONE;
@@ -2302,7 +2323,7 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 {
 	struct anx7625_data *platform;
 	struct anx7625_platform_data *pdata;
-	int ret;
+	int ret = 0;
 	struct device *dev = &client->dev;
 	struct regulator *regulator;
 
@@ -2361,41 +2382,50 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 
 	/* Page 21 of AA-004342-DS-18_ANX7625_Datasheet.pdf
 	 * we need to power on -> init registers -> (ignore CABLE_DET interrupts) -> standby -> wait for CABLE_DET interrupts
-	 * in this way the analog part that is configured in init registers (in DRP mode: continuous toggle of Rp/Rd) is working even if no cable is connected */
+	 * in this way the analog part get configured and continue to work even in standby mode.
+	 * One example is DRP mode where continuous toggle of Rp-Rd need to run even if no usbc cable is connected. */
 	anx7625_chip_control(platform, 1);
 	usleep_range(1000, 1010);
 	anx7625_chip_control(platform, 0);
-
-	ret = gpiod_to_irq(platform->pdata.gpio_cbl_det);
-	if (ret < 0)
-		goto free_platform;
-	platform->pdata.cbl_det_irq = ret;
 
 	ret = gpiod_to_irq(platform->pdata.gpio_intr_comm);
 	if (ret < 0)
 		goto free_platform;
 	client->irq = ret;
+	platform->pdata.intp_irq = ret;
 
-	ret = devm_request_threaded_irq(dev, platform->pdata.cbl_det_irq,
-	                                NULL,
-	                                anx7625_cable_isr,
-	                                IRQF_TRIGGER_FALLING |
-	                                IRQF_TRIGGER_RISING | IRQF_ONESHOT,
-	                                "anx7625-cbl-det", platform);
-	if (ret)
-		goto free_platform;
+	if (platform->pdata.intp_irq) {
+		INIT_WORK(&platform->work, anx7625_work_func);
+		platform->workqueue = create_workqueue("anx7625_work");
+		if (!platform->workqueue) {
+			DRM_DEV_ERROR(dev, "fail to create work queue\n");
+			ret = -ENOMEM;
+			goto free_platform;
+		}
 
-	ret = devm_request_threaded_irq(dev, client->irq,
-	                                NULL,
-	                                anx7625_comm_isr,
-	                                IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-	                                "anx7625-intr-comm", platform);
-	if (ret)
-		goto free_platform;
+		ret = devm_request_threaded_irq(dev, platform->pdata.intp_irq,
+						NULL, anx7625_comm_isr,
+						IRQF_TRIGGER_FALLING |
+						IRQF_ONESHOT,
+						"anx7625-intp", platform);
+		if (ret) {
+			DRM_DEV_ERROR(dev, "fail to request irq\n");
+			goto free_wq;
+		}
+	}
+
+	// Setup & start timer for cable det detection
+	ctx_timer_cable_det = platform;
+	timer_setup(&timer_cable_det, timer_cable_det_poll, 0);
+	mod_timer(&timer_cable_det, jiffies + TIMER_CABLE_DET_POLL_DELAY);
 
 	DRM_DEV_DEBUG_DRIVER(dev, "anx probed\n");
 
 	return 0;
+
+free_wq:
+	if (platform->workqueue)
+		destroy_workqueue(platform->workqueue);
 
 free_platform:
 	kfree(platform);
@@ -2409,6 +2439,10 @@ static int anx7625_i2c_remove(struct i2c_client *client)
 	struct anx7625_data *platform = i2c_get_clientdata(client);
 
 	drm_bridge_remove(&platform->bridge);
+
+	if (platform->pdata.intp_irq)
+		destroy_workqueue(platform->workqueue);
+
 	anx7625_unregister_i2c_dummy_clients(platform);
 	anx7625_audio_exit(platform);
 
