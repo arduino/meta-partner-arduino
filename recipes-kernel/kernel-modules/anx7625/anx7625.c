@@ -69,6 +69,120 @@ static int sys_sta_bak;
 struct timer_list timer_cable_det;
 struct anx7625_data *ctx_timer_cable_det;
 
+/* Functions to report data role and power role changes to upper level */
+static void anx7625_set_data_role(struct anx7625_data *ctx,
+				    enum typec_data_role data_role)
+{
+	struct device *dev = &ctx->client->dev;
+	enum usb_role usb_role = USB_ROLE_NONE;
+	int ret;
+
+	if (data_role == TYPEC_HOST)
+		usb_role = USB_ROLE_HOST;
+	else
+		usb_role = USB_ROLE_DEVICE;
+
+	ret = usb_role_switch_set_role(ctx->usb_typec->role_sw, usb_role);
+	if(ret)
+		DRM_DEV_ERROR(dev, "Failed to perform usb role switch to usb peripheral: %d\n", ret);
+
+	typec_set_data_role(ctx->usb_typec->port, data_role);
+}
+
+static void anx7625_set_pwr_role(struct anx7625_data *ctx,
+				    enum typec_role pwr_role,
+				    enum typec_pwr_opmode opmode,
+				    enum typec_role vconn_role)
+{
+	typec_set_pwr_role(ctx->usb_typec->port, pwr_role);
+	typec_set_pwr_opmode(ctx->usb_typec->port, opmode);
+	typec_set_vconn_role(ctx->usb_typec->port, vconn_role);
+}
+
+static int anx7625_get_fw_caps(struct anx7625_data *ctx,
+				 struct fwnode_handle *fwnode)
+{
+	struct device *dev = &ctx->client->dev;
+	const char *cap_str;
+	int ret;
+
+	ctx->usb_typec->capability.fwnode = fwnode;
+
+	/*
+	 * Supported port type can be configured through device tree
+	 */
+	ret = fwnode_property_read_string(fwnode, "power-role", &cap_str);
+	if (!ret) {
+		ret = typec_find_port_power_role(cap_str);
+		if (ret < 0)
+			return ret;
+		ctx->usb_typec->port_type = ret;
+	}
+	ctx->usb_typec->capability.type = ctx->usb_typec->port_type;
+
+	/* Skip DRP/Source capabilities in case of Sink only */
+	if (ctx->usb_typec->port_type == TYPEC_PORT_SNK)
+		return 0;
+
+	if (ctx->usb_typec->port_type == TYPEC_PORT_DRP)
+		ctx->usb_typec->capability.prefer_role = TYPEC_SINK; /* @TODO: parse "try-power-role" in dts? */
+
+	/*
+	 * Supported power operation mode can be configured through device tree
+	 * @TODO: need to parse "source-pdos", "sink-pdos"...etc
+	 */
+	ctx->usb_typec->pwr_opmode = TYPEC_PWR_MODE_PD;
+
+	return 0;
+}
+
+static int anx7625_typec_connect(struct anx7625_data *ctx)
+{
+	struct device *dev = &ctx->client->dev;
+	struct typec_partner_desc desc;
+	int ret = 0;
+
+	DRM_DEV_DEBUG_DRIVER(dev, "Type C USB connected\n");
+
+	// If POWER_ROLE == SOURCE
+	// enable VBUS?
+	ctx->usb_typec->vbus_on = true;
+
+	desc.usb_pd = false;
+	desc.accessory = TYPEC_ACCESSORY_NONE; /* @TODO: investigate correct enum to use in case of hub with alt mode */
+	desc.identity = NULL;
+
+	/* The partner is the usb port device attached to our port */
+	ctx->usb_typec->partner = typec_register_partner(ctx->usb_typec->port, &desc);
+	if (IS_ERR(ctx->usb_typec->partner)) {
+		ret = PTR_ERR(ctx->usb_typec->partner);
+		DRM_DEV_ERROR(dev, "Failed to register partner for typec port: %d\n", ret);
+		goto vbus_disable;
+	}
+
+	return 0;
+
+vbus_disable:
+	if (ctx->usb_typec->vbus_on) {
+		// disable VBUS?
+		ctx->usb_typec->vbus_on = false;
+	}
+
+	return ret;
+}
+
+static int anx7625_typec_disconnect(struct anx7625_data *ctx)
+{
+	struct device *dev = &ctx->client->dev;
+
+	DRM_DEV_DEBUG_DRIVER(dev, "Type C USB disconnected\n");
+
+	typec_unregister_partner(ctx->usb_typec->partner);
+	ctx->usb_typec->partner = NULL;
+
+	return 0;
+}
+
 #ifdef CABLE_DET_PIN_HAS_GLITCH
 /* There is a known issue with CABLE_DET signal, to be confirmed by Analogix. Cable detection is
  * done by analog circuitry using the CC pin voltage level. When you have PD data passing on CC pin, this
@@ -2136,9 +2250,9 @@ static void print_sys_status(struct anx7625_data *ctx, int sys_status)
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: - VBUS power consumer\n");
 
 	if (sys_status & BIT(5))
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data Role: DFP\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data role: DFP\n");
 	if (!(sys_status & BIT(5)))
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data Role: UFP\n");
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Data role: UFP\n");
 
 	if (sys_status & BIT(6))
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: - Reserved\n");
@@ -2193,6 +2307,7 @@ static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 		if(atomic_read(&ctx->cable_connected))
 		{
 			DRM_DEV_DEBUG_DRIVER(dev, "anx: %s power on\n", __func__);
+			anx7625_typec_connect(ctx);
 			anx7625_chip_control(ctx, 1);
 			return 0;
 		}
@@ -2206,6 +2321,7 @@ static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 			DRM_DEV_DEBUG_DRIVER(dev, "anx: %s power standby\n", __func__);
 			anx7625_power_standby(ctx);
 			atomic_set(&ctx->power_status, 0);
+			anx7625_typec_disconnect(ctx);
 			sys_sta_bak = 0;
 			return 0;
 		}
@@ -2251,10 +2367,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 	struct device *dev = &ctx->client->dev;
-	int val = gpiod_get_value_cansleep(ctx->pdata.gpio_intr_comm);
-	int sys_status, itype, ivector, cc_status, reg_val;
-
-	DRM_DEV_DEBUG_DRIVER(dev, "gpio_intr_comm=%d\n", val);
+	int sys_status, ivector, cc_status;
 
 #define STS_HPD_CHANGE \
 	(((sys_status & HPD_STATUS) != \
@@ -2275,13 +2388,6 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	mutex_lock(&ctx->lock);
 	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr lock acquired\n");
 
-	itype = anx7625_reg_read(ctx, ctx->i2c.tcpc_client,
-	                         TCPC_INTR_ALERT_1);
-	DRM_DEV_DEBUG_DRIVER(dev, "%s %d itype=0x%02X\n", __func__, __LINE__, itype);
-
-	reg_val = anx7625_reg_read(ctx, ctx->i2c.tcpc_client, TCPC_ROLE_CONTROL);
-	DRM_DEV_DEBUG_DRIVER(dev, "%s %d ROLE_CONTROL=0x%02X\n", __func__, __LINE__, reg_val);
-
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
 	                           INTERFACE_CHANGE_INT);
 	DRM_DEV_DEBUG_DRIVER(dev, "anx: comms - interrupt vector (0x44) 0x%x:\n", ivector);
@@ -2299,6 +2405,30 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	DRM_DEV_DEBUG_DRIVER(dev, "anx: comms - CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n",
 	       cc_status & 0x0F, (cc_status >> 4) & 0x0F);
 	print_cc_status(ctx, cc_status);
+
+	/* Inform system of data role change */
+	if (ivector & BIT(5)) { /* ivector == DATA ROLE CHANGE */
+		if (sys_status & BIT(5))
+			anx7625_set_data_role(ctx, TYPEC_HOST); /* DFP */
+		if (!(sys_status & BIT(5)))
+			anx7625_set_data_role(ctx, TYPEC_DEVICE); /* UFP */
+	}
+
+	/* Inform system of power role changes */
+	if (ivector & BIT(3)) { /* ivector == VBUS CHANGE */
+		if (sys_status & BIT(3))
+			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SOURCE); /* We're power provider */
+		if (!(sys_status & BIT(3)))
+			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SINK); /* We're power consumer */
+	}
+
+	/* Inform system of vconn changes */
+	if (ivector & BIT(2)) { /* ivector == VCONN CHANGE */
+		if (sys_status & BIT(2))
+			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SOURCE); /* VCONN status OFF */
+		if (!(sys_status & BIT(2)))
+			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SINK); /* VCONN status OFF @TODO: being sink requires Ra to be present, check */
+	}
 
 	if ((ivector & HPD_STATUS_CHANGE) || STS_HPD_CHANGE)
 		dp_hpd_change_handler(ctx, sys_status & HPD_STATUS);
@@ -2346,6 +2476,12 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 		return -ENOMEM;
 	}
 
+	platform->usb_typec = kzalloc(sizeof(struct anx7625_usb_typec), GFP_KERNEL);
+	if(IS_ERR_OR_NULL(platform->usb_typec)) {
+		DRM_DEV_ERROR(dev, "Failed to allocate mem for platform->usb_typec\n");
+		return -ENOMEM;
+	}
+
 	pdata = &platform->pdata;
 
 	ret = anx7625_parse_dt(dev, pdata);
@@ -2379,6 +2515,39 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 		DRM_DEV_DEBUG_DRIVER(dev, "can't initialize audio\n");
 		return ret;
 	}
+
+	/* Get usb typec configuration from device tree */
+	ret = anx7625_get_fw_caps(platform, pdata->connector_fwnode);
+	if (ret) {
+		DRM_DEV_ERROR(dev, "Failed to get connector caps: %d\n", ret);
+		goto free_platform;
+	}
+
+	platform->usb_typec->port = typec_register_port(dev, &platform->usb_typec->capability);
+	if (IS_ERR(platform->usb_typec->port)) {
+		ret = PTR_ERR(platform->usb_typec->port);
+		DRM_DEV_ERROR(dev, "Failed to register typec port: %d\n", ret);
+		goto free_platform;
+	}
+
+	/*
+	 * Default power role and operation mode initialization: will be updated upon
+	 * cable or comm interrupt
+	 */
+	anx7625_set_pwr_role(platform, TYPEC_SINK, platform->usb_typec->pwr_opmode, TYPEC_SINK);
+
+	/* Here we're getting the role_sw reference which is used to
+	 * propagate data role switch to the AP usb port attached to this usb typec connector */
+	platform->usb_typec->role_sw = fwnode_usb_role_switch_get(pdata->connector_fwnode);
+	if (IS_ERR(platform->usb_typec->role_sw)) {
+		ret = PTR_ERR(platform->usb_typec->role_sw);
+		if (ret != -EPROBE_DEFER)
+			DRM_DEV_ERROR(dev, "Failed to get usb role switch: %d\n", ret);
+		goto free_platform;
+	}
+
+	/* Setting default data role as device for typec connector only: will be updated upon comm interrupt */
+	typec_set_data_role(platform->usb_typec->port, TYPEC_DEVICE);
 
 	/* Page 21 of AA-004342-DS-18_ANX7625_Datasheet.pdf
 	 * we need to power on -> init registers -> (ignore CABLE_DET interrupts) -> standby -> wait for CABLE_DET interrupts
@@ -2442,6 +2611,19 @@ static int anx7625_i2c_remove(struct i2c_client *client)
 
 	if (platform->pdata.intp_irq)
 		destroy_workqueue(platform->workqueue);
+
+	if (platform->usb_typec->partner) {
+		typec_unregister_partner(platform->usb_typec->partner);
+		platform->usb_typec->partner = NULL;
+	}
+
+	//if (platform->usb_typec->vbus_on) // @TODO: implement this
+		//Disable VBUS
+
+	if (platform->usb_typec->role_sw)
+		usb_role_switch_put(platform->usb_typec->role_sw);
+
+	typec_unregister_port(platform->usb_typec->port);
 
 	anx7625_unregister_i2c_dummy_clients(platform);
 	anx7625_audio_exit(platform);

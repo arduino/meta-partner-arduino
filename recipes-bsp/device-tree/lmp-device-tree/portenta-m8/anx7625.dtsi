@@ -36,7 +36,7 @@
 		usbc_pwr-gpios = <&gpio4 9 0x0>;    // VBUS EN active low
 		enable-gpios = <&gpio4 21 0x0>;     // VIDEO_EN active high
 		reset-gpios = <&gpio4 27 0x0>;      // VIDEO_RSTN active low
-		cbl_det-gpios = <&gpio4 22 IRQ_TYPE_NONE>;    // VIDEO_CABLE cable irq input active high
+		cbl_det-gpios = <&gpio4 22 0x0>;    // VIDEO_CABLE cable input active high
 		intr_comm-gpios = <&gpio4 23 IRQ_TYPE_NONE>;  // VIDEO_ALT comm irq input active low
 		#sound-dai-cells = <0>;
 
@@ -55,6 +55,29 @@
 				reg = <3>;
 				codec_endpoint: endpoint {
 					remote-endpoint = <&sai2_cpu_endpoint>;
+				};
+			};
+		};
+
+		typec1_con: connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			power-role = "dual";
+			data-role = "dual";
+			try-power-role = "sink";
+			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
+			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
+			             PDO_VAR(5000, 20000, 3000)>;
+			op-sink-microwatt = <15000000>;
+			self-powered;
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@1 {
+					reg = <1>;
+					typec1_dr_sw: endpoint {
+						remote-endpoint = <&usb1_drd_sw>;
+					};
 				};
 			};
 		};

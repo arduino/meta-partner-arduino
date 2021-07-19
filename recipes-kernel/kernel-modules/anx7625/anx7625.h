@@ -13,6 +13,9 @@
 #include <drm/drm_dp_helper.h>
 #include <video/display_timing.h>
 
+#include <linux/usb/role.h>
+#include <linux/usb/typec.h>
+
 #define ANX7625_DRV_VERSION "0.1.04"
 
 /* Loading OCM re-trying times */
@@ -399,6 +402,7 @@ struct anx7625_platform_data {
 	u32 internal_panel;
 	struct device_node *mipi_host_node;
 	struct device_node *panel_node;
+	struct fwnode_handle *connector_fwnode;
 };
 
 struct anx7625_i2c_client {
@@ -409,6 +413,18 @@ struct anx7625_i2c_client {
 	struct i2c_client *rx_p1_client;
 	struct i2c_client *rx_p2_client;
 	struct i2c_client *tcpc_client;
+};
+
+struct anx7625_usb_typec {
+	struct typec_port	*port;
+	struct typec_capability capability;
+	struct typec_partner	*partner;
+
+	enum typec_port_type	port_type;
+	enum typec_pwr_opmode	pwr_opmode;
+	bool vbus_on;
+
+	struct usb_role_switch	*role_sw;
 };
 
 struct anx7625_data {
@@ -438,6 +454,7 @@ struct anx7625_data {
 	struct drm_display_mode vid_info;
 	struct notifier_block event_nb;
 	struct platform_device *audio_pdev;
+	struct anx7625_usb_typec *usb_typec;
 };
 
 #endif  /* __ANX7625_H__ */
