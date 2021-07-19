@@ -47,6 +47,7 @@
 //#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
 #define CABLE_DET_PIN_HAS_GLITCH
 #define TIMER_CABLE_DET_POLL_DELAY (1 * HZ)
+#define TIMEOUT_USB_DATA_ROLE 2
 
 #define DEBUG
 
@@ -87,6 +88,7 @@ static void anx7625_set_data_role(struct anx7625_data *ctx,
 		DRM_DEV_ERROR(dev, "Failed to perform usb role switch to usb peripheral: %d\n", ret);
 
 	typec_set_data_role(ctx->usb_typec->port, data_role);
+	ctx->usb_typec->usb_data_role_timeout = false;
 }
 
 static void anx7625_set_pwr_role(struct anx7625_data *ctx,
@@ -160,6 +162,9 @@ static int anx7625_typec_connect(struct anx7625_data *ctx)
 		goto vbus_disable;
 	}
 
+	/* Setup the flag to trigger default DEVICE usb data role */
+	ctx->usb_typec->usb_data_role_timeout = true;
+
 	return 0;
 
 vbus_disable:
@@ -179,6 +184,8 @@ static int anx7625_typec_disconnect(struct anx7625_data *ctx)
 
 	typec_unregister_partner(ctx->usb_typec->partner);
 	ctx->usb_typec->partner = NULL;
+
+	ctx->usb_typec->usb_data_role_timeout = false;
 
 	return 0;
 }
@@ -2330,6 +2337,29 @@ static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 	return 0;
 }
 
+/* This function should notify to the system the default value for usb data role
+ * n seconds after a usb type c cable has been plugged and if no data role change has been processed in the meantime.
+ * This is done since anx doesn't set data role change bit in ivector (0x7e, 0x44) when dealing with a passive usb typec cable. On the other
+ * hand defaulting to DEVICE in probe and then switching later on to HOST causes enumeration errors to
+ * the system usb port. @TODO: investigate better solution.
+ * NOTE: this function uses timer_cable_det_poll as a time basis. From tests data role is defined between 400-900ms since cable connection. I'm using
+ * 2 seconds to have some room. */
+static void anx7625_detect_usb_data_role_timeout(struct anx7625_data *ctx)
+{
+	static uint8_t counter = 0;
+	struct device *dev = &ctx->client->dev;
+
+	if(ctx->usb_typec->usb_data_role_timeout==true) {
+		counter++;
+		if(counter == TIMEOUT_USB_DATA_ROLE) {
+			counter = 0;
+			ctx->usb_typec->usb_data_role_timeout = false;
+			anx7625_set_data_role(ctx, TYPEC_DEVICE);
+			DRM_DEV_DEBUG_DRIVER(dev, "Timeout occurred for usb data role, defaulting to DEVICE\n");
+		}
+	}
+}
+
 /* Worqueue for CABLE_DET handling */
 static void anx7625_work_func(struct work_struct *work)
 {
@@ -2338,13 +2368,15 @@ static void anx7625_work_func(struct work_struct *work)
 	struct device *dev = &ctx->client->dev;
 	uint8_t cable_connected = 0;
 
+	anx7625_detect_usb_data_role_timeout(ctx);
+
 #ifdef CABLE_DET_PIN_HAS_GLITCH
 	cable_connected = confirmed_cable_det(ctx);
 #else
 	cable_connected = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
 #endif
 
-	if((cable_connected==1 && (atomic_read(&ctx->power_status)>0)) || (cable_connected==0) && (atomic_read(&ctx->power_status)==0))
+	if((cable_connected==1 && (atomic_read(&ctx->power_status)>0)) || (cable_connected==0 && atomic_read(&ctx->power_status)==0))
 	{
 		return;
 	}
@@ -2546,8 +2578,8 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 		goto free_platform;
 	}
 
-	/* Setting default data role as device for typec connector only: will be updated upon comm interrupt */
-	typec_set_data_role(platform->usb_typec->port, TYPEC_DEVICE);
+	/* When a cable will be connected, a timeout for usb data role is configured */
+	platform->usb_typec->usb_data_role_timeout = false;
 
 	/* Page 21 of AA-004342-DS-18_ANX7625_Datasheet.pdf
 	 * we need to power on -> init registers -> (ignore CABLE_DET interrupts) -> standby -> wait for CABLE_DET interrupts

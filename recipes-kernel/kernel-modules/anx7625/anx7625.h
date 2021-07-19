@@ -425,6 +425,8 @@ struct anx7625_usb_typec {
 	bool vbus_on;
 
 	struct usb_role_switch	*role_sw;
+
+	bool usb_data_role_timeout;
 };
 
 struct anx7625_data {
