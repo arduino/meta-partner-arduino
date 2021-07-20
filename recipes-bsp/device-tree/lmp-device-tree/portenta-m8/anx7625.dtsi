@@ -27,10 +27,10 @@
 		reg = <0x58>;
 		vdda-supply = <&ldo5_reg>;
 
-		// 1: internal panel always connected 
+		// 1: internal panel always connected
 		// !=1: usbc dp port is modeled as a panel that can
 		// be present or not depending on the actual usbc cable connection
-		// status see driver 
+		// status see driver
 		//panel_flags = <1>;
 
 		usbc_pwr-gpios = <&gpio4 9 0x0>;    // VBUS EN active low
