@@ -76,7 +76,7 @@ static void anx7625_set_data_role(struct anx7625_data *ctx,
 {
 	struct device *dev = &ctx->client->dev;
 	enum usb_role usb_role = USB_ROLE_NONE;
-	int ret;
+	int ret = 0;
 
 	if (data_role == TYPEC_HOST)
 		usb_role = USB_ROLE_HOST;
@@ -1679,6 +1679,12 @@ static int anx7625_parse_dt(struct device *dev,
 	struct device_node *np = dev->of_node;
 	struct device_node *panel_node, *out_ep;
 
+	pdata->connector_fwnode = device_get_named_child_node(dev, "connector");
+	if (IS_ERR_OR_NULL(pdata->connector_fwnode)) {
+		DRM_ERROR("Failed to get internal usb typec connector\n");
+		return -ENODEV;
+	}
+
 	of_property_read_u32(dev->of_node, "panel_flags",
 	                     &pdata->panel_flags);
 
@@ -2564,12 +2570,6 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 		goto free_platform;
 	}
 
-	/*
-	 * Default power role and operation mode initialization: will be updated upon
-	 * cable or comm interrupt
-	 */
-	anx7625_set_pwr_role(platform, TYPEC_SINK, platform->usb_typec->pwr_opmode, TYPEC_SINK);
-
 	/* Here we're getting the role_sw reference which is used to
 	 * propagate data role switch to the AP usb port attached to this usb typec connector */
 	platform->usb_typec->role_sw = fwnode_usb_role_switch_get(pdata->connector_fwnode);
@@ -2579,6 +2579,11 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 			DRM_DEV_ERROR(dev, "Failed to get usb role switch: %d\n", ret);
 		goto free_platform;
 	}
+
+	/* Default power role and operation mode initialization: will be updated upon
+	 * cable or comm interrupt
+	 */
+	anx7625_set_pwr_role(platform, TYPEC_SINK, platform->usb_typec->pwr_opmode, TYPEC_SINK);
 
 	/* When a cable will be connected, a timeout for usb data role is configured */
 	platform->usb_typec->usb_data_role_timeout = false;
