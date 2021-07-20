@@ -109,6 +109,8 @@ static int anx7625_get_fw_caps(struct anx7625_data *ctx,
 	int ret;
 
 	ctx->usb_typec->capability.fwnode = fwnode;
+	ctx->usb_typec->capability.revision = 0x0120;	/* Type-C spec release 1.2 */
+	ctx->usb_typec->capability.pd_revision = 0x0300;	/* USB-PD spec release 3.0 */
 
 	/*
 	 * Supported port type can be configured through device tree
@@ -2354,8 +2356,8 @@ static void anx7625_detect_usb_data_role_timeout(struct anx7625_data *ctx)
 		if(counter == TIMEOUT_USB_DATA_ROLE) {
 			counter = 0;
 			ctx->usb_typec->usb_data_role_timeout = false;
-			anx7625_set_data_role(ctx, TYPEC_DEVICE);
 			DRM_DEV_DEBUG_DRIVER(dev, "Timeout occurred for usb data role, defaulting to DEVICE\n");
+			anx7625_set_data_role(ctx, TYPEC_DEVICE);
 		}
 	}
 }
