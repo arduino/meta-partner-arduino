@@ -104,7 +104,6 @@ static void anx7625_set_pwr_role(struct anx7625_data *ctx,
 static int anx7625_get_fw_caps(struct anx7625_data *ctx,
 				 struct fwnode_handle *fwnode)
 {
-	struct device *dev = &ctx->client->dev;
 	const char *cap_str;
 	int ret;
 
@@ -1246,7 +1245,7 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 	/* @TODO: we can't simply enable VBUS here, we need to enable it after
 	 * 1) workmode UFP/DFP has been defined
 	 * 2) power role has been negotiated
-	/* VBUS_USBC on (gpio = 0) */
+	 * VBUS_USBC on (gpio = 0) */
 	gpiod_set_value(ctx->pdata.gpio_vbus_on, 0);
 	usleep_range(10000, 10100);
 #endif
@@ -1277,7 +1276,7 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
 	/* @TODO: we can't simply disable VBUS here, we need to disable it after
 	 * 1) workmode UFP/DFP has been defined
 	 * 2) power role has been negotiated
-	/* VBUS_USBC off (gpio = 1) */
+	 * VBUS_USBC off (gpio = 1) */
 	gpiod_set_value(ctx->pdata.gpio_vbus_on, 1);
 	usleep_range(10000, 10100);
 #endif
@@ -1325,14 +1324,13 @@ static int anx7625_disable_safe_5v_during_auto_rdo(struct anx7625_data *ctx)
 
 	ret |= anx7625_write_and(ctx, ctx->i2c.rx_p0_client,
 	                        AUTO_PD_MODE,
-	                        ~BIT(4));
+	                        ~(u8)BIT(4));
 	return ret;
 }
 
 static int anx7625_chip_register_init(struct anx7625_data *ctx)
 {
 	int ret = 0;
-	uint8_t val = 0;
 
 	/* interrupt vector mask bit as platform needed 0: enable 1: disable */
 	ret = anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
@@ -1380,7 +1378,7 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	/* Disable DRP */
 	ret |= anx7625_write_and(ctx, ctx->i2c.tcpc_client,
 	                         TCPC_ROLE_CONTROL,
-	                         ~BIT(6));
+	                         ~(u8)BIT(6));
 
 	/* AUTO RDO ENABLE */
 	anx7625_enable_auto_rdo(ctx);
@@ -1845,14 +1843,20 @@ out:
 static enum drm_mode_status
 anx7625_connector_mode_valid(struct drm_connector *connector,
                              struct drm_display_mode *mode) {
-#if 0
+
 	struct anx7625_data *ctx = connector_to_anx7625(connector);
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm modes valid verify\n");
-#endif
-	if (mode->clock > SUPPORT_PIXEL_CLOCK)
+	DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking\n");
+
+	/* Max 1200p at 5.4 Ghz, one lane, pixel clock 300M */
+	if (mode->clock > SUPPORT_PIXEL_CLOCK) {
+		DRM_DEV_DEBUG_DRIVER(dev,
+				     "drm mode invalid, pixelclock too high.\n");
 		return MODE_CLOCK_HIGH;
+	}
+
+	DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
 
 	return MODE_OK;
 }
@@ -1999,13 +2003,12 @@ static int anx7625_bridge_attach(struct drm_bridge *bridge)
 
 static enum drm_mode_status
 anx7625_bridge_mode_valid(struct drm_bridge *bridge,
-                          const struct drm_display_mode *mode) {
+			  const struct drm_display_mode *mode)
+{
 	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
 	struct device *dev = &ctx->client->dev;
 
-#if 0
 	DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking\n");
-#endif
 
 	/* Max 1200p at 5.4 Ghz, one lane, pixel clock 300M */
 	if (mode->clock > SUPPORT_PIXEL_CLOCK) {
@@ -2014,9 +2017,7 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 		return MODE_CLOCK_HIGH;
 	}
 
-#if 0
 	DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
-#endif
 
 	return MODE_OK;
 }

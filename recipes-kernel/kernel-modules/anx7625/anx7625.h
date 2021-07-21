@@ -187,13 +187,13 @@
 #define AP_AUDIO_CHG		BIT(3)
 #define AP_MIPI_MUTE		BIT(4) /* 1: MIPI input mute, 0: ummute */
 #define AP_MIPI_RX_EN		BIT(5) /* 1: MIPI RX input in  0: no RX in */
-#define AP_DISABLE_PD		BIT(6)
+#define AP_DISABLE_PD		(u8)BIT(6)
 #define AP_DISABLE_DISPLAY	BIT(7)
 #define MAX_VOLTAGE_SETTING		0x29 /*0xd0*/
 #define MAX_POWER_SETTING		0x2A /*0xd1*/
 #define MIN_POWER_SETTING		0x2B /*0xd2*/
 #define AUTO_PD_MODE			0x2F /*0x6e*/
-#define AUTO_PD_ENABLE		BIT(1)
+#define AUTO_PD_ENABLE		(u8)BIT(1)
 #define OCM_FW_VERSION			0x31
 #define OCM_FW_REVERSION		0x32
 #define XTAL_FRQ_SEL			0x3F
