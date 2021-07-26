@@ -1,7 +1,7 @@
 echo "Using arduino_${fdt_file}"
 
 # Default boot type and device
-setenv bootlimit 3
+setenv bootlimit 5
 setenv devtype mmc
 setenv devnum 2
 setenv bootpart 1
