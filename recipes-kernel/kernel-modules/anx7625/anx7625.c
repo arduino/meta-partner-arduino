@@ -78,10 +78,14 @@ static void anx7625_set_data_role(struct anx7625_data *ctx,
 	enum usb_role usb_role = USB_ROLE_NONE;
 	int ret = 0;
 
-	if (data_role == TYPEC_HOST)
+	if (data_role == TYPEC_HOST) {
 		usb_role = USB_ROLE_HOST;
-	else
+		DRM_DEV_DEBUG_DRIVER(dev, "Type C USB host role selected\n");
+	}
+	else {
 		usb_role = USB_ROLE_DEVICE;
+		DRM_DEV_DEBUG_DRIVER(dev, "Type C USB device role selected\n");
+	}
 
 	ret = usb_role_switch_set_role(ctx->usb_typec->role_sw, usb_role);
 	if(ret)
@@ -1847,7 +1851,7 @@ anx7625_connector_mode_valid(struct drm_connector *connector,
 	struct anx7625_data *ctx = connector_to_anx7625(connector);
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: drm mode checking\n", __func__);
 
 	/* Max 1200p at 5.4 Ghz, one lane, pixel clock 300M */
 	if (mode->clock > SUPPORT_PIXEL_CLOCK) {
@@ -1856,7 +1860,7 @@ anx7625_connector_mode_valid(struct drm_connector *connector,
 		return MODE_CLOCK_HIGH;
 	}
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: drm mode valid.\n", __func__);
 
 	return MODE_OK;
 }
@@ -2008,7 +2012,7 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
 	struct device *dev = &ctx->client->dev;
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm mode checking\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: drm mode checking\n", __func__);
 
 	/* Max 1200p at 5.4 Ghz, one lane, pixel clock 300M */
 	if (mode->clock > SUPPORT_PIXEL_CLOCK) {
@@ -2017,7 +2021,7 @@ anx7625_bridge_mode_valid(struct drm_bridge *bridge,
 		return MODE_CLOCK_HIGH;
 	}
 
-	DRM_DEV_DEBUG_DRIVER(dev, "drm mode valid.\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: drm mode valid.\n", __func__);
 
 	return MODE_OK;
 }
@@ -2348,7 +2352,7 @@ static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 
 /* This function should notify to the system the default value for usb data role
  * n seconds after a usb type c cable has been plugged and if no data role change has been processed in the meantime.
- * This is done since anx doesn't set data role change bit in ivector (0x7e, 0x44) when dealing with a passive usb typec cable. On the other
+ * This is done since anx doesn't set data role change bit in ivector (0x7e, 0x44) when dealing with a passive usb typec cable or with some hubs. On the other
  * hand defaulting to DEVICE in probe and then switching later on to HOST causes enumeration errors to
  * the system usb port. @TODO: investigate better solution.
  * NOTE: this function uses timer_cable_det_poll as a time basis. From tests data role is defined between 400-900ms since cable connection. I'm using
@@ -2357,14 +2361,18 @@ static void anx7625_detect_usb_data_role_timeout(struct anx7625_data *ctx)
 {
 	static uint8_t counter = 0;
 	struct device *dev = &ctx->client->dev;
+	int sys_status = sys_sta_bak;
 
 	if(ctx->usb_typec->usb_data_role_timeout==true) {
 		counter++;
 		if(counter == TIMEOUT_USB_DATA_ROLE) {
 			counter = 0;
 			ctx->usb_typec->usb_data_role_timeout = false;
-			DRM_DEV_DEBUG_DRIVER(dev, "Timeout occurred for usb data role, defaulting to DEVICE\n");
-			anx7625_set_data_role(ctx, TYPEC_DEVICE);
+			DRM_DEV_DEBUG_DRIVER(dev, "Timeout occurred for usb data role change, setting %s\n", (sys_status & BIT(5)) ? "DFP" : "UFP");
+			if (sys_status & BIT(5))
+				anx7625_set_data_role(ctx, TYPEC_HOST); /* DFP */
+			else if (!(sys_status & BIT(5)))
+				anx7625_set_data_role(ctx, TYPEC_DEVICE); /* UFP */
 		}
 	}
 }
@@ -2393,12 +2401,12 @@ static void anx7625_work_func(struct work_struct *work)
 	{
 		atomic_set(&ctx->cable_connected, cable_connected);
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s (%s)\n", __func__, atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s acquiring lock\n", __func__);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s %d acquiring lock\n", __func__, __LINE__);
 		mutex_lock(&ctx->lock);
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s lock acquired\n", __func__);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s %d lock acquired\n", __func__, __LINE__);
 		anx7625_handle_cable_det(ctx); // @TODO: handle return value from this function?
 		mutex_unlock(&ctx->lock);
-		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s done\n", __func__);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s %d lock released\n", __func__, __LINE__);
 	}
 
 	return;
@@ -2425,9 +2433,9 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 		return IRQ_NONE;
 	}
 
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr acquiring lock\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: %s %d acquiring lock\n", __func__, __LINE__);
 	mutex_lock(&ctx->lock);
-	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr lock acquired\n");
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: %s %d lock acquired\n", __func__, __LINE__);
 
 	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
 	                           INTERFACE_CHANGE_INT);
@@ -2451,7 +2459,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (ivector & BIT(5)) { /* ivector == DATA ROLE CHANGE */
 		if (sys_status & BIT(5))
 			anx7625_set_data_role(ctx, TYPEC_HOST); /* DFP */
-		if (!(sys_status & BIT(5)))
+		else if (!(sys_status & BIT(5)))
 			anx7625_set_data_role(ctx, TYPEC_DEVICE); /* UFP */
 	}
 
@@ -2459,7 +2467,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (ivector & BIT(3)) { /* ivector == VBUS CHANGE */
 		if (sys_status & BIT(3))
 			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SOURCE); /* We're power provider */
-		if (!(sys_status & BIT(3)))
+		else if (!(sys_status & BIT(3)))
 			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SINK); /* We're power consumer */
 	}
 
@@ -2467,7 +2475,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	if (ivector & BIT(2)) { /* ivector == VCONN CHANGE */
 		if (sys_status & BIT(2))
 			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SOURCE); /* VCONN status OFF */
-		if (!(sys_status & BIT(2)))
+		else if (!(sys_status & BIT(2)))
 			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SINK); /* VCONN status OFF @TODO: being sink requires Ra to be present, check */
 	}
 
@@ -2485,6 +2493,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 
 	DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr done\n");
 	mutex_unlock(&ctx->lock);
+	DRM_DEV_DEBUG_DRIVER(dev, "anx: %s %d lock released\n", __func__, __LINE__);
 
 	return IRQ_HANDLED;
 }
