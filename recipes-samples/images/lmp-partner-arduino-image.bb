@@ -58,4 +58,5 @@ CORE_IMAGE_BASE_INSTALL += " \
     usb-modeswitch \
     ${BOOT} \
     ${BRINGUP} \
+    android-tools \
 "
