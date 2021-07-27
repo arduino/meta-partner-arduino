@@ -1,0 +1,12 @@
+[Unit]
+Description=Android Debug Bridge
+After=network-pre.target dbus.service
+Before=android-system.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/arduino-android-gadget-setup
+
+[Install]
+WantedBy=basic.target
