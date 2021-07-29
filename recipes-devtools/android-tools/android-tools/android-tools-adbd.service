@@ -1,12 +1,14 @@
 [Unit]
 Description=Android Debug Bridge
+ConditionPathExists=/sys/class/typec/port0/data_role
 After=network-pre.target dbus.service
 Before=android-system.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/bin/arduino-android-gadget-setup
+Type=simple
+Restart=on-failure
+ExecStartPre=/usr/bin/arduino-android-gadget-setup
+ExecStart=/usr/bin/adbd
 
 [Install]
 WantedBy=basic.target
