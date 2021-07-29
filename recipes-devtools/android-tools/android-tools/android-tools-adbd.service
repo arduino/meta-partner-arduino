@@ -8,6 +8,7 @@ Before=android-system.service
 Type=simple
 Restart=on-failure
 ExecStartPre=/usr/bin/arduino-android-gadget-setup
+ExecStartPost=/bin/sh -c 'sleep 2 && UDC=$(ls /sys/class/udc) && echo $UDC > /sys/kernel/config/usb_gadget/g1/UDC'
 ExecStart=/usr/bin/adbd
 
 [Install]
