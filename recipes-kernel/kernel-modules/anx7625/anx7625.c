@@ -47,7 +47,7 @@
 //#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
 #define CABLE_DET_PIN_HAS_GLITCH
 #define TIMER_CABLE_DET_POLL_DELAY (1 * HZ)
-#define TIMEOUT_USB_DATA_ROLE 2
+#define TIMEOUT_USB_DATA_ROLE 3
 
 //#define DEBUG
 
