@@ -59,4 +59,5 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${BOOT} \
     ${BRINGUP} \
     android-tools \
+    arduino-ootb \
 "

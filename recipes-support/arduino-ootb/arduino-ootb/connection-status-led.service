@@ -1,0 +1,7 @@
+[Unit]
+Description=Connection status led
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /usr/bin/connection_status_led
