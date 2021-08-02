@@ -2328,6 +2328,7 @@ static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 		{
 			DRM_DEV_DEBUG_DRIVER(dev, "anx: %s power on\n", __func__);
 			anx7625_typec_connect(ctx);
+			usleep_range(10000, 10100); /* 10ms: as per data sheet */
 			anx7625_chip_control(ctx, 1);
 			return 0;
 		}
