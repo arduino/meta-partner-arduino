@@ -1,6 +1,10 @@
 SUMMARY = "Minimal partner image which includes OTA Lite, Docker, and OpenSSH support"
 FILESEXTRAPATHS_prepend := "${THISDIR}/configs:"
 
+SRC_URI += "\
+    file://sudoers-arduino \
+"
+
 require recipes-samples/images/lmp-image-common.inc
 
 # Factory tooling requires SOTA (OSTree + Aktualizr-lite)
@@ -62,3 +66,11 @@ CORE_IMAGE_BASE_INSTALL += " \
     android-tools \
     arduino-ootb \
 "
+
+fakeroot do_populate_rootfs_add_custom_sudoers () {
+    # Allow sudo group users to use sudo
+    bbwarn Hey you...changing sudoers for arduino ootb!
+    install -m 0440 ${WORKDIR}/sudoers-arduino ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/51-arduino
+}
+
+IMAGE_PREPROCESS_COMMAND += "do_populate_rootfs_add_custom_sudoers; "
