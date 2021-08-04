@@ -1,6 +1,12 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI += "file://arduino-android-gadget-setup"
+SRC_URI += "\
+    file://arduino-android-gadget-setup \
+    file://core/0001-Changing-gid-and-uid-to-match-the-existing-user-fio.patch;patchdir=system/core \
+    file://core/0002-Adding-some-useful-debug-prints.patch;patchdir=system/core \
+"
+
+SRC_URI_remove_pn-${PN} = "file://core/0008-adb-Allow-adbd-to-be-ran-as-root.patch;patchdir=system/core"
 
 do_install_append () {
     install -d ${D}${bindir}

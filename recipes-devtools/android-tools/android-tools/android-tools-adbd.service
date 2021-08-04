@@ -11,6 +11,7 @@ RestartSec=2
 ExecStartPre=/usr/bin/arduino-android-gadget-setup
 ExecStartPost=/bin/sh -c 'sleep 2 && UDC=$(ls /sys/class/udc) && echo $UDC > /sys/kernel/config/usb_gadget/g1/UDC'
 ExecStart=/usr/bin/adbd
+WorkingDirectory=/home/fio
 
 [Install]
 WantedBy=basic.target

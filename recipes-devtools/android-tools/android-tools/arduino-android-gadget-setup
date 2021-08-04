@@ -24,7 +24,7 @@ if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
     ln -s functions/ffs.adb/ configs/c.1
     mkdir /dev/usb-ffs
     mkdir /dev/usb-ffs/adb
-    mount -t functionfs adb /dev/usb-ffs/adb
+    mount -o uid=1000,gid=1000 -t functionfs adb /dev/usb-ffs/adb
     exit 0
 else
     exit 1
