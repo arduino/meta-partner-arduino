@@ -117,7 +117,6 @@ libext4_utils_SRC_FILES += crc16.c
 libext4_utils_SRC_FILES += ext4_sb.c
 libext4_utils_OBJS := $(libext4_utils_SRC_FILES:.c=.o)
 
-CFLAGS += -DDEBUG
 CFLAGS += -std=gnu11
 CFLAGS += -DANDROID
 CFLAGS += -DADB_HOST=0

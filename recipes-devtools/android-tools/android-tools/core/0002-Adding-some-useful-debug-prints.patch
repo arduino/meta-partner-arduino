@@ -1,24 +1,24 @@
-From 29cf54d1b0ecaed442beee54c5bc942233d9799e Mon Sep 17 00:00:00 2001
+From caaf98ac7eb7b5bdff4eb599cda0afcfb6209bf4 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
-Date: Wed, 4 Aug 2021 16:03:30 +0200
-Subject: [PATCH 2/2] Adding some useful debug prints
+Date: Wed, 4 Aug 2021 17:06:21 +0200
+Subject: [PATCH] Adding some useful debug prints
 
 ---
- adb/adb.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ adb/adb.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/adb/adb.c b/adb/adb.c
-index 7d2eaec959..9e64d973c7 100644
+index 7d2eaec959..8c25304878 100644
 --- a/adb/adb.c
 +++ b/adb/adb.c
 @@ -1370,8 +1370,10 @@ int adb_main(int is_daemon, int server_port)
      /* don't listen on a port (default 5037) if running in secure mode */
      /* don't run as root if we are running in secure mode */
      if (should_drop_privileges()) {
-+        D("Dropping privileges\n");
++        fprintf(stderr, "Dropping privileges\n");
          drop_capabilities_bounding_set_if_needed();
  
-+        D("Switching to uid=1000 gid=1000\n");
++        fprintf(stderr, "Switching to uid=1000 gid=1000\n");
          /* then switch user and group to "shell" */
          if (setgid(1000) != 0) {
              exit(1);
@@ -26,13 +26,22 @@ index 7d2eaec959..9e64d973c7 100644
          // listen on USB
          usb_init();
          usb = 1;
-+        D("Successfully opened %s or %s\n", USB_ADB_PATH, USB_FFS_ADB_EP0);
++        fprintf(stderr, "Successfully opened %s or %s\n", USB_ADB_PATH, USB_FFS_ADB_EP0);
 +    }
 +    else {
-+        D("Failed to access %s or %s\n", USB_ADB_PATH, USB_FFS_ADB_EP0);
++        fprintf(stderr, "Failed to access %s or %s\n", USB_ADB_PATH, USB_FFS_ADB_EP0);
      }
  
      // If one of these properties is set, also listen on that port
+@@ -1436,6 +1442,8 @@ int adb_main(int is_daemon, int server_port)
+     }
+     D("Event loop starting\n");
+ 
++    fprintf(stderr, "Event loop starting\n");
++
+     fdevent_loop();
+ 
+     usb_cleanup();
 -- 
 2.25.1
 
