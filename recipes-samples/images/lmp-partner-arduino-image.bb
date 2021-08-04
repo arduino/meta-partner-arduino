@@ -1,10 +1,6 @@
 SUMMARY = "Minimal partner image which includes OTA Lite, Docker, and OpenSSH support"
 FILESEXTRAPATHS_prepend := "${THISDIR}/configs:"
 
-SRC_URI += "\
-    file://sudoers-arduino \
-"
-
 require recipes-samples/images/lmp-image-common.inc
 
 # Factory tooling requires SOTA (OSTree + Aktualizr-lite)
@@ -22,6 +18,10 @@ require recipes-samples/images/lmp-feature-docker.inc
 require recipes-samples/images/lmp-feature-wifi.inc
 require recipes-samples/images/lmp-feature-ota-utils.inc
 require recipes-samples/images/lmp-feature-sbin-path-helper.inc
+
+SRC_URI += "\
+    file://sudoers-arduino \
+"
 
 IMAGE_FEATURES += "ssh-server-openssh"
 
