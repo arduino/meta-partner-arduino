@@ -1,4 +1,5 @@
 SUMMARY = "Minimal partner image which includes OTA Lite, Docker, and OpenSSH support"
+FILESEXTRAPATHS_prepend := "${THISDIR}/configs:"
 
 require recipes-samples/images/lmp-image-common.inc
 
