@@ -43,13 +43,14 @@
 
 #include "anx7625.h"
 
+#define U_BOOT_EARLY_INIT
 //#define DISABLE_PD
 //#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
 #define CABLE_DET_PIN_HAS_GLITCH
 #define TIMER_CABLE_DET_POLL_DELAY (1 * HZ)
 #define TIMEOUT_USB_DATA_ROLE 3
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #ifdef DRM_DEV_DEBUG_DRIVER
@@ -69,6 +70,9 @@ dev_printk(KERN_ERR, dev, fmt, ##__VA_ARGS__)
 static int sys_sta_bak;
 struct timer_list timer_cable_det;
 struct anx7625_data *ctx_timer_cable_det;
+#ifdef U_BOOT_EARLY_INIT
+static int pending_video_work = 0;
+#endif
 
 /* Functions to report data role and power role changes to upper level */
 static void anx7625_set_data_role(struct anx7625_data *ctx,
@@ -1344,32 +1348,20 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	/* AUTO RDO DISABLE */
 	anx7625_disable_auto_rdo(ctx);
 
-	anx7625_disable_safe_5v_during_auto_rdo(ctx);
-
 	/* Maximum Voltage in 100mV units: 5V */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         MAX_VOLTAGE_SETTING,
 	                         0x32);
 
-	/* Maximum Power in 500mW units: 15W */
+	/* Maximum Power in 500mW units: 5W */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         MAX_POWER_SETTING,
-	                         0x1E);
+	                         0x0A);
 
 	/* Minimum Power in 500mW units: 3.5W = 5V * 700mA */
 	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
 	                         MIN_POWER_SETTING,
 	                         0x07);
-
-	/* Maximum Voltage in 100mV units: 5V */
-	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-	                         0x2C,
-	                         0x32);
-
-	/* Maximum Power in 500mW units: 15W */
-	ret |= anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-	                         0x2C,
-	                         0x1E);
 
 	/* Try sink or source @TODO: need to read default policy from dts */
 	ret |= anx7625_write_or(ctx, ctx->i2c.rx_p0_client,
@@ -1544,12 +1536,21 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 	/* VBUS_USBC off (gpio = 1) */
 	platform->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
 #endif
+#ifdef U_BOOT_EARLY_INIT
+	/* Gpio for chip power enable */
+	platform->pdata.gpio_p_on =
+		devm_gpiod_get_optional(dev, "enable", GPIOD_OUT_HIGH);
+	/* Gpio for chip reset */
+	platform->pdata.gpio_reset =
+		devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_HIGH);
+#else
 	/* Gpio for chip power enable */
 	platform->pdata.gpio_p_on =
 		devm_gpiod_get_optional(dev, "enable", GPIOD_OUT_LOW);
 	/* Gpio for chip reset */
 	platform->pdata.gpio_reset =
 		devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+#endif
 
 	platform->pdata.gpio_cbl_det = devm_gpiod_get_optional(dev, "cbl_det",
 	                               GPIOD_IN);
@@ -1580,7 +1581,6 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 		                     desc_to_gpio(platform->pdata.gpio_reset),
 		                     gpiod_get_value_cansleep(platform->pdata.gpio_reset));
 #endif
-		atomic_set(&platform->power_status, 0);
 	} else {
 		/* @TODO: this could happens if no POWER_EN and RESET_N pins are provided, this means
 		 * anx7625 stays always on. This is untested, probably needs some work. */
@@ -2388,6 +2388,20 @@ static void anx7625_work_func(struct work_struct *work)
 
 	anx7625_detect_usb_data_role_timeout(ctx);
 
+#ifdef U_BOOT_EARLY_INIT
+	/* This is done once and is delayed work from anx7625_apply_pending_early_init_config */
+	if(pending_video_work)
+	{
+		usleep_range(500000, 501000); /* 500ms */
+		dp_hpd_change_handler(ctx, pending_video_work);
+		pending_video_work = 0;
+
+		anx7625_reg_write(ctx, ctx->i2c.tcpc_client,
+	                  TCPC_INTR_ALERT_1,
+	                  0xFF);
+	}
+#endif
+
 #ifdef CABLE_DET_PIN_HAS_GLITCH
 	cable_connected = confirmed_cable_det(ctx);
 #else
@@ -2499,6 +2513,77 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+#ifdef U_BOOT_EARLY_INIT
+/* Purpose of following code is to
+ * handle pending configuration from u-boot initialization and
+ * reset comm interrupt pending. This has to be done once.
+ */
+static int anx7625_apply_pending_early_init_config(struct anx7625_data *ctx)
+{
+	struct device *dev = &ctx->client->dev;
+	int sys_status, ivector, cc_status;
+
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: Start\n", __func__);
+
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: forcing ctx->power_status=1 and ctx->cable_connected=1\n", __func__);
+	atomic_set(&ctx->power_status, 1);
+	atomic_set(&ctx->cable_connected, 1);
+
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: forcing typec connect\n", __func__);
+	anx7625_typec_connect(ctx); /* Usually it's done in cable_det */
+
+	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
+	                           INTERFACE_CHANGE_INT);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: interrupt vector (0x44) 0x%x:\n", __func__, ivector);
+	print_ivector(ctx, ivector);
+
+	anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
+	                  INTERFACE_CHANGE_INT,
+	                  ivector &(~ivector));
+
+	sys_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, SYSTEM_STSTUS);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: system status (0x45) 0x%x:\n", __func__, sys_status);
+	print_sys_status(ctx, sys_status);
+
+	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n", __func__,
+	       cc_status & 0x0F, (cc_status >> 4) & 0x0F);
+	print_cc_status(ctx, cc_status);
+
+	/* Inform system of data role change
+	 * NOTE: if no role has been negotiated in u-boot, then timeout mechanism will
+	 * set a default role see function usb_data_role_timeout */
+	if (ivector & BIT(5)) { /* ivector == DATA ROLE CHANGE */
+		if (sys_status & BIT(5))
+			anx7625_set_data_role(ctx, TYPEC_HOST); /* DFP */
+		else if (!(sys_status & BIT(5)))
+			anx7625_set_data_role(ctx, TYPEC_DEVICE); /* UFP */
+	}
+
+	/* Inform system of power role changes */
+	if (ivector & BIT(3)) { /* ivector == VBUS CHANGE */
+		if (sys_status & BIT(3))
+			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SOURCE); /* We're power provider */
+		else if (!(sys_status & BIT(3)))
+			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SINK); /* We're power consumer */
+	}
+
+	/* Inform system of vconn changes */
+	if (ivector & BIT(2)) { /* ivector == VCONN CHANGE */
+		if (sys_status & BIT(2))
+			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SOURCE); /* VCONN status OFF */
+		else if (!(sys_status & BIT(2)))
+			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SINK); /* VCONN status OFF @TODO: being sink requires Ra to be present, check */
+	}
+
+	if ((ivector & HPD_STATUS_CHANGE) || STS_HPD_CHANGE)
+		pending_video_work = sys_status & HPD_STATUS;
+
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: End\n", __func__);
+	return 0;
+}
+#endif
+
 static int anx7625_i2c_probe(struct i2c_client *client,
 			     const struct i2c_device_id *id)
 {
@@ -2599,14 +2684,6 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 	/* When a cable will be connected, a timeout for usb data role is configured */
 	platform->usb_typec->usb_data_role_timeout = false;
 
-	/* Page 21 of AA-004342-DS-18_ANX7625_Datasheet.pdf
-	 * we need to power on -> init registers -> (ignore CABLE_DET interrupts) -> standby -> wait for CABLE_DET interrupts
-	 * in this way the analog part get configured and continue to work even in standby mode.
-	 * One example is DRP mode where continuous toggle of Rp-Rd need to run even if no usbc cable is connected. */
-	anx7625_chip_control(platform, 1);
-	usleep_range(1000, 1010);
-	anx7625_chip_control(platform, 0);
-
 	ret = gpiod_to_irq(platform->pdata.gpio_intr_comm);
 	if (ret < 0)
 		goto free_platform;
@@ -2632,6 +2709,10 @@ static int anx7625_i2c_probe(struct i2c_client *client,
 			goto free_wq;
 		}
 	}
+
+#ifdef U_BOOT_EARLY_INIT
+	anx7625_apply_pending_early_init_config(platform);
+#endif
 
 	// Setup & start timer for cable det detection
 	ctx_timer_cable_det = platform;
