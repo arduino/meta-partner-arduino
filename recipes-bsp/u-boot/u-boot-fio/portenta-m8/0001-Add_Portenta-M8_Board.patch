@@ -3653,7 +3653,7 @@ Index: git/arch/arm/dts/Makefile
 --- git.orig/arch/arm/dts/Makefile
 +++ git/arch/arm/dts/Makefile
 @@ -797,7 +797,8 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
- 	imx8mp-verdin.dtb \
+ 	imx8mm-ddr4-ab2.dtb \
  	imx8mm-ab2.dtb \
  	imx8mn-ddr4-ab2.dtb \
 -	imx8mn-ab2.dtb
