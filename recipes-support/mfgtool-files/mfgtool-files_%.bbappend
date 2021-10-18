@@ -1,0 +1,12 @@
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+
+SRC_URI_append_portenta-x8 = " \
+    file://probe_emmc.uuu \
+    file://linux_initramfs.uuu \
+"
+
+do_deploy_prepend_portenta-x8() {
+    install -d ${DEPLOYDIR}/${PN}
+    install -m 0644 ${WORKDIR}/probe_emmc.uuu ${DEPLOYDIR}/${PN}/probe_emmc.uuu
+    install -m 0644 ${WORKDIR}/linux_initramfs.uuu ${DEPLOYDIR}/${PN}/linux_initramfs.uuu
+}
