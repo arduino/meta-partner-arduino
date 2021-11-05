@@ -29,4 +29,4 @@ FILES_${PN} = " \
 "
 
 COMPATIBLE_MACHINE ?= "^$"
-COMPATIBLE_MACHINE_portenta-m8 = ".*"
+COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
