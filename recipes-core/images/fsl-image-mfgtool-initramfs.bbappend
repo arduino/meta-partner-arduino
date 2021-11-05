@@ -1,1 +1,1 @@
-INITRAMFS_MAXSIZE_portenta-m8 = "262144"
+INITRAMFS_MAXSIZE_portenta-mx8mm = "262144"
