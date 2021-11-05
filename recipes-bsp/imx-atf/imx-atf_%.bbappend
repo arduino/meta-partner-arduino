@@ -8,6 +8,6 @@ LICENSE = "BSD-3-Clause"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI_append_portenta-m8 = " \
+SRC_URI_append_portenta-mx8mm = " \
     file://0001-Uart_2_4_Change_permission.patch \
 "
