@@ -1,1 +1,1 @@
-SYSTEMD_AUTO_ENABLE_portenta-m8 = "disable"
+SYSTEMD_AUTO_ENABLE_portenta-mx8mm = "disable"
