@@ -32,10 +32,15 @@ DTB_OVERLAYS_portenta-mx8mm = " \
 
 SRC_URI_append_portenta-mx8mm = " \
     file://anx7625.dtsi \
-    file://arduino_portenta-m8.dts \
+    file://arduino_portenta-mx8mm.dtsi \
     file://envie_enuc_carrier.dtsi \
     ${DTB_OVERLAYS} \
 "
+
+SRC_URI_append_portenta-m8 = " \
+    file://arduino_portenta-m8.dts \
+"
+
 COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
 
 do_install_append_portenta-mx8mm() {
