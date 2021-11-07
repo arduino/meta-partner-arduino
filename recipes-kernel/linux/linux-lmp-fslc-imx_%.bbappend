@@ -16,4 +16,10 @@ SRC_URI_append_portenta-m8 = " \
   file://portenta-m8.cfg \
 "
 
+SRC_URI_append_portenta-x8 = " \
+  file://portenta-x8-standard.scc \
+  file://portenta-x8.cfg \
+  file://0001-rohm-bd718xx-add-dt-configurable-button-keycode.patch \
+"
+
 # file://rtc-pcf8563-remove-workaround.patch
