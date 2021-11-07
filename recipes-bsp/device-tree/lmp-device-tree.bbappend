@@ -30,6 +30,14 @@ DTB_OVERLAYS_portenta-mx8mm = " \
     file://ov_carrier_max_sara-r4.dts \
 "
 
+DTB_OVERLAYS_append_portenta-m8 = " \
+    file://ov_carrier_breakout_x8h7.dts \
+"
+
+DTB_OVERLAYS_append_portenta-x8 = " \
+    file://ov_som_x8h7.dts \
+"
+
 SRC_URI_append_portenta-mx8mm = " \
     file://anx7625.dtsi \
     file://arduino_portenta-mx8mm.dtsi \
@@ -39,6 +47,10 @@ SRC_URI_append_portenta-mx8mm = " \
 
 SRC_URI_append_portenta-m8 = " \
     file://arduino_portenta-m8.dts \
+"
+
+SRC_URI_append_portenta-x8 = " \
+    file://arduino_portenta-x8.dts \
 "
 
 COMPATIBLE_MACHINE_portenta-mx8mm = ".*"

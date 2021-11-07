@@ -1,0 +1,276 @@
+/**
+ * Portenta-X8 main device tree file
+ * Arduino 2021
+ */
+
+/dts-v1/;
+
+#include "arduino_portenta-mx8mm.dtsi"
+
+/* @TODO to be tested, then move into patch */
+/* NOTE: DCE mode not inverted */
+#define MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX     0x1D8 0x440 0x4Fc 0x4 0x2
+#define MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX      0x1DC 0x444 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B   0x1D0 0x438 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B   0x1D4 0x43C 0x4F8 0x4 0x3
+
+/ {
+	model = "Arduino i.MX8MM Portenta X8 board";
+
+	chosen {
+		stdout-path = &uart2;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_led>;
+
+		ledR {
+			label = "ledR";
+			gpios = <&gpio5 2 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		ledG {
+			label = "ledG";
+			gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		ledB {
+			label = "ledB";
+			gpios = <&gpio5 1 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "heartbeat";
+			default-state = "off";
+		};
+	};
+
+	/* Y2 SIT1532AI */
+	pmic_refclk: pmic-refclk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <32768>;
+	};
+
+	x8h7_adc {
+		compatible = "portenta,x8h7_adc";
+	};
+
+	x8h7_gpio {
+		compatible = "portenta,x8h7_gpio";
+	};
+
+	x8h7_pwm {
+		compatible = "portenta,x8h7_pwm";
+	};
+
+	x8h7_rtc {
+		compatible = "portenta,x8h7_rtc";
+	};
+
+	can0: can@1 {
+		compatible = "portenta,x8h7_can";
+	};
+
+	can1: can@2 {
+		compatible = "portenta,x8h7_can";
+	};
+
+	x8h7_uart {
+		compatible = "portenta,x8h7_uart";
+	};
+
+	x8h7_ui {
+		compatible = "portenta,x8h7_ui";
+	};
+};
+
+&i2c2 {
+	pmic:pmic@4b {
+		compatible = "rohm,bd71847";
+		reg = <0x4b>;
+		pinctrl-0 = <&pinctrl_pmic>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <8 IRQ_TYPE_LEVEL_LOW>;
+		rohm,reset-snvs-powered;
+		rohm,short-press-ms = <10>;
+		rohm,long-press-ms = <3000>;
+		rohm,button-keycode = <KEY_HOME>;
+		clocks = <&pmic_refclk>;
+
+		regulators {
+			buck1_reg: BUCK1 {
+				regulator-name = "BUCK1";
+				regulator-min-microvolt = <700000>;
+				regulator-max-microvolt = <1300000>;
+				regulator-boot-on;
+				regulator-always-on;
+				regulator-ramp-delay = <1250>;
+			};
+
+			buck2_reg: BUCK2 {
+				regulator-name = "BUCK2";
+				regulator-min-microvolt = <700000>;
+				regulator-max-microvolt = <1300000>;
+				regulator-boot-on;
+				regulator-always-on;
+				regulator-ramp-delay = <1250>;
+				rohm,dvs-run-voltage = <1000000>;
+				rohm,dvs-idle-voltage = <900000>;
+			};
+
+			buck3_reg: BUCK3 {
+				// BUCK5 in datasheet
+				regulator-name = "BUCK3";
+				regulator-min-microvolt = <700000>;
+				regulator-max-microvolt = <1350000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			buck4_reg: BUCK4 {
+				// BUCK6 in datasheet
+				regulator-name = "BUCK4";
+				regulator-min-microvolt = <3000000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			buck5_reg: BUCK5 {
+				// BUCK7 in datasheet
+				regulator-name = "BUCK5";
+				regulator-min-microvolt = <1605000>;
+				regulator-max-microvolt = <1995000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			buck6_reg: BUCK6 {
+				// BUCK8 in datasheet
+				regulator-name = "BUCK6";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <1400000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldo1_reg: LDO1 {
+				regulator-name = "LDO1";
+				regulator-min-microvolt = <1600000>;
+				regulator-max-microvolt = <1900000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldo2_reg: LDO2 {
+				regulator-name = "LDO2";
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <900000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldo3_reg: LDO3 {
+				regulator-name = "LDO3";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldo4_reg: LDO4 {
+				regulator-name = "LDO4";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldo5_reg: LDO5 {
+				regulator-name = "LDO5";
+				regulator-min-microvolt = <3000000>;
+				regulator-max-microvolt = <3000000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			ldo6_reg: LDO6 {
+				regulator-name = "LDO6";
+				regulator-min-microvolt = <900000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+		};
+	};
+
+};
+
+&uart2 { /* console */
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_uart2>;
+	status = "okay";
+};
+
+&iomuxc {
+	imx8mm {
+		pinctrl_gpio_led: gpioledgrp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI3_MCLK_GPIO5_IO2		0x19
+				MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28		0x19
+				MX8MM_IOMUXC_SAI3_TXD_GPIO5_IO1			0x19
+			>;
+		};
+
+		pinctrl_pmic: pmicirq {
+			fsl,pins = <
+				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x151
+			>;
+		};
+
+		pinctrl_uart2: uart2grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
+				MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX		0x140
+				MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B		0x140
+				MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B		0x140
+			>;
+		};
+
+		pinctrl_ecspi3: ecspi3grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART1_RXD_ECSPI3_SCLK		0x82
+				MX8MM_IOMUXC_UART1_TXD_ECSPI3_MOSI		0x82
+				MX8MM_IOMUXC_UART2_RXD_ECSPI3_MISO		0x82
+			>;
+		};
+
+		pinctrl_ecspi3_cs: ecspi3cs {
+			fsl,pins = <
+				// MX8MM_IOMUXC_UART2_TXD_ECSPI3_SS0		0x40000
+				MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25		0x40000
+			>;
+		};
+
+		pinctrl_irq_x8h7: x8h7irqgrp {
+			fsl,pins = <
+				/* X8H7 Interrupt pin active low, pullup */
+				/* To use in actual version of the board, connect to a breakout */
+				/* and short SPI1_CS with PWM1 */
+				MX8MM_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x151
+			>;
+		};
+	};
+};
+
+&ecspi3 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi3 &pinctrl_ecspi3_cs>;
+	num-cs = <1>;
+	cs-gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};

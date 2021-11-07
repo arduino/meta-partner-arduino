@@ -1,0 +1,42 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2021
+ * This overlay is adding the H7 multifunction external
+ * microcontroller that works on SPI.
+ * The external microcontroller has an interrupt line to
+ * alert main AP processor some data is ready to be sent.
+ * The H7 provides many functionalities like:
+ * - can
+ * - adc
+ * - uart
+ * - gpio
+ * - rtc
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include "imx8mm-pinfunc.h"
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&ecspi3>;
+		__overlay__ {
+			x8h7: x8h7@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "portenta,x8h7";
+				reg = <0>;
+				pinctrl-0 = <&pinctrl_irq_x8h7>;
+				interrupt-parent = <&gpio5>;
+				interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
+				spi-max-frequency = <1000000>;
+			};
+		};
+	};
+};

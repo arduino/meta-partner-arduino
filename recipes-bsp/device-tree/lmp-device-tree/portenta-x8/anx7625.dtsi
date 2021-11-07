@@ -1,0 +1,204 @@
+/**
+ */
+
+&iomuxc {
+	imx8mm {
+		pinctrl_sai6: sai6grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI1_TXD6_SAI6_TX_SYNC   0xd6
+				MX8MM_IOMUXC_SAI1_TXD4_SAI6_TX_BCLK   0xd6
+				MX8MM_IOMUXC_SAI1_TXD5_SAI6_TX_DATA0  0xd6
+
+				/* @TODO: GPIO1_IO08 GPIO1_IO07 are 3v3 while outputs
+				from anx7625 are 1v8  */
+				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9     0x19
+				MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8     0x151 /* was 0x51 */
+				MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7     0x151
+				MX8MM_IOMUXC_GPIO1_IO13_GPIO1_IO13    0x19
+				MX8MM_IOMUXC_SAI1_TXD1_GPIO4_IO13     0x19
+			>;
+		};
+	};
+};
+
+&i2c2 {
+
+	analogix: analogix_i2c@58{
+		compatible ="analogix,anx7625";
+		status = "okay";
+		reg = <0x58>;
+		vdda-supply = <&ldo5_reg>;
+
+		// 1: internal panel always connected
+		// !=1: usbc dp port is modeled as a panel that can
+		// be present or not depending on the actual usbc cable connection
+		// status see driver
+		//panel_flags = <1>;
+
+		usbc_pwr-gpios = <&gpio4 13 0x0>;    // VBUS EN active low
+		enable-gpios = <&gpio1 9 0x0>;     // VIDEO_EN active high
+		reset-gpios = <&gpio1 13 0x0>;      // VIDEO_RSTN active low
+		cbl_det-gpios = <&gpio1 8 0x0>;    // VIDEO_CABLE cable input active high
+		intr_comm-gpios = <&gpio1 7 IRQ_TYPE_NONE>;  // VIDEO_ALT comm irq input active low
+		#sound-dai-cells = <0>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				lvds_from_dsi: endpoint {
+					remote-endpoint = <&dsi_to_lvds>;
+				};
+			};
+
+			port@3 {
+				reg = <3>;
+				codec_endpoint: endpoint {
+					remote-endpoint = <&sai6_cpu_endpoint>;
+				};
+			};
+		};
+
+		typec1_con: connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			power-role = "dual";
+			data-role = "dual";
+			try-power-role = "sink";
+			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
+			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
+			             PDO_VAR(5000, 20000, 3000)>;
+			op-sink-microwatt = <15000000>;
+			self-powered;
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@1 {
+					reg = <1>;
+					typec1_dr_sw: endpoint {
+						remote-endpoint = <&usb1_drd_sw>;
+					};
+				};
+			};
+		};
+	};
+};
+
+/ {
+	sound-anx7625 {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,name = "anx7625";
+		simple-audio-card,mclk-fs = <512>;
+		simple-audio-card,cpu {
+			sound-dai = <&sai6>;
+			dai-tdm-slot-num = <2>;
+			dai-tdm-slot-width = <32>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&analogix>;
+		};
+	};
+};
+
+&mipi_dsi {
+	status = "okay";
+	port@1 {
+		dsi_to_lvds: endpoint {
+			remote-endpoint = <&lvds_from_dsi>;
+			attach-bridge;
+		};
+	};
+};
+
+&lcdif {
+	status = "okay";
+	display = <&display0>;
+
+	display0: display {
+		bits-per-pixel = <32>;
+		bus-width = <24>;
+
+		display-timings {
+			native-mode = <&timing_1>;
+
+			timing_wvga: 800x480 {
+				clock-frequency = <33260000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <88>;
+				hfront-porch = <40>;
+				vback-porch = <32>;
+				vfront-porch = <13>;
+				hsync-len = <48>;
+				vsync-len = <3>;
+				de-active = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				pixelclk-active = <0>;
+			};
+
+			timing_1: 1920x1080 {
+				clock-frequency = <74000000>;
+				hactive = <1920>;
+				vactive = <1080>;
+				hback-porch = <148>;
+				hfront-porch = <88>;
+				vback-porch = <36>;
+				vfront-porch = <4>;
+				hsync-len = <44>;
+				vsync-len = <5>;
+				de-active = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				pixelclk-active = <0>;
+			};
+
+		};
+	};
+
+};
+
+&sai6 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_sai6>;
+	assigned-clocks = <&clk IMX8MM_CLK_SAI6>;
+	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
+	assigned-clock-rates = <49152000>;
+	clocks = <&clk IMX8MM_CLK_SAI6_IPG>, <&clk IMX8MM_CLK_DUMMY>,
+					<&clk IMX8MM_CLK_SAI6_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
+					<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
+					<&clk IMX8MM_AUDIO_PLL2_OUT>;
+	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
+	fsl,sai-multi-lane;
+	fsl,dataline,dsd = <0 0xff 0xff 2 0xff 0x11>;
+	#sound-dai-cells = <0>;
+	status = "okay";
+
+	ports {
+		sai6_port0: port@0 {
+			sai6_cpu_endpoint: endpoint {
+				remote-endpoint = <&codec_endpoint>;
+				dai-format = "i2s";
+			};
+		};
+	};
+};
+
+&gpu {
+	status = "okay";
+};
+
+&vpu_g1 {
+	status = "okay";
+};
+
+&vpu_g2 {
+	status = "okay";
+};
+
+&vpu_h1 {
+	status = "okay";
+};

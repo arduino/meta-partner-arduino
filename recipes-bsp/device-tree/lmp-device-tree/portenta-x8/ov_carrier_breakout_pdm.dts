@@ -1,0 +1,56 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable PDM interface on Arduino Breakout carrier board
+ * for connecting a digital microphone.
+ * PDM_D0 and PDM_D0 signals are available so two
+ * microphones can be connected
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/clock/imx8mm-clock.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_pdm: pdmgrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI5_RXC_PDM_CLK       0xd6
+						MX8MM_IOMUXC_SAI1_RXD0_PDM_DATA0    0xd6
+						MX8MM_IOMUXC_SAI1_RXD1_PDM_DATA1    0xd6
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&micfil>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pdm>;
+			assigned-clocks = <&clk IMX8MM_CLK_PDM>;
+			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
+			assigned-clock-rates = <196608000>;
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			sound-micfil {
+				compatible = "fsl,imx-audio-micfil";
+				model = "imx-audio-micfil";
+				cpu-dai = <&micfil>;
+			};
+		};
+	};
+};
