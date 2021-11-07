@@ -1,0 +1,22 @@
+
+&iomuxc {
+	pinctrl-names = "default";
+	imx8mm {
+		x8h7_irq {
+			fsl,pins = <
+				MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x41
+			>;
+		};
+	};
+};
+
+&ecspi2 {
+	status = "okay";
+
+	x8h7: x8h7@0 {
+		compatible = "portenta,x8h7";
+		irq = <8>;
+		spi_frequency = <1000000>;
+		status = "okay";
+	};
+};
