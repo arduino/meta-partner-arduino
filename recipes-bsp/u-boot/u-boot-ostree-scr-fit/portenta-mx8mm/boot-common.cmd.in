@@ -146,10 +146,10 @@ fi
 
 setenv bootcmd_load_f 'ext4load ${devtype} ${devnum}:${rootpart} ${fit_addr} "/boot"${kernel_image}'
 setenv bootcmd_tee_ovy 'if test -n ${optee_ovl_addr}; then imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}; fdt resize 0x1000; fdt apply ${optee_ovl_addr}; fi'
-setenv bootcmd_dtb 'imxtract ${loadaddr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}'
+setenv bootcmd_dtb 'imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}'
 setenv bootcmd_overlay ' \
   for ov in ${overlays}; do; \
-    if imxtract ${loadaddr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${ov}.dtbo ${ovl_addr}; then \
+    if imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${ov}.dtbo ${ovl_addr}; then \
       fdt resize 0x${filesize}; \
       fdt apply ${ovl_addr}; \
       echo "Applied ${ov}.dtbo to DTB"; \
