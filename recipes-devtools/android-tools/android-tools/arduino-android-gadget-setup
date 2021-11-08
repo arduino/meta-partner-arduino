@@ -11,7 +11,7 @@ if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
     echo 0x$VID > idVendor
     echo 0x$PID > idProduct
     mkdir strings/0x409
-    echo 012345678 > strings/0x409/serialnumber
+    echo $(cat /sys/devices/soc0/serial_number) > strings/0x409/serialnumber
     echo $BOARDPROVIDER > strings/0x409/manufacturer
     echo $BOARDNAME > strings/0x409/product
     mkdir functions/acm.GS0
