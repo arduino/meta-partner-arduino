@@ -30,7 +30,7 @@
 #include <linux/list.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
-#include <linux/slab.h>
+// #include <linux/slab.h>
 #include <linux/compat.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
@@ -41,18 +41,17 @@
 
 #include <linux/uaccess.h>
 
-#include "x8h7_ioctl.h"
 #include "x8h7.h"
 
 #define DRIVER_NAME     "x8h7"
 #define X8H7_BUF_SIZE   (64*1024)
 
 // Peripheral code
-#define X8H7_H7_PERIPH    0x00
+//#define X8H7_H7_PERIPH    0x00
 // Op code
-#define X8H7_H7_FW_VER    0x10
+//#define X8H7_H7_FW_VER    0x10
 
-//#define DEBUG   1
+#define DEBUG   1
 #include "debug.h"
 
 
@@ -110,9 +109,9 @@ struct spidev_data {
   u16                 x8h7_txl;
   u8                 *x8h7_rxb;
 
-  wait_queue_head_t   x8h7_wait;
-  int                 rx_cnt;
-  x8h7_pkt_t          rx_pkt;
+//  wait_queue_head_t   x8h7_wait;
+//  int                 rx_cnt;
+//  x8h7_pkt_t          rx_pkt;
 };
 
 static LIST_HEAD(device_list);
@@ -145,6 +144,9 @@ typedef struct __attribute__((packed, aligned(4))) {
 x8h7_hook_t x8h7_hook[X8H7_PERIPH_NUM] = {};
 void *x8h7_hook_priv[X8H7_PERIPH_NUM];
 
+void (*x8h7_dbg)(void*, uint8_t*, uint16_t);
+void *x8h7_dbg_priv;
+
 #if 0
 /**
  */
@@ -161,7 +163,8 @@ x8h7_periph_t x8h7_periph[X8H7_PERIPH_NUM];
 
 /**
  */
-#ifdef DEBUG
+
+#if defined(DEBUG) && (DEBUG == 3)
 
 #define X8H7_PERIPH_H7      0x00
 #define X8H7_PERIPH_ADC     0x01
@@ -293,7 +296,6 @@ static int pkt_parse(struct spidev_data *spidev)
 
   ptr = spidev->x8h7_rxb;
   hdr = (x8h7_pkthdr_t*)ptr;
-
   size = hdr->size;
   ptr += sizeof(x8h7_pkthdr_t);
 
@@ -392,7 +394,11 @@ static inline int x8h7_pkt_send_priv(int arg)
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
   // @TODO: Add control
   if (hdr->size) {
-    pkt_parse(spidev);
+    if (x8h7_dbg) {
+      x8h7_dbg(x8h7_dbg_priv, spidev->x8h7_rxb, hdr->size);
+    } else {
+      pkt_parse(spidev);
+    }
   }
 
   memset(spidev->x8h7_txb, 0, X8H7_BUF_SIZE);
@@ -424,6 +430,16 @@ int x8h7_hook_set(uint8_t idx, x8h7_hook_t hook, void *priv)
 EXPORT_SYMBOL_GPL(x8h7_hook_set);
 
 /**
+ */
+int x8h7_dbg_set(void (*hook)(void*, uint8_t*, uint16_t), void *priv)
+{
+  x8h7_dbg = hook;
+  x8h7_dbg_priv = priv;
+  return 0;
+}
+EXPORT_SYMBOL_GPL(x8h7_dbg_set);
+
+/**
  * Interrupt handler
  */
 static irqreturn_t x8h7_threaded_isr(int irq, void *data)
@@ -437,7 +453,7 @@ static irqreturn_t x8h7_threaded_isr(int irq, void *data)
 }
 
 /**
- */
+ *//*
 static void x8h7_h7_hook(void *priv, x8h7_pkt_t *pkt)
 {
   struct spidev_data  *spidev = (struct spidev_data*)priv;
@@ -446,9 +462,9 @@ static void x8h7_h7_hook(void *priv, x8h7_pkt_t *pkt)
   spidev ->rx_cnt++;
   wake_up_interruptible(&spidev ->x8h7_wait);
 }
-
+*/
 /**
- */
+ *//*
 static int x8h7_h7_pkt_get(struct spidev_data *spidev)
 {
   long ret;
@@ -462,9 +478,9 @@ static int x8h7_h7_pkt_get(struct spidev_data *spidev)
   }
   return -1;
 }
-
+*/
 /**
- */
+ *//*
 int x8h7_fw_ver(void)
 {
   x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_FW_VER, 0, NULL);
@@ -473,7 +489,7 @@ int x8h7_fw_ver(void)
   pkt_dump("FW Version", (void*)&x8h7_spidev->rx_pkt);
   return 0;
 }
-
+*/
 /*-------------------------------------------------------------------------*/
 
 static ssize_t
@@ -1152,8 +1168,9 @@ static int spidev_probe(struct spi_device *spi)
   }
 
   x8h7_spidev = spidev;
-  init_waitqueue_head(&spidev->x8h7_wait);
-  x8h7_hook_set(X8H7_H7_PERIPH, x8h7_h7_hook, spidev);
+
+  //init_waitqueue_head(&spidev->x8h7_wait);
+  //x8h7_hook_set(X8H7_H7_PERIPH, x8h7_h7_hook, spidev);
   //x8h7_fw_ver();
 
   if (status == 0)

@@ -11,7 +11,6 @@
 #include <linux/slab.h>
 #include <linux/wait.h>
 
-#include "x8h7_ioctl.h"
 #include "x8h7.h"
 
 #define DRIVER_NAME "x8h7_rtc"
@@ -27,6 +26,8 @@
 #define X8H7_RTC_GET_DATE   0x02
 #define X8H7_RTC_SET_ALARM  0x11
 #define X8H7_RTC_GET_ALARM  0x12
+#define X8H7_RTC_ALARM_IEN  0x13
+#define X8H7_RTC_ALARM_INT  0x14
 
 struct x8h7_rtc {
   struct rtc_device  *rtc;
@@ -40,14 +41,17 @@ struct x8h7_rtc {
 static void x8h7_rtc_hook(void *priv, x8h7_pkt_t *pkt)
 {
   struct x8h7_rtc  *rtc = (struct x8h7_rtc*)priv;
-  /*
-   @TODO: devo verificare che sia per l'allarme
-  if (rtc->alarm_enabled) {
+
+  if ((pkt->peripheral == X8H7_RTC_PERIPH) &&
+      (pkt->opcode == X8H7_RTC_ALARM_INT) &&
+      (pkt->size == 1)) {
     rtc->alarm_pending = 1;
-  }*/
-  memcpy(&rtc->rx_pkt, pkt, sizeof(x8h7_pkt_t));
-  rtc->rx_cnt++;
-  wake_up_interruptible(&rtc->wait);
+    rtc_update_irq(rtc->rtc, 1, RTC_IRQF | RTC_AF);
+  } else {
+    memcpy(&rtc->rx_pkt, pkt, sizeof(x8h7_pkt_t));
+    rtc->rx_cnt++;
+    wake_up_interruptible(&rtc->wait);
+  }
 }
 
 static int x8h7_rtc_pkt_get(struct x8h7_rtc *rtc)
@@ -177,9 +181,18 @@ int x8h7_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *wa)
 
 int x8h7_rtc_alarm_irq_enable(struct device *dev, unsigned int enabled)
 {
-  struct x8h7_rtc *rtc = dev_get_drvdata(dev);
+  struct x8h7_rtc  *rtc = dev_get_drvdata(dev);
+  uint8_t           data[1];
 
   rtc->alarm_enabled = enabled;
+
+  if (enabled) {
+    data[0] = RTC_AF;
+  } else {
+    data[0] = ~RTC_AF;
+  }
+  x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_ALARM_IEN, 1, data);
+  x8h7_pkt_send();
   return 0;
 }
 

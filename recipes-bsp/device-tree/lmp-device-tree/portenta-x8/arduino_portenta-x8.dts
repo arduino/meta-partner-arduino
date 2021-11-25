@@ -84,6 +84,10 @@
 	x8h7_ui {
 		compatible = "portenta,x8h7_ui";
 	};
+
+	x8h7_h7 {
+		compatible = "portenta,x8h7_h7";
+	};
 };
 
 &i2c2 {

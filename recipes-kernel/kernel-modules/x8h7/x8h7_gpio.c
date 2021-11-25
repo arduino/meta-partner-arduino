@@ -8,8 +8,8 @@
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
+#include <linux/interrupt.h>
 
-#include "x8h7_ioctl.h"
 #include "x8h7.h"
 
 #define DRIVER_NAME "x8h7_gpio"
@@ -20,9 +20,32 @@
 // Peripheral code
 #define X8H7_GPIO_PERIPH 0x07
 // Op code
-#define X8H7_GPIO_OC_DIR 0x10
-#define X8H7_GPIO_OC_WR  0x20
-#define X8H7_GPIO_OC_RD  0x30
+#define X8H7_GPIO_OC_DIR    0x10
+#define X8H7_GPIO_OC_WR     0x20
+#define X8H7_GPIO_OC_RD     0x30
+#define X8H7_GPIO_OC_IEN    0x40
+#define X8H7_GPIO_OC_INT    0x50
+#define X8H7_GPIO_OC_IACK   0x60
+
+//#define GPIO_MODE_INPUT         0x00   /*!< Input Floating Mode */
+//#define GPIO_MODE_OUTPUT_PP     0x01   /*!< Output Push Pull Mode */
+//#define GPIO_MODE_OUTPUT_OD     0x11   /*!< Output Open Drain Mode */
+
+#define GPIO_MODE_INPUT         0x00   /*!< Input Floating Mode */
+#define GPIO_MODE_IN_RE         0x01   /*!< Input interrupt rising edge */
+#define GPIO_MODE_IN_FE         0x02   /*!< Input interrupt falling edge */
+#define GPIO_MODE_IN_AH         0x04   /*!< Input interrupt active high */
+#define GPIO_MODE_IN_AL         0x08   /*!< Input interrupt active low */
+
+#define GPIO_MODE_OUTPUT_PP     0x10   /*!< Output Push Pull Mode */
+#define GPIO_MODE_OUTPUT_OD     0x11   /*!< Output Open Drain Mode */
+
+//#define GPIO_INT_EDGE_RISING    0x1
+//#define GPIO_INT_EDGE_FALLING   0x2
+//#define GPIO_INT_MASK           (GPIO_INT_EDGE_RISING | GPIO_INT_EDGE_FALLING)
+//#define GPIO_INT_MASK_SIZE      2
+
+#define X8H7_GPIO_NUM   7
 
 struct x8h7_gpio_info {
   struct device      *dev;
@@ -32,19 +55,29 @@ struct x8h7_gpio_info {
   struct gpio_chip    gc;
   uint32_t            gpio_dir;
   uint32_t            gpio_val;
+  uint32_t            gpio_ien;
+  struct irq_domain  *irq;
 };
 
-#define  GPIO_MODE_INPUT       0x00   /*!< Input Floating Mode */
-#define  GPIO_MODE_OUTPUT_PP   0x01   /*!< Output Push Pull Mode */
-#define  GPIO_MODE_OUTPUT_OD   0x11   /*!< Output Open Drain Mode */
 
 static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
 {
   struct x8h7_gpio_info  *inf = (struct x8h7_gpio_info*)priv;
 
-  memcpy(&inf->rx_pkt, pkt, sizeof(x8h7_pkt_t));
-  inf->rx_cnt++;
-  wake_up_interruptible(&inf->wait);
+  if ((pkt->peripheral == X8H7_GPIO_PERIPH) &&
+      (pkt->opcode == X8H7_GPIO_OC_INT) &&
+      (pkt->size == 1)) {
+    if (pkt->data[0] < X8H7_GPIO_NUM) {
+      int ret;
+      ret = generic_handle_irq(irq_linear_revmap(inf->irq, pkt->data[0]));
+      DBG_PRINT("call generic_handle_irq(%d) return %d\n",
+                irq_linear_revmap(inf->irq, pkt->data[0]), ret);
+    }
+  } else {
+    memcpy(&inf->rx_pkt, pkt, sizeof(x8h7_pkt_t));
+    inf->rx_cnt++;
+    wake_up_interruptible(&inf->wait);
+  }
 }
 
 static int x8h7_gpio_pkt_get(struct x8h7_gpio_info *inf)
@@ -180,9 +213,10 @@ static int x8h7_gpio_get_direction(struct gpio_chip *chip, unsigned offset)
 static int x8h7_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
                                 unsigned long config)
 {
-  struct x8h7_gpio_info  *inf = gpiochip_get_data(chip);
+//  struct x8h7_gpio_info  *inf = gpiochip_get_data(chip);
   uint8_t                 data[2];
 
+  DBG_PRINT("offset: %d, config: %ld\n", offset, config);
   data[0] = offset;
   switch (pinconf_to_config_param(config)) {
   case PIN_CONFIG_DRIVE_OPEN_DRAIN:
@@ -199,6 +233,124 @@ static int x8h7_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
 
   return 0;
 }
+
+static int x8h7_gpio_to_irq(struct gpio_chip *gc, unsigned offset)
+{
+  struct x8h7_gpio_info  *inf = gpiochip_get_data(gc);
+
+  if (inf->irq && offset < X8H7_GPIO_NUM) {
+    int irq;
+    irq = irq_create_mapping(inf->irq, offset);
+    DBG_PRINT("offset %d, irq %d\n", offset, irq);
+    return irq;
+  } else {
+    DBG_ERROR("\n");
+    return -ENXIO;
+  }
+}
+
+static void x8h7_gpio_irq_unmask(struct irq_data *d)
+{
+  struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
+  uint8_t                 data[2];
+  unsigned long           irq;
+
+  irq = irqd_to_hwirq(d);
+  inf->gpio_ien &= ~(1 << irq);
+  DBG_PRINT("irq %ld, ien %08Xld\n", irq, inf->gpio_ien);
+
+  data[0] = irq;
+  data[1] = 0;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+  x8h7_pkt_send();
+}
+
+static void x8h7_gpio_irq_mask(struct irq_data *d)
+{
+  struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
+  uint8_t                 data[2];
+  unsigned long           irq;
+
+  irq = irqd_to_hwirq(d);
+  inf->gpio_ien |= (1 << irq);
+  DBG_PRINT("irq %ld, ien %08Xld\n", irq, inf->gpio_ien);
+
+  data[0] = irq;
+  data[1] = 0;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+  x8h7_pkt_send();
+}
+
+static void x8h7_gpio_irq_ack(struct irq_data *d)
+{
+//  struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
+  uint8_t                 data[1];
+  unsigned long           irq;
+
+  irq = irqd_to_hwirq(d);
+  DBG_PRINT("irq %ld\n", irqd_to_hwirq(d));
+  data[0] = irq;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 1, data);
+  x8h7_pkt_send();
+}
+
+static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
+{
+  //struct x8h7_gpio_info *inf = irq_data_get_irq_chip_data(d);
+  uint8_t                 data[2];
+  //struct gpio_chip *gc = &inf->gc;
+  //unsigned long flags;
+
+  DBG_PRINT("irq %ld flow_type %d\n", irqd_to_hwirq(d), flow_type);
+
+  switch (flow_type) {
+  case IRQ_TYPE_EDGE_RISING:
+    data[1] = GPIO_MODE_IN_RE;
+    break;
+  case IRQ_TYPE_EDGE_FALLING:
+    data[1] = GPIO_MODE_IN_FE;
+    break;
+    break;
+  case IRQ_TYPE_EDGE_BOTH:
+    data[1] = GPIO_MODE_IN_RE | GPIO_MODE_IN_FE;
+    break;
+  case IRQ_TYPE_LEVEL_HIGH:
+    data[1] = GPIO_MODE_IN_AH;
+    break;
+  case IRQ_TYPE_LEVEL_LOW:
+    data[1] = GPIO_MODE_IN_AL;
+    break;
+  default:
+    return -EINVAL;
+  }
+
+  data[0] = irqd_to_hwirq(d);
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
+  x8h7_pkt_send();
+  return 0;
+}
+
+static struct irq_chip x8h7_gpio_irq_chip = {
+  .name         = "x8h7-gpio",
+  .irq_unmask   = x8h7_gpio_irq_unmask,
+  .irq_mask     = x8h7_gpio_irq_mask,
+  .irq_ack      = x8h7_gpio_irq_ack,
+  .irq_set_type = x8h7_gpio_irq_set_type,
+};
+
+static int x8h7_gpio_irq_map(struct irq_domain *h, unsigned int irq,
+                             irq_hw_number_t hwirq)
+{
+  irq_set_chip_data(irq, h->host_data);
+  irq_set_chip_and_handler(irq, &x8h7_gpio_irq_chip, handle_edge_irq);
+
+  return 0;
+}
+
+static const struct irq_domain_ops x8h7_gpio_irq_ops = {
+  .map   = x8h7_gpio_irq_map,
+  .xlate = irq_domain_xlate_twocell,
+};
 
 static int x8h7_gpio_probe(struct platform_device *pdev)
 {
@@ -229,11 +381,18 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->gc.set              = x8h7_gpio_set;
   inf->gc.get_direction    = x8h7_gpio_get_direction;
   inf->gc.set_config       = x8h7_gpio_set_config;
-  inf->gc.to_irq           = NULL;
+  inf->gc.to_irq           = x8h7_gpio_to_irq;
   inf->gc.base             = base;
-  inf->gc.ngpio            = 7;
+  inf->gc.ngpio            = X8H7_GPIO_NUM;
   inf->gc.parent           = &pdev->dev;
   inf->gc.of_node          = pdev->dev.of_node;
+
+  inf->irq = irq_domain_add_linear(node, X8H7_GPIO_NUM,
+                                   &x8h7_gpio_irq_ops, inf);
+  if (!inf->irq) {
+    DBG_ERROR("Failed to add irq domain\n");
+    //return 0;
+  }
 
   platform_set_drvdata(pdev, inf);
 

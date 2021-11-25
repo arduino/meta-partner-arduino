@@ -6,6 +6,7 @@ obj-m += x8h7_rtc.o
 obj-m += x8h7_can.o
 obj-m += x8h7_uart.o
 obj-m += x8h7_ui.o
+obj-m += x8h7_h7.o
 
 SRC := $(shell pwd)
 

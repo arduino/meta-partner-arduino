@@ -19,12 +19,11 @@
 #include <asm/io.h>
 #include <asm/irq.h>
 
-#include "x8h7_ioctl.h"
 #include "x8h7.h"
 
 #define DRIVER_NAME "x8h7_uart"
 
-#define DEBUG
+//#define DEBUG
 #include "debug.h"
 
 #define PORT_X8H7_UART    1000 // @TODO: add this define in serial.h

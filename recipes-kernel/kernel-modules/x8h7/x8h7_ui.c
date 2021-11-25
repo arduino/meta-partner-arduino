@@ -12,7 +12,6 @@
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 
-#include "x8h7_ioctl.h"
 #include "x8h7.h"
 
 #define DRIVER_NAME "x8h7_ui"

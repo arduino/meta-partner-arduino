@@ -19,6 +19,7 @@ SRC_URI = " \
   file://x8h7_can.c \
   file://x8h7_uart.c \
   file://x8h7_ui.c \
+  file://x8h7_h7.c \
   file://debug.h \
   file://COPYING \
 "
