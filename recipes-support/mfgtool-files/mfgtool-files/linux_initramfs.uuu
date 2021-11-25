@@ -8,20 +8,13 @@ SDPV: jump
 
 FB: ucmd setenv fastboot_buffer ${loadaddr}
 
-FB: download -f fitImage
+FB: download -f fitImage-portenta-x8-mfgtool
 
-#FB: ucmd setenv fastboot_buffer ${fdt_addr}
-#FB: download -f ../p1/arduino_portenta-x8.dtb
-#FB: ucmd setenv fastboot_buffer ${initrd_addr}
-#FB: download -f ../p1/fsl-image-mfgtool-initramfs-portenta-x8.cpio.gz
-
-#FB: ucmd setenv bootargs console=${console},${baudrate} rdinit=/linuxrc clk_ignore_unused
 FB: ucmd setenv earlycon "ec_imx6q,0x30890000,115200"
+#FB: ucmd setenv bootargs console=${console},${baudrate} rdinit=/linuxrc clk_ignore_unused
 FB: ucmd setenv bootargs console=${console},${baudrate} earlycon=${earlycon},${baudrate} rdinit=/linuxrc
 SDPV: delay 1000
 
-#FB: acmd booti ${loadaddr} - ${fdt_addr}
 FB: acmd bootm ${loadaddr}
-#FB: acmd booti ${loadaddr} ${initrd_addr} ${fdt_addr}
 
 FB: done
