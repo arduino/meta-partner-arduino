@@ -64,12 +64,13 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${BOOT} \
     ${BRINGUP} \
     android-tools \
+    android-tools-adbd \
     arduino-ootb \
 "
 
 fakeroot do_populate_rootfs_add_custom_sudoers () {
     # Allow sudo group users to use sudo
-    bbwarn Hey you...changing sudoers for arduino ootb!
+    bbwarn Changing sudoers for arduino ootb!
     install -m 0440 ${WORKDIR}/sudoers-arduino ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/51-arduino
 }
 
