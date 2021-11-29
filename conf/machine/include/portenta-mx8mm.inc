@@ -25,9 +25,6 @@ DDR_FIRMWARE_NAME = "lpddr4_pmu_train_1d_imem.bin lpddr4_pmu_train_1d_dmem.bin l
 IMXBOOT_TARGETS = "${@bb.utils.contains('UBOOT_CONFIG', 'fspi', 'flash_evk_flexspi', 'flash_evk', d)}"
 IMX_BOOT_SOC_TARGET = "iMX8MM"
 
-# Set Serial console
-SERIAL_CONSOLE = "115200;ttymxc1"
-
 BOOT_SPACE = "65536"
 
 LOADADDR = ""
@@ -37,7 +34,6 @@ IMX_BOOT_SEEK = "33"
 # make sure we build the devicetree and add it to lmp-base builds
 EXTRA_IMAGEDEPENDS_append = " virtual/dtb "
 
-OSTREE_KERNEL_ARGS_portenta-mx8mm ?= "console=tty1 console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 root=/dev/mmcblk2p2 rootfstype=ext4"
 OPTEE_BIN_EXT = "8mm"
 
 # Add additional firmware
