@@ -91,6 +91,10 @@ static int x8h7_pwm_capture(struct pwm_chip *chip, struct pwm_device *pwm,
   //@TODO: period_ns must be greater than 953
   x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm | 0x60, sizeof(x8h7->pkt), &x8h7->pkt);
   x8h7_pkt_send();
+
+  x8h7->pkt.duty = 0;
+  x8h7->pkt.period = 0;
+
   x8h7_pwm_pkt_get(x8h7, timeout);
 
   result->duty_cycle = x8h7->pkt.duty;
