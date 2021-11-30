@@ -1,0 +1,50 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable UART1 on Arduino Breakout carrier board
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include "imx8mm-pinfunc.h"
+
+/* @TODO they shall be introduced in recent bsps from nxp */
+/* NOTE: DCE mode not inverted */
+#define MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX     0x1D8 0x440 0x4Fc 0x4 0x2
+#define MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX      0x1DC 0x444 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B   0x1D0 0x438 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B   0x1D4 0x43C 0x4F8 0x4 0x3
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_uart2: uart2grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
+						MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX		0x140
+						MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B	0x140
+						MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B	0x140
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&uart2>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart2>;
+			assigned-clocks = <&clk IMX8MM_CLK_UART2>;
+			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+			fsl,uart-has-rtscts;
+			status = "okay";
+		};
+	};
+};

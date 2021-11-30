@@ -3,8 +3,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 DTB_OVERLAYS_portenta-mx8mm = " \
     file://overlays.txt \
     file://ov_som_lbee5kl1dx.dts \
-    file://ov_carrier_breakout_uart0.dts \
-    file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_uart3.dts \
     file://ov_carrier_breakout_i2c0.dts \
     file://ov_carrier_breakout_i2c1.dts \
@@ -31,11 +29,13 @@ DTB_OVERLAYS_portenta-mx8mm = " \
 "
 
 DTB_OVERLAYS_append_portenta-m8 = " \
-    file://ov_carrier_breakout_x8h7.dts \
+    file://ov_carrier_breakout_uart0.dts \
+    file://ov_carrier_breakout_uart1.dts \
 "
 
 DTB_OVERLAYS_append_portenta-x8 = " \
     file://ov_som_x8h7.dts \
+    file://ov_carrier_breakout_uart1.dts \
 "
 
 SRC_URI_append_portenta-mx8mm = " \
