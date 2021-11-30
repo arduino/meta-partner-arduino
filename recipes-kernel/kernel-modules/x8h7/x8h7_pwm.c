@@ -31,6 +31,8 @@ struct __attribute__((packed, aligned(4))) pwmPacket {
 struct x8h7_pwm_chip {
   struct pwm_chip   chip;
   struct pwmPacket  pkt;
+  wait_queue_head_t wait;
+  int               cnt;
 };
 
 #define to_x8h7_pwm_chip(_chip) container_of(_chip, struct x8h7_pwm_chip, chip)
@@ -46,6 +48,55 @@ static int x8h7_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
   x8h7->pkt.period = period_ns;
   x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
   x8h7_pkt_send();
+
+  return 0;
+}
+
+
+static void x8h7_pwm_hook(void *priv, x8h7_pkt_t *pkt)
+{
+  struct x8h7_pwm_chip  *pwm = (struct x8h7_pwm_chip*)priv;
+  uint8_t           ch;
+
+  ch = pkt->opcode & 0xF;
+  if (ch < 10) {
+    struct pwmPacket* packet = (struct pwmPacket*)(pkt->data);
+    pwm->pkt.duty = packet->duty;
+    pwm->pkt.period = packet->period;
+    pwm->cnt++;
+    wake_up_interruptible(&pwm->wait);
+  }
+}
+
+static int x8h7_pwm_pkt_get(struct x8h7_pwm_chip *pwm, unsigned int timeout)
+{
+  long ret;
+
+  ret = wait_event_interruptible_timeout(pwm->wait,
+                                         pwm->cnt != 0,
+                                         timeout);
+  if (!ret) {
+    DBG_ERROR("timeout expired");
+    return -1;
+  }
+  pwm->cnt--;
+  return 0;
+}
+
+static int x8h7_pwm_capture(struct pwm_chip *chip, struct pwm_device *pwm,
+		                        struct pwm_capture *result, unsigned long timeout)
+{
+  struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
+
+  //@TODO: period_ns must be greater than 953
+  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm | 0x60, sizeof(x8h7->pkt), &x8h7->pkt);
+  x8h7_pkt_send();
+  x8h7_pwm_pkt_get(x8h7, timeout);
+
+  result->duty_cycle = x8h7->pkt.duty;
+  result->period = x8h7->pkt.period;
+
+  DBG_PRINT("duty_ns: %d, period_ns: %d\n", result->duty_cycle, result->period);
 
   return 0;
 }
@@ -76,6 +127,7 @@ static const struct pwm_ops x8h7_pwm_ops = {
   .config  = x8h7_pwm_config,
   .enable  = x8h7_pwm_enable,
   .disable = x8h7_pwm_disable,
+  .capture = x8h7_pwm_capture,
   .owner   = THIS_MODULE,
 };
 
@@ -100,6 +152,8 @@ static int x8h7_pwm_probe(struct platform_device *pdev)
   x8h7_pwm->chip.base = -1;
   x8h7_pwm->chip.npwm = 10;
 
+  init_waitqueue_head(&x8h7_pwm->wait);
+
   ret = pwmchip_add(&x8h7_pwm->chip);
   if (ret < 0) {
     dev_err(&pdev->dev, "failed to add PWM chip %d\n", ret);
@@ -107,6 +161,8 @@ static int x8h7_pwm_probe(struct platform_device *pdev)
   }
 
   platform_set_drvdata(pdev, x8h7_pwm);
+
+  x8h7_hook_set(X8H7_PWM_PERIPH, x8h7_pwm_hook, x8h7_pwm);
 
   return ret;
 }
