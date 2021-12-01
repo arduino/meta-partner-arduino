@@ -1,7 +1,7 @@
 # common Arduino u-boot-fio settings
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
-SRCREV_portenta-mx8mm = "7038b7ef5c09fa14af281b64f3a59a84f82c35ef"
+SRCREV_portenta-mx8mm = "a16b1bcad17c876e7fbc219b9d06ebde7738dd59"
 SRCBRANCH_portenta-mx8mm = "2021.04+imx_5.10.35_2.0.0-arduino"
 
 SRC_URI_portenta-mx8mm = "git://source.foundries.io/factories/arduino/u-boot.git;protocol=https;branch=${SRCBRANCH} \
