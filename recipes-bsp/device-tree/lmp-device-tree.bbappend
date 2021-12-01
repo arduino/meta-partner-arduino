@@ -41,7 +41,6 @@ DTB_OVERLAYS_append_portenta-x8 = " \
 SRC_URI_append_portenta-mx8mm = " \
     file://anx7625.dtsi \
     file://arduino_portenta-mx8mm.dtsi \
-    file://envie_enuc_carrier.dtsi \
     ${DTB_OVERLAYS} \
 "
 
