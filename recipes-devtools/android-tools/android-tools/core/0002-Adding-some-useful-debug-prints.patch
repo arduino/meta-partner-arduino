@@ -15,10 +15,10 @@ index 7d2eaec959..8c25304878 100644
      /* don't listen on a port (default 5037) if running in secure mode */
      /* don't run as root if we are running in secure mode */
      if (should_drop_privileges()) {
-+        fprintf(stderr, "Dropping privileges\n");
++        #if 0
          drop_capabilities_bounding_set_if_needed();
- 
-+        fprintf(stderr, "Switching to uid=1000 gid=1000\n");
+
++        #endif
          /* then switch user and group to "shell" */
          if (setgid(1000) != 0) {
              exit(1);
