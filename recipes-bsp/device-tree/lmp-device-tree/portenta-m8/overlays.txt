@@ -1,7 +1,7 @@
 # Here list the overlays you want
 # to load using a space as separator
 # e.g. overlays=name_ov1 name_ov2
-# Default is no overlay loaded (overlays=)
+# Default is including som overlays (see end of file)
 
 # Som board definition
 som_ovl=ov_som_lbee5kl1dx
@@ -44,4 +44,4 @@ ov_carrier_enuc_lora
 
 #overlays=${som_ovl} ${max_ovl}
 
-overlays=
+overlays=ov_som_lbee5kl1dx
