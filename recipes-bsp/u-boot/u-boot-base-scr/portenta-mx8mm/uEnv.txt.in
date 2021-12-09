@@ -8,8 +8,16 @@ ovlpath=/boot/devicetree
 fdtovaddr=0x43600000
 bootcmd_ovl_load=${ovlload} ${ovltype} ${ovldev}:${ovlpart} ${loadaddr} ${ovlpath}/overlays.txt;\
                  env import -t ${loadaddr} ${filesize}
+bootcmd_ovl_auto_detect=if test "${is_on_carrier}" = "yes"; then \
+                            if test "${carrier_name}" = "breakout"; then \
+                                setenv overlays $som_ovl $breakout_ovl \
+                            fi \
+                            if test "${carrier_name}" = "max"; then \
+                                setenv overlays $som_ovl $enuc_ovl \
+                            fi \
+                        fi
 bootcmd_dtb=fatload ${devtype} ${devnum}:1 ${fdt_addr} ${fdt_file}
-bootcmd_ovy=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
+bootcmd_ovl=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
             for ov in ${overlays}; do; \
               echo overlaying ${ov}... \
               ${ovlload} ${ovltype} ${ovldev}:${ovlpart} ${fdtovaddr} ${ovlpath}/${ov}.dtbo && \
@@ -18,4 +26,4 @@ bootcmd_ovy=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
 bootcmd_args=setenv bootargs console=${console} root=/dev/mmcblk2p2 rootwait rw
 bootcmd_load_k=fatload ${devtype} ${devnum}:1 ${loadaddr} ${image}
 bootcmd_run=booti ${loadaddr} - ${fdt_addr}
-bootcmd=run bootcmd_ovl_load; run bootcmd_dtb; run bootcmd_ovy; run bootcmd_args; run bootcmd_load_k; run bootcmd_run
+bootcmd=run bootcmd_ovl_load; run bootcmd_ovl_auto_detect; run bootcmd_dtb; run bootcmd_ovl; run bootcmd_args; run bootcmd_load_k; run bootcmd_run
