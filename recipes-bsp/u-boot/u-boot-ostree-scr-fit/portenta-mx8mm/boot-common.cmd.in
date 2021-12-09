@@ -147,6 +147,18 @@ fi
 setenv bootcmd_load_f 'ext4load ${devtype} ${devnum}:${rootpart} ${fit_addr} "/boot"${kernel_image}'
 setenv bootcmd_tee_ovy 'if test -n ${optee_ovl_addr}; then imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}; fdt resize 0x1000; fdt apply ${optee_ovl_addr}; fi'
 setenv bootcmd_dtb 'imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}'
+setenv bootcmd_ovl_auto_detect ' \
+  if env exist carrier_custom; then true; \
+  else \
+    if test "${is_on_carrier}" = "yes"; then \
+        if test "${carrier_name}" = "breakout"; then \
+            setenv overlays $som_ovl $breakout_ovl \
+        fi \
+        if test "${carrier_name}" = "max"; then \
+            setenv overlays $som_ovl $max_ovl \
+        fi \
+    fi \
+  fi'
 setenv bootcmd_overlay ' \
   for ov in ${overlays}; do; \
     if imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${ov}.dtbo ${ovl_addr}; then \
@@ -170,10 +182,8 @@ run bootcmd_tee_ovy
 echo "${fiovb_msg} Forcing secondary boot to 0 after reboot"
 imx_secondary_boot 0
 
-# default overlays
-if env exist overlays; then true; else setenv overlays 'ov_som_lbee5kl1dx'; saveenv; fi
-
 run bootcmd_dtb
+run bootcmd_ovl_auto_detect
 run bootcmd_overlay
 run bootcmd_run
 

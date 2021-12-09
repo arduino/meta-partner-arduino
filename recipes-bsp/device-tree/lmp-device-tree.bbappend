@@ -1,7 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 DTB_OVERLAYS_portenta-mx8mm = " \
-    file://overlays.txt \
     file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart3.dts \
     file://ov_carrier_breakout_i2c0.dts \
@@ -53,10 +52,6 @@ SRC_URI_append_portenta-x8 = " \
 "
 
 COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
-
-do_install_append_portenta-mx8mm() {
-    install -Dm 0644 ${WORKDIR}/overlays.txt ${D}/boot/devicetree/overlays.txt
-}
 
 FILES_${PN}_portenta-mx8mm += " \
     /boot/devicetree/* \

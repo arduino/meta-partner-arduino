@@ -6,15 +6,16 @@ ovldev=2
 ovlpart=2
 ovlpath=/boot/devicetree
 fdtovaddr=0x43600000
-bootcmd_ovl_load=${ovlload} ${ovltype} ${ovldev}:${ovlpart} ${loadaddr} ${ovlpath}/overlays.txt;\
-                 env import -t ${loadaddr} ${filesize}
-bootcmd_ovl_auto_detect=if test "${is_on_carrier}" = "yes"; then \
+bootcmd_ovl_auto_detect=if env exist carrier_custom; then true; \
+                        else \
+                          if test "${is_on_carrier}" = "yes"; then \
                             if test "${carrier_name}" = "breakout"; then \
-                                setenv overlays $som_ovl $breakout_ovl \
+                              setenv overlays $som_ovl $breakout_ovl \
                             fi \
                             if test "${carrier_name}" = "max"; then \
-                                setenv overlays $som_ovl $enuc_ovl \
+                              setenv overlays $som_ovl $max_ovl \
                             fi \
+                          fi \
                         fi
 bootcmd_dtb=fatload ${devtype} ${devnum}:1 ${fdt_addr} ${fdt_file}
 bootcmd_ovl=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
@@ -26,4 +27,4 @@ bootcmd_ovl=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
 bootcmd_args=setenv bootargs console=${console} root=/dev/mmcblk2p2 rootwait rw
 bootcmd_load_k=fatload ${devtype} ${devnum}:1 ${loadaddr} ${image}
 bootcmd_run=booti ${loadaddr} - ${fdt_addr}
-bootcmd=run bootcmd_ovl_load; run bootcmd_ovl_auto_detect; run bootcmd_dtb; run bootcmd_ovl; run bootcmd_args; run bootcmd_load_k; run bootcmd_run
+bootcmd=run bootcmd_ovl_auto_detect; run bootcmd_dtb; run bootcmd_ovl; run bootcmd_args; run bootcmd_load_k; run bootcmd_run
