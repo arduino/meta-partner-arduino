@@ -18,16 +18,10 @@
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
-				pinctrl_i2c3: i2c3grp {
-					fsl,pins = <
-						MX8MM_IOMUXC_I2C3_SCL_I2C3_SCL        0x400001c3
-						MX8MM_IOMUXC_I2C3_SDA_I2C3_SDA        0x400001c3
-					>;
-				};
-
+				/* @TODO: bq24195 irq line goes to stm32h7 */
 				pinctrl_gpio_bq24195: gpiobq24195grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20      0xC0000041 /* Interrupt pin */
+						MX8MM_IOMUXC_GPIO1_IO05_GPIO1_IO5     0x141 /* Interrupt pin pull-up */
 					>;
 				};
 			};
@@ -58,18 +52,13 @@
 	fragment@2 {
 		target = <&i2c3>;
 		__overlay__ {
-			clock-frequency = <100000>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_i2c3>;
-			status = "okay";
-
 			bq24195: charger@6b {
 				compatible = "ti,bq24195";
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_gpio_bq24195>;
 				reg = <0x6b>;
-				interrupt-parent = <&gpio3>;
-				interrupts = <20 GPIO_ACTIVE_LOW>;
+				interrupt-parent = <&gpio1>;
+				interrupts = <5 IRQ_TYPE_NONE>; /* Edge set in drv module */
 				monitored-battery = <&bat>;
 				ti,system-minimum-microvolt = <3200000>;
 				omit-battery-class;

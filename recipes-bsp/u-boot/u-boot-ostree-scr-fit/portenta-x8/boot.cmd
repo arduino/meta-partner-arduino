@@ -29,9 +29,6 @@ setenv som_ovl ' \
 # Breakout carrier ov list
 setenv breakout_ovl ' \
   ov_carrier_breakout_gpio \
-  ov_carrier_breakout_i2c0 \
-  ov_carrier_breakout_i2c1 \
-  ov_carrier_breakout_i2c2 \
   ov_carrier_breakout_i2s \
   ov_carrier_breakout_sai \
   ov_carrier_breakout_pdm \
@@ -43,16 +40,16 @@ setenv breakout_ovl ' \
   ov_carrier_breakout_uart3 \
   ov_carrier_breakout_usbfs'
 
-# eNUC carrier ov list
-setenv enuc_ovl ' \
-  ov_carrier_enuc_bq24195 \
+# Max carrier ov list
+# power supply usbc only
+setenv max_ovl ' \
   ov_carrier_enuc_usbfs \
-  ov_carrier_enuc_cs42l52 \
-  ov_carrier_enuc_sara-r4 \
+  ov_carrier_max_cs42l52 \
   ov_carrier_enuc_lora'
 
 # Max carrier ov list
-setenv max_ovl ' \
+# power supply +9Vdc (VIN)
+setenv max_ovl_full ' \
   ov_carrier_enuc_bq24195 \
   ov_carrier_enuc_usbfs \
   ov_carrier_max_cs42l52 \
@@ -62,6 +59,6 @@ setenv max_ovl ' \
 # Following variables can be used to disable
 # auto carrier detection mechanism
 # setenv carrier_custom 1
-# setenv overlays '${som_ovl}'
+# setenv overlays 'ov_name1 ov_name2...'
 
 @@INCLUDE_COMMON@@

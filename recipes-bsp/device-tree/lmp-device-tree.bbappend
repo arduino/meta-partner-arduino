@@ -3,9 +3,6 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 DTB_OVERLAYS_portenta-mx8mm = " \
     file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart3.dts \
-    file://ov_carrier_breakout_i2c0.dts \
-    file://ov_carrier_breakout_i2c1.dts \
-    file://ov_carrier_breakout_i2c2.dts \
     file://ov_carrier_breakout_spi0.dts \
     file://ov_carrier_breakout_spdif.dts \
     file://ov_carrier_breakout_i2s.dts \
@@ -19,7 +16,6 @@ DTB_OVERLAYS_portenta-mx8mm = " \
     file://ov_carrier_enuc_rs485f_sp330.dts \
     file://ov_carrier_enuc_rs485h_sp330.dts \
     file://ov_carrier_enuc_cs42l52.dts \
-    file://ov_carrier_enuc_bq24195.dts \
     file://ov_carrier_enuc_sara-r4.dts \
     file://ov_carrier_enuc_lora.dts \
     file://ov_carrier_enuc_usbfs.dts \
@@ -30,11 +26,13 @@ DTB_OVERLAYS_portenta-mx8mm = " \
 DTB_OVERLAYS_append_portenta-m8 = " \
     file://ov_carrier_breakout_uart0.dts \
     file://ov_carrier_breakout_uart1.dts \
+    file://ov_carrier_enuc_bq24195.dts \
 "
 
 DTB_OVERLAYS_append_portenta-x8 = " \
     file://ov_som_x8h7.dts \
     file://ov_carrier_breakout_uart1.dts \
+    file://ov_carrier_enuc_bq24195.dts \
 "
 
 SRC_URI_append_portenta-mx8mm = " \

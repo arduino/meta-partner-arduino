@@ -1,0 +1,67 @@
+/**
+ * Portenta-M8 dtb overlay file
+ * Arduino 2021
+ * Enable bq24195 power regulator on Arduino eNUC carrier board.
+ * This overlay should be always included.
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_gpio_bq24195: gpiobq24195grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20      0x141 /* Interrupt pin pull-up */
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			bat: battery {
+				compatible = "simple-battery";
+				precharge-current-microamp = <256000>;
+				charge-term-current-microamp = <128000>;
+				/*
+				compatible = "simple-battery";
+				voltage-min-design-microvolt = <3200000>;
+				energy-full-design-microwatt-hours = <5290000>;
+				charge-full-design-microamp-hours = <1430000>;
+				precharge-current-microamp = <256000>;
+				charge-term-current-microamp = <128000>;
+				constant-charge-current-max-microamp = <900000>;
+				constant-charge-voltage-max-microvolt = <4200000>;
+				*/
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&i2c3>;
+		__overlay__ {
+			bq24195: charger@6b {
+				compatible = "ti,bq24195";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_gpio_bq24195>;
+				reg = <0x6b>;
+				interrupt-parent = <&gpio3>;
+				interrupts = <20 IRQ_TYPE_NONE>; /* Edge set in drv module */
+				monitored-battery = <&bat>;
+				ti,system-minimum-microvolt = <3200000>;
+				omit-battery-class;
+			};
+		};
+	};
+};
