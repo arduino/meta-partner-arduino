@@ -1,0 +1,50 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2021
+ * Enable LORA modem serial port on Arduino Max carrier board
+ * no RTS CTS only TX RX.
+ * Gpios:
+ * - Reset pin active low, ext. pull up of 1M on carrier
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include "imx8mm-pinfunc.h"
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_uart4: uart4grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX			0x140
+						MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX			0x140
+					>;
+				};
+
+				/* @TODO: fix me Lora modem reset pass thru stm32h7 */
+				pinctrl_gpio_lora: gpioloragrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO14_GPIO1_IO14			0x16 /* RST active low stm32h7 PF4 */
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&uart4>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart4>, <&pinctrl_gpio_lora>;
+			assigned-clocks = <&clk IMX8MM_CLK_UART4>;
+			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+			status = "okay";
+		};
+	};
+};

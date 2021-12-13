@@ -1,10 +1,10 @@
 /**
  * Portenta-M8 dtb overlay file
  * Arduino 2021
- * Enable LORA modem serial port on Arduino eNUC carrier board
+ * Enable LORA modem serial port on Arduino Max carrier board
  * no RTS CTS only TX RX.
  * Gpios:
- * - Reset pin active low 
+ * - Reset pin active low, ext. pull up of 1M on carrier
  */
 
 /dts-v1/;
@@ -22,17 +22,16 @@
 			imx8mm {
 				pinctrl_uart4: uart4grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX       0x140
-						MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX       0x140
+						MX8MM_IOMUXC_UART4_RXD_UART4_DCE_RX			0x140
+						MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX			0x140
 					>;
 				};
 
 				pinctrl_gpio_lora: gpioloragrp {
 					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10    0xC0000041 /* RST active low */
+						MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10			0x41 /* RST active low */
 					>;
 				};
-				
 			};
 		};
 	};
