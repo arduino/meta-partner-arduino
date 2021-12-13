@@ -1,8 +1,9 @@
 /**
  * Portenta-M8 dtb overlay file
  * Arduino 2021
- * Enable SARA-R4 modem serial port on Arduino eNUC carrier board
+ * Enable SARA-R4 modem serial port on Arduino Max carrier board
  * no RTS CTS only TX RX.
+ * No audio signals are connected to the modem.
  * In order for the modem to work ov_carrier_enuc_usbfs overlay need to be included.
  * Gpios:
  * - Reset pin active low
@@ -12,7 +13,6 @@
 /dts-v1/;
 /plugin/;
 
-#include <dt-bindings/clock/imx8mm-clock.h>
 #include "imx8mm-pinfunc.h"
 
 / {
@@ -24,10 +24,15 @@
 			imx8mm {
 				pinctrl_uart3: uart3grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX     0x140
-						MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX     0x140
-						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9         0x44 /* RST active low */
-						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11        0x44 /* POWER_ON active high */
+						MX8MM_IOMUXC_ECSPI1_SCLK_UART3_DCE_RX		0x140
+						MX8MM_IOMUXC_ECSPI1_MOSI_UART3_DCE_TX		0x140
+					>;
+				};
+
+				pinctrl_gpio_sara: gpiosaragrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9			0x44 /* RST active low */
+						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11			0x44 /* POWER_ON active high */
 					>;
 				};
 			};
@@ -38,7 +43,7 @@
 		target = <&uart3>;
 		__overlay__ {
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_uart3>;
+			pinctrl-0 = <&pinctrl_uart3>, <&pinctrl_gpio_sara>;
 			assigned-clocks = <&clk IMX8MM_CLK_UART3>;
 			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 			status = "okay";
