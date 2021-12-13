@@ -1,8 +1,9 @@
 /**
  * Portenta-M8 dtb overlay file
  * Arduino 2021
- * Enable bq24195 power regulator on Arduino eNUC carrier board.
- * This overlay should be always included.
+ * Enable bq24195 power regulator on Arduino Max carrier board.
+ * This overlay should be always included when powering carrier board with
+ * 9Vdc jack connector.
  */
 
 /dts-v1/;
@@ -20,7 +21,7 @@
 			imx8mm {
 				pinctrl_gpio_bq24195: gpiobq24195grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20      0x141 /* Interrupt pin pull-up */
+						MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20		0x141 /* Interrupt pin pull-up */
 					>;
 				};
 			};
