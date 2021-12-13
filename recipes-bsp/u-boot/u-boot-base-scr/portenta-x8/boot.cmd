@@ -23,7 +23,7 @@ setenv breakout_ovl ' \
 # Max carrier ov list
 # power supply usbc only
 setenv max_ovl ' \
-  ov_carrier_enuc_usbfs \
+  ov_carrier_max_usbfs \
   ov_carrier_max_cs42l52 \
   ov_carrier_enuc_lora'
 
@@ -31,7 +31,7 @@ setenv max_ovl ' \
 # power supply +9Vdc (VIN)
 setenv max_ovl_full ' \
   ov_carrier_enuc_bq24195 \
-  ov_carrier_enuc_usbfs \
+  ov_carrier_max_usbfs \
   ov_carrier_max_cs42l52 \
   ov_carrier_max_sara-r4 \
   ov_carrier_enuc_lora'
