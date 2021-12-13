@@ -12,7 +12,6 @@
 #include "imx8mm-pinfunc.h"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
-#include <dt-bindings/clock/imx8mm-clock.h>
 
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
