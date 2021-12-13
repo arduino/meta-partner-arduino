@@ -13,6 +13,7 @@
 /plugin/;
 
 #include "imx8mm-pinfunc.h"
+#include <dt-bindings/clock/imx8mm-clock.h>
 
 /* @TODO they shall be introduced in recent bsps from nxp */
 /* NOTE: DCE mode not inverted */
