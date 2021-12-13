@@ -1,9 +1,7 @@
 /**
- * Portenta-M8 dtb overlay file
+ * Portenta-X8 dtb overlay file
  * Arduino 2021
- * Enable cs42l52 codec on Arduino eNUC carrier board
- * This overlay has a dependency on bq24195 overlay, you need
- * to include it in order for this to work
+ * Enable cs42l52 codec on Arduino Max carrier board
  */
 
 /dts-v1/;
@@ -20,18 +18,20 @@
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
-				pinctrl_sai3: sai3grp {
+				pinctrl_sai5: sai5grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI3_TXFS_SAI3_TX_SYNC     0xd6
-						MX8MM_IOMUXC_SAI3_TXC_SAI3_TX_BCLK      0xd6
-						MX8MM_IOMUXC_SAI3_TXD_SAI3_TX_DATA0     0xd6
-						MX8MM_IOMUXC_SAI3_RXD_SAI3_RX_DATA0     0xd6
+						MX8MM_IOMUXC_SAI5_RXD2_SAI5_TX_BCLK			0xd6
+						MX8MM_IOMUXC_SAI5_RXD1_SAI5_TX_SYNC			0xd6
+						MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0		0xd6
+						MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0		0xd6
 					>;
 				};
 
+				/* @TODO: fix me cs42l52 clk en and reset pass thru stm32h7 */
 				pinctrl_gpio_cs42l52: gpiocs42l52grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8       0x16
+						MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6			0x16 /* CLOCK ENABLE (active low) stm32h7 PF8 */
+						MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12			0x16 /* RESET (active low) stm32h7 PF6 */
 					>;
 				};
 			};
@@ -39,18 +39,34 @@
 	};
 
 	fragment@1 {
-		target = <&sai3>;
+		target = <&sai5>;
 		__overlay__ {
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_sai3>;
-			assigned-clocks = <&clk IMX8MM_CLK_SAI3>;
+			pinctrl-0 = <&pinctrl_sai5>;
+			assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
 			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
-			assigned-clock-rates = <24576000>;
+			assigned-clock-rates = <12000000>;
 			status = "okay";
 		};
 	};
 
 	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			reg_cs42l52_clock: cs42l52_regulator {
+				compatible = "regulator-fixed";
+				regulator-name = "cs42l52-clock-en";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				gpio = <&gpio1 6 GPIO_ACTIVE_LOW>; /* stm32h7 PF8 */
+				startup-delay-us = <10000>;
+				enable-active-low;
+			};
+		};
+	};
+
+	fragment@3 {
 		target-path = "/";
 		__overlay__ {
 			sound-cs42l52 {
@@ -83,21 +99,21 @@
 					"External Speaker", "SPKOUTA",
 					"External Speaker", "SPKOUTB";
 
-				dailink0_master: simple-audio-card,cpu {
-					sound-dai = <&sai3>;
+				simple-audio-card,cpu {
+					sound-dai = <&sai5>;
 					dai-tdm-slot-num = <2>;
-					dai-tdm-slot-width = <32>;
+					dai-tdm-slot-width = <31>;
 				};
 
-				simple-audio-card,codec {
+				dailink0_master: simple-audio-card,codec {
 					sound-dai = <&cs42l52>;
-					clocks = <&clk IMX8MM_CLK_SAI3_ROOT>;
+					clocks = <&clk IMX8MM_CLK_SAI5_ROOT>;
 				};
 			};
 		};
 	};
 
-	fragment@3 {
+	fragment@4 {
 		target = <&i2c3>;
 		__overlay__ {
 			cs42l52: cs42l52@4a {
@@ -106,11 +122,11 @@
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_gpio_cs42l52>;
 				reg = <0x4a>;
-				cirrus,reset-gpio = <&gpio1 8 GPIO_ACTIVE_LOW>;
+				cirrus,reset-gpio = <&gpio1 12 GPIO_ACTIVE_LOW>; /* stm32h7 PF6 */
 				cirrus,chgfreq-divisor = <0x05>;
 				cirrus.mica-differential-cfg;
 				cirrus,micbias-lvl = <5>;
-				cirrus,mclk = <24000000>;
+				cirrus,mclk = <12000000>;
 			};
 		};
 	};
