@@ -15,8 +15,6 @@
 #include <dt-bindings/gpio/gpio.h>
 #include "imx8mm-pinfunc.h"
 
-//#define SDC_HS /* Decomment to enable high speed sd cards */
-
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
