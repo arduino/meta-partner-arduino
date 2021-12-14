@@ -23,6 +23,7 @@ setenv breakout_ovl ' \
 # power supply usbc only
 setenv max_ovl ' \
   ov_carrier_max_usbfs \
+  ov_carrier_max_sdc \
   ov_carrier_max_cs42l52 \
   ov_carrier_enuc_lora'
 

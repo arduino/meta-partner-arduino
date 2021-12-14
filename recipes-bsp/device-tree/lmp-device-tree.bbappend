@@ -13,6 +13,7 @@ DTB_OVERLAYS_portenta-mx8mm = " \
     file://ov_carrier_breakout_gpio.dts \
     file://ov_carrier_breakout_pwm.dts \
     file://ov_carrier_max_usbfs.dts \
+    file://ov_carrier_max_sdc.dts \
 "
 
 DTB_OVERLAYS_append_portenta-m8 = " \
