@@ -3,11 +3,10 @@
  * Arduino 2021
  * Enable SDC on Arduino Breakout carrier board
  * This will allow you to use an sd card.
- * Can be configured to normal or high speed by using 
- * the define SDC_HS.
+ * @TODO: fix me higher speed (1.8v signals) disabled see known hw bug
  * Signals:
- * - RST can be used to control an ext. regulator for sd card supply
- *   is configured as active high and enabled by default
+ * - RST can be used to control an ext. regulator for sd card supply (3.3v).
+ *   Is configured as active high and enabled by default.
  */
 
 /dts-v1/;
@@ -79,19 +78,15 @@
 	fragment@1 {
 		target = <&usdhc2>;
 		__overlay__ {
-			#if defined(SDC_HS)
-				pinctrl-names = "default", "state_100mhz", "state_200mhz";
-				pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
-				pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
-				pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
-			#else
-				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
-			#endif
-				cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
-				bus-width = <4>;
-				vmmc-supply = <&reg_usdhc2_vmmc>;
-				status = "okay";
+			no-1-8-v;
+			pinctrl-names = "default", "state_100mhz", "state_200mhz";
+			pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+			pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
+			pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+			cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
+			bus-width = <4>;
+			vmmc-supply = <&reg_usdhc2_vmmc>;
+			status = "okay";
 		};
 	};
 
