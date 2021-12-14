@@ -1,5 +1,5 @@
 /**
- * Portenta-M8 dtb overlay file
+ * Portenta-X8 dtb overlay file
  * Arduino 2021
  */
 
@@ -12,12 +12,12 @@
 	fragment@0 {
 		target = <&ecspi2>;
 		__overlay__ {
-			spidev_cb: spidev@1 {
+			spidev_cb: spidev@0 {
 				#address-cells = <1>;
 				#size-cells = <1>;
-				compatible = "spidev";
-				spi-max-frequency = <20000000>;
-				reg = <1>;
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
 			};
 		};
 	};
