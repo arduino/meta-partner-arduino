@@ -236,6 +236,22 @@
 			>;
 		};
 
+		pinctrl_ecspi1: ecspi1grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_ECSPI1_SCLK_ECSPI1_SCLK		0x82
+				MX8MM_IOMUXC_ECSPI1_MISO_ECSPI1_MISO		0x82
+				MX8MM_IOMUXC_ECSPI1_MOSI_ECSPI1_MOSI		0x82
+			>;
+		};
+
+		/* @TODO: fix me */
+		pinctrl_ecspi1_cs: ecspi1cs {
+			fsl,pins = <
+				// MX8MM_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x40000 // This is the correct one
+				MX8MM_IOMUXC_SAI1_RXFS_GPIO4_IO0		0x40000
+			>;
+		};
+
 		pinctrl_ecspi2: ecspi2grp {
 			fsl,pins = <
 				MX8MM_IOMUXC_ECSPI2_SCLK_ECSPI2_SCLK		0x82
@@ -274,6 +290,15 @@
 			>;
 		};
 	};
+};
+
+&ecspi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
+	num-cs = <1>;
+	// cs-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&gpio4 0 GPIO_ACTIVE_LOW>;
+	status = "okay";
 };
 
 &ecspi2 {

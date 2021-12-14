@@ -36,6 +36,7 @@ setenv breakout_ovl ' \
   ov_carrier_breakout_sdc \
   ov_carrier_breakout_spdif \
   ov_carrier_breakout_spi0 \
+  ov_carrier_breakout_spi1 \
   ov_carrier_breakout_uart1 \
   ov_carrier_breakout_uart3 \
   ov_carrier_breakout_usbfs'

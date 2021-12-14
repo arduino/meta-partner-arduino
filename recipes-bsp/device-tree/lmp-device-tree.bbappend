@@ -29,6 +29,7 @@ DTB_OVERLAYS_append_portenta-x8 = " \
     file://ov_som_x8h7.dts \
     file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_spi0.dts \
+    file://ov_carrier_breakout_spi1.dts \
     file://ov_carrier_enuc_bq24195.dts \
     file://ov_carrier_max_cs42l52.dts \
     file://ov_carrier_enuc_lora.dts \
