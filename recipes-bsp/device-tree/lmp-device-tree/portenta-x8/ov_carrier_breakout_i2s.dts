@@ -1,9 +1,9 @@
 /**
- * Portenta-M8 dtb overlay file
+ * Portenta-X8 dtb overlay file
  * Arduino 2021
  * Enable I2S on Arduino Breakout carrier board
  * A generic sound card is also created together
- * with a dummy codec suing bt-sco. In this way the alsa interface
+ * with a dummy codec using bt-sco. In this way the alsa interface
  * streams i2s signals without the need to have
  * a real codec device connected.
  * The i2s signals are configured with left_j format.
@@ -22,12 +22,12 @@
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
-				pinctrl_sai3: sai3grp {
+				pinctrl_sai5: sai5grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI3_TXFS_SAI3_TX_SYNC     0xd6
-						MX8MM_IOMUXC_SAI3_TXC_SAI3_TX_BCLK      0xd6
-						MX8MM_IOMUXC_SAI3_TXD_SAI3_TX_DATA0     0xd6
-						MX8MM_IOMUXC_SAI3_RXD_SAI3_RX_DATA0     0xd6
+						MX8MM_IOMUXC_SAI5_RXD2_SAI5_TX_BCLK			0xd6
+						MX8MM_IOMUXC_SAI5_RXD1_SAI5_TX_SYNC			0xd6
+						MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0		0xd6
+						MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0		0xd6
 					>;
 				};
 			};
@@ -35,11 +35,11 @@
 	};
 
 	fragment@1 {
-		target = <&sai3>;
+		target = <&sai5>;
 		__overlay__ {
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_sai3>;
-			assigned-clocks = <&clk IMX8MM_CLK_SAI3>;
+			pinctrl-0 = <&pinctrl_sai5>;
+			assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
 			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
 			assigned-clock-rates = <24576000>;
 			status = "okay";
@@ -56,7 +56,7 @@
 				simple-audio-card,mclk-fs = <512>;
 
 				simple-audio-card,cpu {
-					sound-dai = <&sai3>;
+					sound-dai = <&sai5>;
 					dai-tdm-slot-num = <2>;
 					dai-tdm-slot-width = <32>;
 				};
