@@ -22,8 +22,8 @@
 			imx8mm {
 				pinctrl_pdm: pdmgrp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI1_MCLK_PDM_CLK      0xd6
-						MX8MM_IOMUXC_SAI1_RXD2_PDM_DATA2    0xd6
+						MX8MM_IOMUXC_SAI1_MCLK_PDM_CLK			0xd6
+						MX8MM_IOMUXC_SAI1_RXD2_PDM_DATA2		0xd6
 					>;
 				};
 			};
@@ -53,4 +53,3 @@
 		};
 	};
 };
-

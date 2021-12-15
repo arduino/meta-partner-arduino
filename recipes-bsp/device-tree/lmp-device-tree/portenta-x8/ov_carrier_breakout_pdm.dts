@@ -1,9 +1,9 @@
 /**
- * Portenta-M8 dtb overlay file
+ * Portenta-X8 dtb overlay file
  * Arduino 2021
  * Enable PDM interface on Arduino Breakout carrier board
  * for connecting a digital microphone.
- * PDM_D0 and PDM_D0 signals are available so two
+ * PDM_D0 and PDM_D1 signals are available so two
  * microphones can be connected
  */
 
@@ -22,9 +22,9 @@
 			imx8mm {
 				pinctrl_pdm: pdmgrp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SAI5_RXC_PDM_CLK       0xd6
-						MX8MM_IOMUXC_SAI1_RXD0_PDM_DATA0    0xd6
-						MX8MM_IOMUXC_SAI1_RXD1_PDM_DATA1    0xd6
+						MX8MM_IOMUXC_SAI5_RXC_PDM_CLK			0xd6
+						MX8MM_IOMUXC_SAI1_RXD0_PDM_DATA0		0xd6
+						MX8MM_IOMUXC_SAI1_RXD1_PDM_DATA1		0xd6
 					>;
 				};
 			};

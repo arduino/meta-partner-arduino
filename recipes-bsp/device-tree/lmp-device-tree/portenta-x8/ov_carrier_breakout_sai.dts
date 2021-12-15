@@ -1,0 +1,89 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2021
+ * Enable SAI (another I2S) on Arduino Breakout carrier board
+ * A generic sound card is also created together
+ * with a dummy codec using bt-sco driver. In this way the alsa interface
+ * streams i2s signals without the need to have
+ * a real codec device connected.
+ * The i2s signals are configured with left_j format.
+ * Only SDO signal is available so the interface will be able only to do
+ * playback and no capture.
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/clock/imx8mm-clock.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_sai1: sai1grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC			0xd6
+						MX8MM_IOMUXC_SAI1_TXC_SAI1_TX_BCLK			0xd6
+						MX8MM_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0		0xd6
+						MX8MM_IOMUXC_SAI1_TXD1_SAI1_TX_DATA1		0xd6
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&sai5>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_sai1>;
+			assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
+			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
+			assigned-clock-rates = <49152000>;
+			clocks = <&clk IMX8MM_CLK_SAI1_IPG>, <&clk IMX8MM_CLK_DUMMY>,
+				<&clk IMX8MM_CLK_SAI1_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
+				<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
+				<&clk IMX8MM_AUDIO_PLL2_OUT>;
+			clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
+			fsl,sai-asynchronous;
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			sound-sai {
+				compatible = "simple-audio-card";
+				simple-audio-card,name = "sai-audio";
+				simple-audio-card,format = "left_j";
+				simple-audio-card,mclk-fs = <512>;
+
+				simple-audio-card,cpu {
+					sound-dai = <&sai1>;
+					dai-tdm-slot-num = <2>;
+					dai-tdm-slot-width = <32>;
+				};
+
+				simple-audio-card,codec {
+					sound-dai = <&codecdummy2>;
+				};
+			};
+		};
+	};
+
+	fragment@3 {
+		target-path = "/";
+		__overlay__ {
+			codecdummy2: codec2 {
+				#sound-dai-cells = <0>;
+				compatible = "linux,bt-sco";
+				status = "okay";
+			};
+		};
+	};
+};

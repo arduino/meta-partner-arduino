@@ -4,8 +4,6 @@ DTB_OVERLAYS_portenta-mx8mm = " \
     file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart3.dts \
     file://ov_carrier_breakout_spdif.dts \
-    file://ov_carrier_breakout_sai.dts \
-    file://ov_carrier_breakout_pdm.dts \
     file://ov_carrier_breakout_sdc.dts \
     file://ov_carrier_breakout_usbfs.dts \
     file://ov_carrier_breakout_gpio.dts \
@@ -19,6 +17,8 @@ DTB_OVERLAYS_append_portenta-m8 = " \
     file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_spi0.dts \
     file://ov_carrier_breakout_i2s.dts \
+    file://ov_carrier_breakout_sai.dts \
+    file://ov_carrier_breakout_pdm.dts \
     file://ov_carrier_enuc_bq24195.dts \
     file://ov_carrier_max_cs42l52.dts \
     file://ov_carrier_enuc_lora.dts \
@@ -31,6 +31,8 @@ DTB_OVERLAYS_append_portenta-x8 = " \
     file://ov_carrier_breakout_spi0.dts \
     file://ov_carrier_breakout_spi1.dts \
     file://ov_carrier_breakout_i2s.dts \
+    file://ov_carrier_breakout_sai.dts \
+    file://ov_carrier_breakout_pdm.dts \
     file://ov_carrier_enuc_bq24195.dts \
     file://ov_carrier_max_cs42l52.dts \
     file://ov_carrier_enuc_lora.dts \
