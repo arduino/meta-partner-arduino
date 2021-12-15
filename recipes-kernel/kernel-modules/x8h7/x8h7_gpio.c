@@ -21,6 +21,7 @@
 #define X8H7_GPIO_PERIPH 0x07
 // Op code
 #define X8H7_GPIO_OC_DIR    0x10
+#define X8H7_GPIO_OC_IRQ_TYPE    0x11
 #define X8H7_GPIO_OC_WR     0x20
 #define X8H7_GPIO_OC_RD     0x30
 #define X8H7_GPIO_OC_IEN    0x40
@@ -37,7 +38,7 @@
 #define GPIO_MODE_IN_AH         0x04   /*!< Input interrupt active high */
 #define GPIO_MODE_IN_AL         0x08   /*!< Input interrupt active low */
 
-#define GPIO_MODE_OUTPUT_PP     0x10   /*!< Output Push Pull Mode */
+#define GPIO_MODE_OUTPUT_PP     0x01   /*!< Output Push Pull Mode */
 #define GPIO_MODE_OUTPUT_OD     0x11   /*!< Output Open Drain Mode */
 
 //#define GPIO_INT_EDGE_RISING    0x1
@@ -260,7 +261,7 @@ static void x8h7_gpio_irq_unmask(struct irq_data *d)
   DBG_PRINT("irq %ld, ien %08Xld\n", irq, inf->gpio_ien);
 
   data[0] = irq;
-  data[1] = 0;
+  data[1] = 1;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
   x8h7_pkt_send();
 }
@@ -325,7 +326,7 @@ static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
   }
 
   data[0] = irqd_to_hwirq(d);
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
   x8h7_pkt_send();
   return 0;
 }
