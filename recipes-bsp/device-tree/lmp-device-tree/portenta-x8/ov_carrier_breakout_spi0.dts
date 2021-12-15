@@ -13,8 +13,6 @@
 		target = <&ecspi2>;
 		__overlay__ {
 			spidev_cb: spidev@0 {
-				#address-cells = <1>;
-				#size-cells = <1>;
 				compatible = "rohm,dh2228fv";
 				spi-max-frequency = <1000000>;
 				reg = <0>;

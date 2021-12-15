@@ -224,8 +224,6 @@
 };
 
 &ecspi2 {
-	#address-cells = <1>;
-	#size-cells = <0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs_adc &pinctrl_ecspi2_cs>;
 	num-cs = <2>;
