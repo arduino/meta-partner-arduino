@@ -2,8 +2,7 @@
  * Portenta-M8 dtb overlay file
  * Arduino 2021
  * Enable SPDIF on Arduino Breakout carrier board
- * A generic sound card is also created so that can
- * be used by alsa
+ * A generic sound card is created to handle this interface
  */
 
 /dts-v1/;
@@ -21,8 +20,8 @@
 			imx8mm {
 				pinctrl_spdif1: spdif1grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_SPDIF_TX_SPDIF1_OUT        0xd6
-						MX8MM_IOMUXC_SPDIF_RX_SPDIF1_IN         0xd6
+						MX8MM_IOMUXC_SPDIF_TX_SPDIF1_OUT			0xd6
+						MX8MM_IOMUXC_SPDIF_RX_SPDIF1_IN				0xd6
 					>;
 				};
 			};
@@ -62,4 +61,3 @@
 		};
 	};
 };
-
