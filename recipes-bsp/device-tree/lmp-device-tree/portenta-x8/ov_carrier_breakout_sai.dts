@@ -37,11 +37,11 @@
 	};
 
 	fragment@1 {
-		target = <&sai5>;
+		target = <&sai1>;
 		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_sai1>;
-			assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
+			assigned-clocks = <&clk IMX8MM_CLK_SAI1>;
 			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
 			assigned-clock-rates = <49152000>;
 			clocks = <&clk IMX8MM_CLK_SAI1_IPG>, <&clk IMX8MM_CLK_DUMMY>,
