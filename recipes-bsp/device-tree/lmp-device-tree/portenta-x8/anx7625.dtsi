@@ -168,12 +168,12 @@
 	assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
 	assigned-clock-rates = <49152000>;
 	clocks = <&clk IMX8MM_CLK_SAI6_IPG>, <&clk IMX8MM_CLK_DUMMY>,
-					<&clk IMX8MM_CLK_SAI6_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
-					<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
-					<&clk IMX8MM_AUDIO_PLL2_OUT>;
+		<&clk IMX8MM_CLK_SAI6_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
+		<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
+		<&clk IMX8MM_AUDIO_PLL2_OUT>;
 	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
-	fsl,sai-multi-lane;
-	fsl,dataline,dsd = <0 0xff 0xff 2 0xff 0x11>;
+	fsl,sai-asynchronous;
+	fsl,shared-interrupt;
 	#sound-dai-cells = <0>;
 	status = "okay";
 
