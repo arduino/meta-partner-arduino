@@ -1,0 +1,39 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2021
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				/* @TODO: fix me */
+				pinctrl_pwm1: pwm1grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SPDIF_EXT_CLK_GPIO5_IO5			0x110
+						/* stm32h7 pwm: 
+						* CHA2
+						* CHC1
+						* CHC2
+						* CHE2
+						* CHD1
+						* CHE1
+						* CHB2
+						* CHA1
+						* CHD2
+						* CHB1
+						*/
+					>;
+				};
+			};
+		};
+	};
+};
