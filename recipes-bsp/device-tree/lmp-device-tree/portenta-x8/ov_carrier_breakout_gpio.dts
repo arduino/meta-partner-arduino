@@ -1,0 +1,39 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2021
+ * Pads are configured as inputs with high value (~50k) pull down resistor
+ * but configuration can be changed later from userspace.
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			pinctrl-0 = <&pinctrl_hog>;
+			imx8mm {
+				/* @TODO: fix me */
+				pinctrl_hog: hoggrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI1_RXC_GPIO4_IO1			0x110
+						/* stm32h7 gpios: 
+						* PF8
+						* PF6
+						* PF3
+						* PF4
+						* PF12
+						* PE10
+						* PE11
+						*/
+					>;
+				};
+			};
+		};
+	};
+};
