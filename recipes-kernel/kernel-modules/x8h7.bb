@@ -28,13 +28,12 @@ S = "${WORKDIR}"
 
 #KERNEL_MODULE_AUTOLOAD_append = "x8h7 x8h7_drv x8h7_adc x8h7_gpio x8h7_pwm x8h7_rtc x8h7_can x8h7_uart"
 
-# Following customization is necessary since modules under standard path, revert when module devel
+# Following customization is necessary since modules under standard path are executed by default, revert when module devel
 # is ended
-# are executed by default
 do_install() {
-  bbwarn "Copying x8h7 modules into /home/root/extra"
+    bbwarn "Copying x8h7 modules into /home/fio/extra"
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
-	oe_runmake DEPMOD=echo MODLIB="${D}/home/root" \
+	oe_runmake DEPMOD=echo MODLIB="${D}/home/fio" \
 	           INSTALL_FW_PATH="${D}${nonarch_base_libdir}/firmware" \
 	           CC="${KERNEL_CC}" LD="${KERNEL_LD}" \
 	           O=${STAGING_KERNEL_BUILDDIR} \
