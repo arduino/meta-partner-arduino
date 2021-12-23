@@ -14,12 +14,9 @@ PV = "0.0.1"
 
 S = "${WORKDIR}/git"
 
-#do_compile[noexec] = "1"
-
 do_compile() {
     bbnote "Building stm32h7 firmware with cortex-m7 arch"
     unset LDFLAGS CFLAGS CPPFLAGS CFLAGS_ASM
-
     make
 }
 
@@ -35,7 +32,7 @@ do_install() {
     cd ${D}/${sysconfdir}
     ln -s ..${nonarch_base_libdir}/firmware firmware
 
-    bbwarn "Copying stm32h7 firmware for x8h7 module in /home/fio/extra"
+    bbwarn "Copying stm32h7 firmware needed by x8h7 package in /home/fio/extra"
     # @TODO: remove me
     install -d ${D}/home/fio/extra
     cd ${D}/home/fio/extra
