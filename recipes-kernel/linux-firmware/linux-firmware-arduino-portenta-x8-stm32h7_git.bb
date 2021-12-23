@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://Makefile;md5=65aef5a7c0ea5b17c9c49c2c2a6a3347"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://git@github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=ssh;branch=refactor"
-SRCREV = "a3de27ea57e1fac0e2e928320a714846aded6d2c"
+SRCREV = "ee84db3ef95d53842051160d866d1d9ffe219c34"
 PV = "0.0.1"
 
 S = "${WORKDIR}/git"
