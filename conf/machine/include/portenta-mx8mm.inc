@@ -37,7 +37,7 @@ EXTRA_IMAGEDEPENDS_append = " virtual/dtb "
 OPTEE_BIN_EXT = "8mm"
 
 # Add additional firmware
-MACHINE_FIRMWARE_append = "linux-firmware linux-firmware-cyw-fmac-fw linux-firmware-cyw-fmac-nvram linux-firmware-cyw-bt-patch"
+MACHINE_FIRMWARE_append = " linux-firmware linux-firmware-cyw-fmac-fw linux-firmware-cyw-fmac-nvram linux-firmware-cyw-bt-patch"
 
 # Add kernel-module recipe recommendations
 MACHINE_EXTRA_RRECOMMENDS += " bq24195 cs42l52 anx7625"
