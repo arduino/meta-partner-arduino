@@ -34,10 +34,10 @@
 		//panel_flags = <1>;
 
 		usbc_pwr-gpios = <&gpio4 13 0x0>;    // VBUS EN active low
-		enable-gpios = <&gpio1 9 0x0>;     // VIDEO_EN active high
-		reset-gpios = <&gpio1 13 0x0>;      // VIDEO_RSTN active low
-		cbl_det-gpios = <&gpio1 8 0x0>;    // VIDEO_CABLE cable input active high
-		intr_comm-gpios = <&gpio1 7 IRQ_TYPE_NONE>;  // VIDEO_ALT comm irq input active low
+		enable-gpios = <&gpio4 25 0x0>;     // VIDEO_EN active high
+		reset-gpios = <&gpio4 26 0x0>;      // VIDEO_RSTN active low
+		cbl_det-gpios = <&gpio4 27 0x0>;    // VIDEO_CABLE cable input active high
+		intr_comm-gpios = <&gpio4 20 IRQ_TYPE_NONE>;  // VIDEO_ALT comm irq input active low
 		#sound-dai-cells = <0>;
 
 		ports {
