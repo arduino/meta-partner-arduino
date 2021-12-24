@@ -244,11 +244,9 @@
 			>;
 		};
 
-		/* @TODO: fix me */
 		pinctrl_ecspi1_cs: ecspi1cs {
 			fsl,pins = <
-				// MX8MM_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x40000 // This is the correct one
-				MX8MM_IOMUXC_SAI1_RXFS_GPIO4_IO0		0x40000
+				MX8MM_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x40000
 			>;
 		};
 
@@ -294,8 +292,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
 	num-cs = <1>;
-	// cs-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
-	cs-gpios = <&gpio4 0 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
