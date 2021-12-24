@@ -36,7 +36,7 @@ do_install() {
     # @TODO: remove me
     install -d ${D}/home/fio/extra
     cd ${D}/home/fio/extra
-    ln -s ..${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin STM32H747AII6_CM7.bin
+    ln -s ../../../${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin STM32H747AII6_CM7.bin
 
     install -m 0644 ${S}/flash.sh ${D}/home/fio/extra/flash.sh
 }
