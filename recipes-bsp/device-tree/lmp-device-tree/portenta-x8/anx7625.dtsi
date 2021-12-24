@@ -5,23 +5,29 @@
 	imx8mm {
 		pinctrl_sai6: sai6grp {
 			fsl,pins = <
-				MX8MM_IOMUXC_SAI1_TXD6_SAI6_TX_SYNC   0xd6
-				MX8MM_IOMUXC_SAI1_TXD4_SAI6_TX_BCLK   0xd6
-				MX8MM_IOMUXC_SAI1_TXD5_SAI6_TX_DATA0  0xd6
+				MX8MM_IOMUXC_SAI1_TXD6_SAI6_TX_SYNC			0xd6
+				MX8MM_IOMUXC_SAI1_TXD4_SAI6_TX_BCLK			0xd6
+				MX8MM_IOMUXC_SAI1_TXD5_SAI6_TX_DATA0		0xd6
+			>;
+		};
 
-				MX8MM_IOMUXC_SAI2_TXC_GPIO4_IO25      0x19
-				MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27     0x51
-				MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20     0x151
-				MX8MM_IOMUXC_SAI2_TXD0_GPIO4_IO26     0x19
-				MX8MM_IOMUXC_SAI1_TXD1_GPIO4_IO13     0x19
+		pinctrl_anx7625: anx7625grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI2_TXC_GPIO4_IO25			0x19
+				MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27			0x51
+				MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20			0x151
+				MX8MM_IOMUXC_SAI2_TXD0_GPIO4_IO26			0x19
+				MX8MM_IOMUXC_SAI1_TXD1_GPIO4_IO13			0x19
+				MX8MM_IOMUXC_SAI1_RXFS_GPIO4_IO0			0x19
 			>;
 		};
 	};
 };
 
 &i2c2 {
-
-	analogix: analogix_i2c@58{
+	analogix: analogix_i2c@58 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_anx7625>;
 		compatible ="analogix,anx7625";
 		status = "okay";
 		reg = <0x58>;
@@ -98,6 +104,19 @@
 		simple-audio-card,codec {
 			sound-dai = <&analogix>;
 		};
+	};
+
+	reg_anx7625_i2s_en: anx7625_regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "anx7625-i2s-en";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio4 0 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <20000>;
+		startup-delay-us = <100>;
+		enable-active-low;
+		regulator-boot-on;
+		regulator-always-on;
 	};
 };
 
