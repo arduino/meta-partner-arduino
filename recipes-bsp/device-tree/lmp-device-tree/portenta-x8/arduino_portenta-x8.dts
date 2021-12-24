@@ -284,9 +284,7 @@
 		pinctrl_irq_x8h7: x8h7irqgrp {
 			fsl,pins = <
 				/* X8H7 Interrupt pin active low, pullup */
-				/* To use in actual version of the board, connect to a breakout */
-				/* and short SPI1_CS with PWM1 */
-				MX8MM_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x151
+				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9		0x151
 			>;
 		};
 	};

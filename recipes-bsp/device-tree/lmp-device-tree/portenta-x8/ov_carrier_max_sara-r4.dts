@@ -42,7 +42,7 @@
 				pinctrl_gpio_sara: gpiosaragrp {
 					fsl,pins = <
 						MX8MM_IOMUXC_GPIO1_IO15_GPIO1_IO15			0x44 /* RST active low stm32h7 PF3 */
-						MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20			0x44 /* POWER_ON active high stm32h7 PF12 */
+						// MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20			0x44 /* POWER_ON active high stm32h7 PF12 */
 					>;
 				};
 			};
