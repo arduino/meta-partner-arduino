@@ -1,0 +1,13 @@
+uuu_version 0.64.43
+
+SDP: boot -f imx-boot-mfgtool
+
+SDPV: delay 1000
+SDPV: write -f u-boot-mfgtool.itb
+SDPV: jump
+
+FB: ucmd mmc list
+FB: ucmd mmc dev 1
+FB: ucmd mmc info
+
+FB: done
