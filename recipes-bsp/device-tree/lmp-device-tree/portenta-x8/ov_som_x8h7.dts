@@ -25,6 +25,20 @@
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
 	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_irq_x8h7: x8h7irqgrp {
+					fsl,pins = <
+						/* X8H7 Interrupt pin active low, pullup */
+						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9		0x151
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
 		target = <&ecspi3>;
 		__overlay__ {
 			x8h7: x8h7@0 {
@@ -32,6 +46,7 @@
 				#size-cells = <1>;
 				compatible = "portenta,x8h7";
 				reg = <0>;
+				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_irq_x8h7>;
 				interrupt-parent = <&gpio1>;
 				interrupts = <9 IRQ_TYPE_LEVEL_LOW>;

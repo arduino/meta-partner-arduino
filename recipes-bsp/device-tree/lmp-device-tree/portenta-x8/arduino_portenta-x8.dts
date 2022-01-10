@@ -279,13 +279,6 @@
 				MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25		0x40000
 			>;
 		};
-
-		pinctrl_irq_x8h7: x8h7irqgrp {
-			fsl,pins = <
-				/* X8H7 Interrupt pin active low, pullup */
-				MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9		0x151
-			>;
-		};
 	};
 };
 
