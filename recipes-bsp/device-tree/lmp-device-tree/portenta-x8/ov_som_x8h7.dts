@@ -34,6 +34,13 @@
 						MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9		0x151
 					>;
 				};
+
+				pinctrl_gpio_x8h7: gpiox8h7grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10		0x19 /* NRST_STM32 */
+						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x19 /* BOOT0_STM32 */
+					>;
+				};
 			};
 		};
 	};
@@ -47,10 +54,51 @@
 				compatible = "portenta,x8h7";
 				reg = <0>;
 				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_irq_x8h7>;
+				pinctrl-0 = <&pinctrl_irq_x8h7>, <&pinctrl_gpio_x8h7>;
 				interrupt-parent = <&gpio1>;
 				interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
 				spi-max-frequency = <1000000>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			x8h7_adc {
+				compatible = "portenta,x8h7_adc";
+			};
+
+			x8h7_gpio {
+				compatible = "portenta,x8h7_gpio";
+			};
+
+			x8h7_pwm {
+				compatible = "portenta,x8h7_pwm";
+			};
+
+			x8h7_rtc {
+				compatible = "portenta,x8h7_rtc";
+			};
+
+			can0: can@1 {
+				compatible = "portenta,x8h7_can";
+			};
+
+			can1: can@2 {
+				compatible = "portenta,x8h7_can";
+			};
+
+			x8h7_uart {
+				compatible = "portenta,x8h7_uart";
+			};
+
+			x8h7_ui {
+				compatible = "portenta,x8h7_ui";
+			};
+
+			x8h7_h7 {
+				compatible = "portenta,x8h7_h7";
 			};
 		};
 	};

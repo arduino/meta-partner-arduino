@@ -46,42 +46,6 @@
 		#clock-cells = <0>;
 		clock-frequency = <32768>;
 	};
-
-	x8h7_adc {
-		compatible = "portenta,x8h7_adc";
-	};
-
-	x8h7_gpio {
-		compatible = "portenta,x8h7_gpio";
-	};
-
-	x8h7_pwm {
-		compatible = "portenta,x8h7_pwm";
-	};
-
-	x8h7_rtc {
-		compatible = "portenta,x8h7_rtc";
-	};
-
-	can0: can@1 {
-		compatible = "portenta,x8h7_can";
-	};
-
-	can1: can@2 {
-		compatible = "portenta,x8h7_can";
-	};
-
-	x8h7_uart {
-		compatible = "portenta,x8h7_uart";
-	};
-
-	x8h7_ui {
-		compatible = "portenta,x8h7_ui";
-	};
-
-	x8h7_h7 {
-		compatible = "portenta,x8h7_h7";
-	};
 };
 
 &i2c2 {
