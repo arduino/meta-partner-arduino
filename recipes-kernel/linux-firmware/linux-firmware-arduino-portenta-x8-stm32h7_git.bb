@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://Makefile;md5=65aef5a7c0ea5b17c9c49c2c2a6a3347"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://git@github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=ssh;branch=refactor"
-SRCREV = "ee84db3ef95d53842051160d866d1d9ffe219c34"
+SRCREV = "b7588e2488b77eec4bc5abd9d962785fd52da277"
 PV = "0.0.1"
 
 S = "${WORKDIR}/git"
@@ -39,6 +39,7 @@ do_install() {
     ln -s ../../../${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin STM32H747AII6_CM7.bin
 
     install -m 0644 ${S}/flash.sh ${D}/home/fio/extra/flash.sh
+    install -m 0644 ${S}/openocd_script.cfg ${D}/home/fio/extra/openocd_script.cfg
 }
 
 FILES_${PN} = " \
@@ -47,6 +48,7 @@ FILES_${PN} = " \
     ${sysconfdir}/firmware \
     /home/fio/extra/STM32H747AII6_CM7.bin \
     /home/fio/extra/flash.sh \
+    /home/fio/extra/openocd_script.cfg \
 "
 
 DEPENDS += " \
