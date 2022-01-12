@@ -38,7 +38,7 @@ do_install() {
     cd ${D}/home/fio/extra
     ln -s ../../../${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin STM32H747AII6_CM7.bin
 
-    install -m 0644 ${S}/flash.sh ${D}/home/fio/extra/flash.sh
+    install -m 0744 ${S}/flash.sh ${D}/home/fio/extra/flash.sh
     install -m 0644 ${S}/openocd_script.cfg ${D}/home/fio/extra/openocd_script.cfg
 }
 
