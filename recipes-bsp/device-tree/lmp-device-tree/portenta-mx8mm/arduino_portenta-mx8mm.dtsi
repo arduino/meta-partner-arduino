@@ -9,8 +9,6 @@
 #include "imx8mm.dtsi"
 #include "anx7625.dtsi"
 
-//#define EMMC_HS /* Decomment to enable high speed emmc flash */
-
 / {
 	model = "Arduino i.MX8MM Portenta board";
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
@@ -131,15 +129,13 @@
 };
 
 &usdhc3 { /* emmc flash */
-#if defined(EMMC_HS)
+	assigned-clocks = <&clk IMX8MM_CLK_USDHC3_ROOT>;
+	/* @TODO: lowered speed here from 400000000 */
+	assigned-clock-rates = <200000000>;
 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
 	pinctrl-0 = <&pinctrl_usdhc3>;
 	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
 	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
-#else
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_usdhc3>;
-#endif
 	bus-width = <8>;
 	non-removable;
 	status = "okay";
