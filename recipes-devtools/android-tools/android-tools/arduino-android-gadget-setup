@@ -3,8 +3,8 @@
 if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
     PID=0061
     VID=2341
-    BOARDNAME=PortentaM8
-    BOARDPROVIDER=Arduino
+    BOARDNAME="Portenta X8"
+    BOARDPROVIDER="Arduino"
     cd /sys/kernel/config/usb_gadget/
     mkdir g1
     cd g1
@@ -12,8 +12,8 @@ if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
     echo 0x$PID > idProduct
     mkdir strings/0x409
     echo $(cat /sys/devices/soc0/serial_number) > strings/0x409/serialnumber
-    echo $BOARDPROVIDER > strings/0x409/manufacturer
-    echo $BOARDNAME > strings/0x409/product
+    echo "$BOARDPROVIDER" > strings/0x409/manufacturer
+    echo "$BOARDNAME" > strings/0x409/product
     mkdir functions/acm.GS0
     mkdir functions/ffs.adb
     mkdir functions/rndis.usb0
