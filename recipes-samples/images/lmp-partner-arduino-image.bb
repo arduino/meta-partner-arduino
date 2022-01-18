@@ -47,15 +47,16 @@ BOOT = " \
 
 BRINGUP = " \
     i2c-tools \
-    usbutils \
-    python3-pyserial \
-    opkg \
-    minicom \
-    stress-ng \
 "
-# imx-test
-# bcm43xx-utils
-# brcm-patchram-plus
+
+ADB = " \
+    android-tools \
+    android-tools-adbd \
+"
+
+ARDUINO = " \
+    arduino-ootb \
+"
 
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
@@ -63,10 +64,13 @@ CORE_IMAGE_BASE_INSTALL += " \
     usb-modeswitch \
     ${BOOT} \
     ${BRINGUP} \
-    android-tools \
-    android-tools-adbd \
-    arduino-ootb \
+    ${ADB} \
+    ${ARDUINO} \
 "
+
+# Packages to be installed in Portenta-X8 machine only
+PACKAGECONFIG_append_pn-openocd = " sysfsgpio"
+IMAGE_INSTALL_append_portenta-x8 = " openocd"
 
 fakeroot do_populate_rootfs_add_custom_sudoers () {
     # Allow sudo group users to use sudo
