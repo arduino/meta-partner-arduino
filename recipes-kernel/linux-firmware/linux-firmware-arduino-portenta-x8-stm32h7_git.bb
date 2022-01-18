@@ -4,12 +4,12 @@ HOMEPAGE = "https://github.com/bcmi-labs/portentam8-stm32h7-fw"
 SECTION = "kernel"
 LICENSE = "Proprietary"
 #LIC_FILES_CHKSUM = "file://LICENSE.arduino;md5=cbc5f665d04f741f1e006d2096236ba7"
-LIC_FILES_CHKSUM = "file://Makefile;md5=65aef5a7c0ea5b17c9c49c2c2a6a3347"
+LIC_FILES_CHKSUM = "file://Makefile;md5=dd9b8b57a3f9b9e8bd5e1c5c97c04850"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=https;branch=refactor"
-SRCREV = "b7588e2488b77eec4bc5abd9d962785fd52da277"
+SRCREV = "f943e7cdf57c7f87995777b25391a7cb1537d1b3"
 PV = "0.0.1"
 
 S = "${WORKDIR}/git"
@@ -39,6 +39,8 @@ do_install() {
     ln -s ../../../${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin STM32H747AII6_CM7.bin
 
     install -m 0744 ${S}/flash.sh ${D}/home/fio/extra/flash.sh
+    install -m 0744 ${S}/reset.sh ${D}/home/fio/extra/reset.sh
+    install -m 0744 ${S}/program.sh ${D}/home/fio/extra/program.sh
     install -m 0644 ${S}/openocd_script.cfg ${D}/home/fio/extra/openocd_script.cfg
 }
 
@@ -48,6 +50,8 @@ FILES_${PN} = " \
     ${sysconfdir}/firmware \
     /home/fio/extra/STM32H747AII6_CM7.bin \
     /home/fio/extra/flash.sh \
+    /home/fio/extra/reset.sh \
+    /home/fio/extra/program.sh \
     /home/fio/extra/openocd_script.cfg \
 "
 
