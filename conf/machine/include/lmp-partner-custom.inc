@@ -1,0 +1,1 @@
+# LMP partner specific customizations (either replace or extend options as defined by meta-lmp)
