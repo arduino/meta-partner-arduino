@@ -1,5 +1,5 @@
 [Unit]
-Description=Android Debug Bridge
+Description=Android Debug Bridge & Usb RNDIS
 ConditionPathExists=/sys/class/typec/port0/data_role
 After=network-pre.target dbus.service
 Before=android-system.service
@@ -8,10 +8,10 @@ Before=android-system.service
 Type=simple
 Restart=on-failure
 RestartSec=2
-ExecStartPre=/usr/bin/arduino-android-gadget-setup
-ExecStartPost=/bin/sh -c 'sleep 2 && UDC=$(ls /sys/class/udc) && echo $UDC > /sys/kernel/config/usb_gadget/g1/UDC'
+ExecStartPre=/usr/bin/arduino-android-gadget-setup start
 ExecStart=/usr/bin/adbd
+ExecStartPost=/bin/sh -c 'sleep 2 && UDC=$(ls /sys/class/udc) && echo $UDC > /sys/kernel/config/usb_gadget/g1/UDC'
 WorkingDirectory=/home/fio
 
 [Install]
-WantedBy=basic.target
+WantedBy=usb-gadget.target

@@ -1,42 +1,98 @@
 #!/bin/sh
 
-if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
-    PID=0061
-    VID=2341
-    BOARDNAME="Portenta X8"
-    BOARDPROVIDER="Arduino"
-    cd /sys/kernel/config/usb_gadget/
-    mkdir g1
-    cd g1
-    echo 0x$VID > idVendor
-    echo 0x$PID > idProduct
-    echo 0xEF > bDeviceClass
-    echo 0x02 > bDeviceSubClass
-    echo 0x01 > bDeviceProtocol
-    mkdir strings/0x409
-    echo $(cat /sys/devices/soc0/serial_number) > strings/0x409/serialnumber
-    echo "$BOARDPROVIDER" > strings/0x409/manufacturer
-    echo "$BOARDNAME" > strings/0x409/product
-    echo 1       > os_desc/use
-    echo 0xcd    > os_desc/b_vendor_code
-    echo MSFT100 > os_desc/qw_sign
-    mkdir functions/acm.GS0
-    mkdir functions/ffs.adb
-    mkdir functions/rndis.usb0
-    echo RNDIS   > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
-    echo 5162001 > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
-    mkdir configs/c.1
-    mkdir configs/c.1/strings/0x409
-    echo \"adb+cdc\" > configs/c.1/strings/0x409/configuration
-    echo 120 > configs/c.1/MaxPower
-    ln -s functions/rndis.usb0/ configs/c.1
-    ln -s functions/acm.GS0 configs/c.1
-    ln -s functions/ffs.adb/ configs/c.1
-    ln -s configs/c.1 os_desc
-    mkdir /dev/usb-ffs
-    mkdir /dev/usb-ffs/adb
-    mount -o uid=1000,gid=1000 -t functionfs adb /dev/usb-ffs/adb
-    exit 0
-else
-    exit 1
-fi
+start()
+{
+    if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
+        echo "Creating Arduino usb gadgets..."
+
+        PID=0061
+        VID=2341
+        BOARDNAME="Portenta X8"
+        BOARDPROVIDER="Arduino"
+
+        # go to configfs directory for USB gadgets
+        cd /sys/kernel/config/usb_gadget
+
+        # create gadget directory and enter it
+        mkdir g1
+        cd g1
+
+        # USB ids
+        echo 0x$VID > idVendor
+        echo 0x$PID > idProduct
+        echo 0xEF > bDeviceClass
+        echo 0x02 > bDeviceSubClass
+        echo 0x01 > bDeviceProtocol
+
+        # USB strings, optional
+        mkdir strings/0x409
+        echo $(cat /sys/devices/soc0/serial_number) > strings/0x409/serialnumber
+        echo "$BOARDPROVIDER" > strings/0x409/manufacturer
+        echo "$BOARDNAME" > strings/0x409/product
+
+        # create the (only) configuration
+        mkdir configs/c.1
+
+        # populate config, optional
+        mkdir configs/c.1/strings/0x409
+        echo \"adb+cdc\" > configs/c.1/strings/0x409/configuration
+        echo 120 > configs/c.1/MaxPower
+
+        # os_desc, optional
+        ln -s configs/c.1 os_desc
+        echo 1       > os_desc/use
+        echo 0xcd    > os_desc/b_vendor_code
+        echo MSFT100 > os_desc/qw_sign
+
+        # create the adb necessary functions
+        mkdir functions/acm.GS0
+        mkdir functions/ffs.adb
+
+        # create the rndis function
+        mkdir functions/rndis.usb0
+        echo RNDIS   > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+        echo 5162001 > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+
+        # assign rndis function to configuration
+        ln -s functions/rndis.usb0/ configs/c.1
+
+        # assign adb functions to configuration
+        ln -s functions/acm.GS0 configs/c.1
+        ln -s functions/ffs.adb/ configs/c.1
+
+        # create adb ffs device dir and mount it
+        mkdir -p /dev/usb-ffs/adb
+        mount -o uid=1000,gid=1000 -t functionfs adb /dev/usb-ffs/adb
+
+        # execute adbd
+        # /usr/bin/adbd
+
+        # bind!
+        # ls /sys/class/udc to see available UDCs
+        # UDC=$(ls /sys/class/udc) && echo $UDC > /sys/kernel/config/usb_gadget/g1/UDC
+    else
+        exit 1
+    fi
+}
+
+stop()
+{
+    echo "Removing Arduino usb gadgets..."
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 2
+esac
+exit 0

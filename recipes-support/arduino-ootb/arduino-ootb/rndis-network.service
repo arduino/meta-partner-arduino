@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure dhcp server on usb rndis interface
+Requires=usb-gadget.service
+After=network-pre.target dbus.service usb-gadget.service
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/bin/nmcli c delete usbrndis; /usr/bin/nmcli c add type ethernet ifname usb0 ipv4.method shared con-name usbrndis && /usr/bin/nmcli c modify usbrndis ipv4.addresses 192.168.7.1/24 && /usr/bin/nmcli c up usbrndis'
+ExecStop=/bin/sh -c '/usr/bin/nmcli c down usbrndis && /usr/bin/nmcli c delete usbrndis'
+
+[Install]
+WantedBy=basic.target
