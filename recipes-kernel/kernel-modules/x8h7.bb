@@ -31,9 +31,10 @@ S = "${WORKDIR}"
 # Following customization is necessary since modules under standard path are executed by default, revert when module devel
 # is ended
 do_install() {
-    bbwarn "Copying x8h7 modules into /home/fio/extra"
+	bbwarn "Copying x8h7 modules into /opt/arduino/extra"
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
-	oe_runmake DEPMOD=echo MODLIB="${D}/home/fio" \
+	install -d ${D}/opt/arduino/extra
+	oe_runmake DEPMOD=echo MODLIB="${D}/opt/arduino" \
 	           INSTALL_FW_PATH="${D}${nonarch_base_libdir}/firmware" \
 	           CC="${KERNEL_CC}" LD="${KERNEL_LD}" \
 	           O=${STAGING_KERNEL_BUILDDIR} \
