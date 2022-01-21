@@ -1,6 +1,7 @@
 [Unit]
 Description=Configure dhcp server on usb rndis interface
-After=android-tools-adbd.service
+BindsTo=sys-subsystem-net-devices-usb0.device
+After=android-tools-adbd.service sys-subsystem-net-devices-usb0.device
 
 [Service]
 Type=simple
