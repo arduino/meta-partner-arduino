@@ -1,7 +1,6 @@
 [Unit]
 Description=Configure dhcp server on usb rndis interface
-Requires=android-tools-adbd.service
-After=network-pre.target dbus.service android-tools-adbd.service
+After=android-tools-adbd.service
 
 [Service]
 Type=simple
@@ -10,4 +9,4 @@ ExecStart=/bin/sh -c '/usr/bin/nmcli c delete usbrndis; /usr/bin/nmcli c add typ
 ExecStop=/bin/sh -c '/usr/bin/nmcli c down usbrndis && /usr/bin/nmcli c delete usbrndis'
 
 [Install]
-WantedBy=basic.target
+WantedBy=usb-gadget.target
