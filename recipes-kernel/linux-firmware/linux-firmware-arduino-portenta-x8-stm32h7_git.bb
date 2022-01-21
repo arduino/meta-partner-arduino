@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://Makefile;md5=dd9b8b57a3f9b9e8bd5e1c5c97c04850"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=https;branch=refactor"
-SRCREV = "12cce1c73b6333a2a3ae23141f8a3b47dcbebf5d"
+SRCREV = "00aa69596796f2b93097058d020202f2f70417d3"
 PV = "0.0.1"
 
 S = "${WORKDIR}/git"
@@ -32,26 +32,26 @@ do_install() {
     cd ${D}/${sysconfdir}
     ln -s ..${nonarch_base_libdir}/firmware firmware
 
-    bbwarn "Copying stm32h7 firmware needed by x8h7 package in /opt/arduino/extra"
+    bbwarn "Copying stm32h7 firmware needed by x8h7 package in /usr/arduino/extra"
     # @TODO: remove me
-    install -d ${D}/opt/arduino/extra
-    ln -s ../../..${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin ${D}/opt/arduino/extra/STM32H747AII6_CM7.bin
+    install -d ${D}/usr/arduino/extra
+    ln -s ../../..${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin ${D}/usr/arduino/extra/STM32H747AII6_CM7.bin
 
-    install -m 0744 ${S}/flash.sh ${D}/opt/arduino/extra/flash.sh
-    install -m 0744 ${S}/reset.sh ${D}/opt/arduino/extra/reset.sh
-    install -m 0744 ${S}/program.sh ${D}/opt/arduino/extra/program.sh
-    install -m 0644 ${S}/openocd_script.cfg ${D}/opt/arduino/extra/openocd_script.cfg
+    install -m 0744 ${S}/flash.sh ${D}/usr/arduino/extra/flash.sh
+    install -m 0744 ${S}/reset.sh ${D}/usr/arduino/extra/reset.sh
+    install -m 0744 ${S}/program.sh ${D}/usr/arduino/extra/program.sh
+    install -m 0644 ${S}/openocd_script.cfg ${D}/usr/arduino/extra/openocd_script.cfg
 }
 
 FILES_${PN} = " \
     ${nonarch_base_libdir}/firmware/LICENSE.arduino-stm32h7-fw \
     ${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin \
     ${sysconfdir}/firmware \
-    /opt/arduino/extra/STM32H747AII6_CM7.bin \
-    /opt/arduino/extra/flash.sh \
-    /opt/arduino/extra/reset.sh \
-    /opt/arduino/extra/program.sh \
-    /opt/arduino/extra/openocd_script.cfg \
+    /usr/arduino/extra/STM32H747AII6_CM7.bin \
+    /usr/arduino/extra/flash.sh \
+    /usr/arduino/extra/reset.sh \
+    /usr/arduino/extra/program.sh \
+    /usr/arduino/extra/openocd_script.cfg \
 "
 
 DEPENDS += " \
