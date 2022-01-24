@@ -1,0 +1,11 @@
+[Unit]
+Description=Program stm32h7 on Portenta-X8 boards
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/bin/sh /usr/arduino/extra/program.sh
+ExecStartPost=/bin/sh /usr/arduino/extra/load_modules.sh
+
+[Install]
+WantedBy=multi-user.target
