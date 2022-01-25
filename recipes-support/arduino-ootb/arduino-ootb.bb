@@ -10,7 +10,7 @@ SRC_URI = " \
     file://rndis-network.service \
     file://connection_status_led \
     file://m4-led-forwarder.service \
-    file://m4-led-forwarder \
+    file://m4_led_forwarder \
 "
 
 inherit systemd
@@ -26,7 +26,7 @@ do_install() {
 
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/
-    install -m 0755 ${WORKDIR}/m4-led-forwarder ${D}${bindir}/
+    install -m 0755 ${WORKDIR}/m4_led_forwarder ${D}${bindir}/
 }
 
 FILES_${PN} += " \
