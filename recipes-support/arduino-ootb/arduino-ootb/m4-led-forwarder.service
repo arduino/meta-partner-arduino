@@ -1,5 +1,6 @@
 [Unit]
 Description=M4 builtin led forwarder
+After=stm32h7-program.service
 
 [Service]
 Type=oneshot
