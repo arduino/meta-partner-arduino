@@ -69,7 +69,6 @@ CORE_IMAGE_BASE_INSTALL += " \
 "
 
 # Packages to be installed in Portenta-X8 machine only
-PACKAGECONFIG_append_pn-openocd = " sysfsgpio"
 IMAGE_INSTALL_append_portenta-x8 = " openocd"
 
 fakeroot do_populate_rootfs_add_custom_sudoers () {
