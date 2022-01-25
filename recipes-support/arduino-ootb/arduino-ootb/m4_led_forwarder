@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ $1 = "enable" ]; then
+    echo gpio > /sys/class/leds/ledR/trigger
+    echo 7 > /sys/class/leds/ledR/gpio
+else
+    echo none > /sys/class/leds/ledR/trigger
+fi

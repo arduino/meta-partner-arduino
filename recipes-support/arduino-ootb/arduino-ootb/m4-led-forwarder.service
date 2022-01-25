@@ -3,5 +3,5 @@ Description=M4 builtin led forwarder
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh /usr/bin/m4-led-forwarder enable
-ExecStop=/bin/sh /usr/bin/m4-led-forwarder disable
+ExecStart=/bin/sh /usr/bin/m4_led_forwarder enable
+ExecStop=/bin/sh /usr/bin/m4_led_forwarder disable
