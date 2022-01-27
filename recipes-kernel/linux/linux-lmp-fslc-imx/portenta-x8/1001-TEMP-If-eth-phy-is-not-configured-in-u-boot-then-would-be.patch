@@ -1,0 +1,25 @@
+From bb32af347be21a9a14b86f1eb13c10f8d25bddd1 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Wed, 2 Feb 2022 15:36:05 +0100
+Subject: [PATCH] If eth phy is not configured in u-boot, then would be better
+ to reset it during init
+
+---
+ drivers/net/phy/micrel.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/phy/micrel.c b/drivers/net/phy/micrel.c
+index 663c68ed6ef9..c4ee3baf7192 100644
+--- a/drivers/net/phy/micrel.c
++++ b/drivers/net/phy/micrel.c
+@@ -1152,6 +1152,7 @@ static struct phy_driver ksphy_driver[] = {
+ 	.name		= "Microchip KSZ9131 Gigabit PHY",
+ 	/* PHY_GBIT_FEATURES */
+ 	.driver_data	= &ksz9021_type,
++	.flags		= PHY_RST_AFTER_CLK_EN,
+ 	.probe		= kszphy_probe,
+ 	.config_init	= ksz9131_config_init,
+ 	.read_status	= genphy_read_status,
+-- 
+2.25.1
+
