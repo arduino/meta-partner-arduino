@@ -24,7 +24,7 @@
 // Op code
 #define X8H7_UI_OC_DATA     0x01
 
-#define X8H7_UI_DATA_MAX    256
+#define X8H7_UI_DATA_MAX    (1 * 1024)
 
 struct x8h7_ui_priv {
   struct device      *dev;
@@ -43,8 +43,12 @@ static void x8h7_ui_hook(void *prv, x8h7_pkt_t *pkt)
   struct x8h7_ui_priv  *priv = (struct x8h7_ui_priv*)prv;
 
   //DBG_PRINT("received %d bytes\n", pkt->size);
-  memcpy(&priv->rx_data, pkt->data, pkt->size);
-  priv->rx_len = pkt->size;
+  if (priv->rx_len + pkt->size > X8H7_UI_DATA_MAX) {
+    return;
+  }
+
+  memcpy(&priv->rx_data[priv->rx_len], pkt->data, pkt->size);
+  priv->rx_len += pkt->size;
 }
 
 static int x8h7_ui_open(struct inode *inode, struct file *file)

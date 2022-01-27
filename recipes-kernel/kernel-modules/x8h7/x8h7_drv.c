@@ -30,7 +30,6 @@
 #include <linux/list.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
-// #include <linux/slab.h>
 #include <linux/compat.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
@@ -45,11 +44,6 @@
 
 #define DRIVER_NAME     "x8h7"
 #define X8H7_BUF_SIZE   (64*1024)
-
-// Peripheral code
-//#define X8H7_H7_PERIPH    0x00
-// Op code
-//#define X8H7_H7_FW_VER    0x10
 
 #define DEBUG   1
 #include "debug.h"
@@ -108,10 +102,6 @@ struct spidev_data {
   u8                 *x8h7_txb;
   u16                 x8h7_txl;
   u8                 *x8h7_rxb;
-
-//  wait_queue_head_t   x8h7_wait;
-//  int                 rx_cnt;
-//  x8h7_pkt_t          rx_pkt;
 };
 
 static LIST_HEAD(device_list);
@@ -140,7 +130,7 @@ typedef struct __attribute__((packed, aligned(4))) {
   uint16_t  size;
 } x8h7_subpkt_t;
 
-#define X8H7_PERIPH_NUM   11
+#define X8H7_PERIPH_NUM   16
 x8h7_hook_t x8h7_hook[X8H7_PERIPH_NUM] = {};
 void *x8h7_hook_priv[X8H7_PERIPH_NUM];
 
@@ -163,10 +153,8 @@ x8h7_periph_t x8h7_periph[X8H7_PERIPH_NUM];
 
 /**
  */
-
 #if defined(DEBUG) && (DEBUG == 3)
 
-#define X8H7_PERIPH_H7      0x00
 #define X8H7_PERIPH_ADC     0x01
 #define X8H7_PERIPH_PWM     0x02
 #define X8H7_PERIPH_FDCAN1  0x03
@@ -174,6 +162,7 @@ x8h7_periph_t x8h7_periph[X8H7_PERIPH_NUM];
 #define X8H7_PERIPH_UART    0x05
 #define X8H7_PERIPH_RTC     0x06
 #define X8H7_PERIPH_GPIO    0x07
+#define X8H7_PERIPH_H7      0x09
 #define X8H7_PERIPH_UI      0x0A
 
 /**
@@ -339,6 +328,7 @@ int x8h7_spi_trx(struct spi_device *spi,
   t.tx_buf = tx_buf;
   t.rx_buf = rx_buf;
   t.len    = len;
+  t.speed_hz = x8h7_spidev->speed_hz;
 
   spi_message_init(&m);
   spi_message_add_tail(&t, &m);
@@ -452,44 +442,6 @@ static irqreturn_t x8h7_threaded_isr(int irq, void *data)
   return IRQ_HANDLED;
 }
 
-/**
- *//*
-static void x8h7_h7_hook(void *priv, x8h7_pkt_t *pkt)
-{
-  struct spidev_data  *spidev = (struct spidev_data*)priv;
-
-  memcpy(&spidev ->rx_pkt, pkt, sizeof(x8h7_pkt_t));
-  spidev ->rx_cnt++;
-  wake_up_interruptible(&spidev ->x8h7_wait);
-}
-*/
-/**
- *//*
-static int x8h7_h7_pkt_get(struct spidev_data *spidev)
-{
-  long ret;
-
-  ret = wait_event_interruptible_timeout(spidev->x8h7_wait,
-                                         spidev->rx_cnt != 0,
-                                         X8H7_RX_TIMEOUT);
-  if (!ret) {
-    spidev->rx_cnt--;
-    return 0;
-  }
-  return -1;
-}
-*/
-/**
- *//*
-int x8h7_fw_ver(void)
-{
-  x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_FW_VER, 0, NULL);
-  x8h7_pkt_send();
-  x8h7_h7_pkt_get(x8h7_spidev);
-  pkt_dump("FW Version", (void*)&x8h7_spidev->rx_pkt);
-  return 0;
-}
-*/
 /*-------------------------------------------------------------------------*/
 
 static ssize_t
@@ -1083,6 +1035,25 @@ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
 
 /*-------------------------------------------------------------------------*/
 
+
+/*************** Sysfs functions **********************/
+static ssize_t sysfs_show_speed(struct kobject *kobj,
+                struct kobj_attribute *attr, char *buf)
+{
+        return sprintf(buf, "%d", x8h7_spidev->speed_hz);
+}
+
+static ssize_t sysfs_store_speed(struct kobject *kobj,
+                struct kobj_attribute *attr,const char *buf, size_t count)
+{
+        sscanf(buf, "%d", &x8h7_spidev->speed_hz);
+        return count;
+}
+
+
+struct kobject *kobj_ref;
+struct kobj_attribute etx_attr = __ATTR(speed, 0660, sysfs_show_speed, sysfs_store_speed);
+
 static int spidev_probe(struct spi_device *spi)
 {
   struct spidev_data  *spidev;
@@ -1169,14 +1140,17 @@ static int spidev_probe(struct spi_device *spi)
 
   x8h7_spidev = spidev;
 
-  //init_waitqueue_head(&spidev->x8h7_wait);
-  //x8h7_hook_set(X8H7_H7_PERIPH, x8h7_h7_hook, spidev);
-  //x8h7_fw_ver();
-
   if (status == 0)
     spi_set_drvdata(spi, spidev);
   else
     kfree(spidev);
+
+  kobj_ref = kobject_create_and_add("x8h7_spidev", kernel_kobj);
+
+  /*Creating sysfs file for etx_value*/
+  if(sysfs_create_file(kobj_ref, &etx_attr.attr)){
+    DBG_ERROR("Cannot create sysfs file\n");
+  }
 
   return status;
 }
