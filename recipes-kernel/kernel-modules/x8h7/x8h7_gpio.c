@@ -46,7 +46,7 @@
 //#define GPIO_INT_MASK           (GPIO_INT_EDGE_RISING | GPIO_INT_EDGE_FALLING)
 //#define GPIO_INT_MASK_SIZE      2
 
-#define X8H7_GPIO_NUM   7
+#define X8H7_GPIO_NUM   34
 
 struct x8h7_gpio_info {
   struct device      *dev;
