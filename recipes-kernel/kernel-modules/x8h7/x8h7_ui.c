@@ -46,12 +46,13 @@ static void x8h7_ui_hook(void *prv, x8h7_pkt_t *pkt)
 
   //DBG_PRINT("received %d bytes\n", pkt->size);
   if (priv->rx_len + pkt->size > X8H7_UI_DATA_MAX) {
-    return;
+    goto wake_read;
   }
 
   memcpy(&priv->rx_data[priv->rx_len], pkt->data, pkt->size);
   priv->rx_len += pkt->size;
 
+wake_read:
   wake_up_interruptible(&wq);
 }
 
@@ -80,24 +81,15 @@ static ssize_t x8h7_ui_read(struct file *file,
 {
   struct x8h7_ui_priv *priv = x8h7_ui;
 
-  //DBG_PRINT("count %d\n", count);
-  if (count > priv->rx_len) {
-    count = priv->rx_len;
-  }
-
   // call this only in case of O_BLOCK
   wait_event_interruptible(wq, priv->rx_len != 0);
 
-  if (priv->rx_len) {
-    priv->rx_len = 0;
-    //DBG_PRINT("cpoy to user %d bytes\n", count);
-    if (copy_to_user(buf, priv->rx_data, count)) {
-      return -EFAULT;
-    }
-  } else {
-    return -EAGAIN;
-  }
-  return count;
+  *offset = 0;
+  //DBG_PRINT("cpoy to user %d bytes\n", count);
+  ssize_t ret = simple_read_from_buffer(buf, count, offset, priv->rx_data, priv->rx_len);
+  priv->rx_len = 0;
+
+  return ret;
 }
 
 static ssize_t x8h7_ui_write(struct file *file,
@@ -186,6 +178,8 @@ static int x8h7_ui_probe(struct platform_device *pdev)
     unregister_chrdev_region(priv->dev_num, 1);
     return -1;
   }
+
+  x8h7_ui->rx_len = 0;
 
   x8h7_hook_set(X8H7_UI_PERIPH, x8h7_ui_hook, priv);
 
