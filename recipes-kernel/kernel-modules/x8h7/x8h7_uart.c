@@ -29,8 +29,8 @@
 #define PORT_X8H7_UART    1000 // @TODO: add this define in serial.h
 
 
-#define X8H7_UART_BAUD_MIN         0
-#define X8H7_UART_BAUD_MAX    115200
+#define X8H7_UART_BAUD_MIN          0
+#define X8H7_UART_BAUD_MAX    2000000
 
 // Peripheral code
 #define X8H7_UART_PERIPH 0x05
@@ -156,28 +156,7 @@ static void x8h7_uart_hook(void *priv, x8h7_pkt_t *pkt)
     break;
   }
 
-  /* TX holding register empty - transmit a byte */
-  x8h7_uart_tx_chars(sport);
-
   sport->rx_cnt++;
-  //wake_up_interruptible(&sport->wait); // @TODO: this is currently unused
-}
-
-/**
- */
-static int x8h7_uart_pkt_get(struct x8h7_uart_port *sport)
-{
-  long ret;
-
-  ret = wait_event_interruptible_timeout(sport->wait,
-                                         sport->rx_cnt != 0,
-                                         X8H7_RX_TIMEOUT);
-  if (!ret) {
-    DBG_ERROR("timeout expired");
-    return -1;
-  }
-  sport->rx_cnt--;
-  return 0;
 }
 
 /**
@@ -243,13 +222,6 @@ static void x8h7_uart_tx_chars(struct x8h7_uart_port *sport)
   sport->flags |= X8H7_UART_TRANSMIT;
   DBG_PRINT("work queue triggered\n");
   queue_work(sport->workqueue, &sport->work);
-
-  if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS) {
-    uart_write_wakeup(&sport->port);
-  }
-  if (uart_circ_empty(xmit)) {
-    x8h7_uart_stop_tx(&sport->port);
-  }
 }
 
 /**
@@ -279,8 +251,6 @@ static void x8h7_uart_mctrl_check(struct x8h7_uart_port *sport)
   if (changed & TIOCM_CTS) {
     uart_handle_cts_change(&sport->port, status & TIOCM_CTS);
   }
-
-  wake_up_interruptible(&sport->port.state->port.delta_msr_wait);
 }
 
 /**
@@ -289,15 +259,6 @@ static void x8h7_uart_mctrl_check(struct x8h7_uart_port *sport)
  */
 static void x8h7_uart_timeout(struct timer_list *t)
 {
-  struct x8h7_uart_port  *sport = from_timer(sport, t, timer);
-  unsigned long           flags;
-
-  if (sport->port.state) {
-    spin_lock_irqsave(&sport->port.lock, flags);
-    x8h7_uart_mctrl_check(sport);
-    spin_unlock_irqrestore(&sport->port.lock, flags);
-    mod_timer(&sport->timer, jiffies + MCTRL_TIMEOUT);
-  }
 }
 
 /**
@@ -316,12 +277,8 @@ static void x8h7_uart_stop_rx(struct uart_port *port)
  */
 static unsigned int x8h7_uart_tx_empty(struct uart_port *port)
 {
-  //struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
-  DBG_PRINT("\n");
-  //if(sport->status & X8H7_UART_STATUS_TX_EMPTY)
-    return TIOCSER_TEMT;
-  //else
-  //  return 0;
+  struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
+  return ((sport->flags & X8H7_UART_TRANSMIT) ? 0 : TIOCSER_TEMT);
 }
 
 /**
@@ -352,31 +309,6 @@ static void x8h7_uart_set_mctrl(struct uart_port *port, unsigned int mctrl)
  */
 static unsigned int x8h7_uart_get_mctrl(struct uart_port *port)
 {
-/*
-  struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
-  uint16_t                control;
-  unsigned int            mctrl;
-
-  DBG_PRINT("\n");
-  mctrl = 0;
-
-  x8h7_pkt_enq(X8H7_UART_PERIPH, X8H7_UART_OC_GET_LINESTATE, 0, NULL);
-  x8h7_pkt_send();
-  x8h7_uart_pkt_get(sport);
-
-  control = sport->rx_pkt.data[0] | (sport->rx_pkt.data[1] <<8);
-  if (control & X8H7_UART_CTRL_DSR) {
-    mctrl |= TIOCM_DSR;
-  }
-  if (control & X8H7_UART_CTRL_CTS) {
-    mctrl |= TIOCM_CTS;
-  }
-  if (control & X8H7_UART_CTRL_DCD) {
-    mctrl |= TIOCM_CAR;
-  }
-
-  return mctrl;
-*/
   /* DCD and DSR are not wired and CTS/RTS is handled automatically
   * so just indicate DSR and CAR asserted
   * @TODO: add also TIOCM_CTS?
@@ -404,36 +336,15 @@ static void x8h7_uart_start_tx(struct uart_port *port)
 }
 
 /**
- * Set the modem control timer to fire immediately.
- */
-static void x8h7_uart_enable_ms(struct uart_port *port)
-{
-  struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
-
-  DBG_PRINT("\n");
-  mod_timer(&sport->timer, jiffies);
-}
-
-/**
  * Control the transmission of a break signal
  */
 static void x8h7_uart_break_ctl(struct uart_port *port, int break_state)
 {
   struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
   unsigned long           flags;
-  /*
-  unsigned int lcr;
-*/
+
   DBG_PRINT("\n");
   spin_lock_irqsave(&sport->port.lock, flags);
-  /*
-  lcr = serial_in(sport, PNX8XXX_LCR);
-  if (break_state == -1)
-    lcr |= PNX8XXX_UART_LCR_TXBREAK;
-  else
-    lcr &= ~PNX8XXX_UART_LCR_TXBREAK;
-  serial_out(sport, PNX8XXX_LCR, lcr);
-  */
   spin_unlock_irqrestore(&sport->port.lock, flags);
 }
 
@@ -443,16 +354,6 @@ static void x8h7_uart_break_ctl(struct uart_port *port, int break_state)
 static int x8h7_uart_startup(struct uart_port *port)
 {
   struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
-
-  DBG_PRINT("\n");
-  timer_setup(&sport->timer, x8h7_uart_timeout, 0);
-
-  /*
-  * Enable modem status interrupts
-  */
-  spin_lock_irq(&sport->port.lock);
-  x8h7_uart_enable_ms(&sport->port);
-  spin_unlock_irq(&sport->port.lock);
 
   return 0;
 }
@@ -557,12 +458,6 @@ static void x8h7_uart_set_termios(struct uart_port *port,
   sport->cfg.baud = baud;
 
   /*
-   * Update the per-port timeout.
-   */
-  del_timer_sync(&sport->timer);
-  uart_update_timeout(port, termios->c_cflag, baud);
-
-  /*
    * disable interrupts and drain transmitter
    * then, disable everything
    * Reset the Rx and Tx FIFOs too
@@ -571,10 +466,6 @@ static void x8h7_uart_set_termios(struct uart_port *port,
   DBG_PRINT("work queue triggered\n");
   queue_work(sport->workqueue, &sport->work);
 
-  /* CTS flow-control and modem-status interrupts */
-  if (UART_ENABLE_MS(&sport->port, termios->c_cflag)) {
-    x8h7_uart_enable_ms(&sport->port);
-  }
   //spin_unlock_irqrestore(&sport->port.lock, flags);
 }
 
@@ -657,7 +548,6 @@ static const struct uart_ops x8h7_uart_pops = {
   .stop_tx      = x8h7_uart_stop_tx,
   .start_tx     = x8h7_uart_start_tx,
   .stop_rx      = x8h7_uart_stop_rx,
-  .enable_ms    = x8h7_uart_enable_ms,
   .break_ctl    = x8h7_uart_break_ctl,
   .startup      = x8h7_uart_startup,
   .shutdown     = x8h7_uart_shutdown,
@@ -668,48 +558,6 @@ static const struct uart_ops x8h7_uart_pops = {
   .config_port  = x8h7_uart_config_port,
   .verify_port  = x8h7_uart_verify_port,
 };
-
-/**
- * Setup the PNX8XXX serial ports.
- *
- * Note also that we support "console=ttySx" where "x" is either 0 or 1.
- */
-static void __init x8h7_uart_init_ports(void)
-{
-  static int first = 1;
-  int i;
-
-  DBG_PRINT("\n");
-  if (!first) {
-    return;
-  }
-  first = 0;
-#if 0
-
-#define UPIO_PORT		(SERIAL_IO_PORT)	/* 8b I/O port access */
-#define UPIO_HUB6		(SERIAL_IO_HUB6)	/* Hub6 ISA card */
-#define UPIO_MEM		(SERIAL_IO_MEM)		/* 8b MMIO access */
-#define UPIO_MEM32		(SERIAL_IO_MEM32)	/* 32b little endian */
-#define UPIO_AU			(SERIAL_IO_AU)		/* Au1x00 and RT288x type IO */
-#define UPIO_TSI		(SERIAL_IO_TSI)		/* Tsi108/109 type IO */
-#define UPIO_MEM32BE		(SERIAL_IO_MEM32BE)
-
-#endif
-
-  for (i = 0; i < X8H7_UART_NR_PORTS; i++) {
-    timer_setup(&x8h7_uart_ports[i].timer, x8h7_uart_timeout, 0);
-
-		x8h7_uart_ports[i].port.type     = PORT_MAX310X;
-		x8h7_uart_ports[i].port.fifosize = 32;
-		x8h7_uart_ports[i].port.flags    = 0; //UPF_FIXED_TYPE | UPF_LOW_LATENCY;
-    x8h7_uart_ports[i].port.iotype   = SERIAL_IO_PORT;
-		x8h7_uart_ports[i].port.iobase	 = 0;
-		x8h7_uart_ports[i].port.membase	 = (void __iomem *)~0;
-    x8h7_uart_ports[i].port.uartclk  = 24*1000*1000;
-    x8h7_uart_ports[i].port.ops      = &x8h7_uart_pops;
-  }
-  DBG_PRINT("DONE\n");
-}
 
 /**
  */
@@ -745,53 +593,42 @@ static void x8h7_uart_work_func(struct work_struct *work)
     uint16_t          size;
 
     sport->flags &= ~X8H7_UART_TRANSMIT;
-    size = 0;
-    for (;;) {
-      txb[size] = xmit->buf[xmit->tail];
-      size++;
 
-      xmit->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
-      sport->port.icount.tx++;
-      if (uart_circ_empty(xmit)) {
-        break;
+    while (!uart_circ_empty(xmit)) {
+
+      for (size = 0; size < X8H7_PKT_SIZE && !uart_circ_empty(xmit); size++) {
+        txb[size] = xmit->buf[xmit->tail];
+
+        xmit->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
       }
-    }
 
-    //send pkt
-    x8h7_pkt_enq(X8H7_UART_PERIPH, X8H7_UART_OC_DATA, size, txb);
-    x8h7_pkt_send();
+      //send pkt
+      x8h7_pkt_enq(X8H7_UART_PERIPH, X8H7_UART_OC_DATA, size, txb);
+      x8h7_pkt_send();
+
+      sport->port.icount.tx += size;
+    }
+    //uart_circ_clear(xmit);
   }
-   DBG_PRINT("work queue end\n");
+  DBG_PRINT("work queue end\n");
 }
 
 /**
  */
 static int x8h7_uart_probe(struct platform_device *pdev)
 {
-  /*
-  struct resource *res = pdev->resource;
-  int i;
-
-  for (i = 0; i < pdev->num_resources; i++, res++) {
-    if (!(res->flags & IORESOURCE_MEM)) {
-      continue;
-    }
-    for (i = 0; i < X8H7_UART_NR_PORTS; i++) {
-      if (x8h7_uart_ports[i].port.mapbase != res->start) {
-        continue;
-      }
-      init_waitqueue_head(&x8h7_uart_ports[i].wait);
-      x8h7_uart_ports[i].port.dev = &pdev->dev;
-      uart_add_one_port(&x8h7_uart, &x8h7_uart_ports[i].port);
-      platform_set_drvdata(pdev, &x8h7_uart_ports[i]);
-      x8h7_hook_set(X8H7_UART_PERIPH, x8h7_uart_hook, &x8h7_uart_ports[i]);
-      break;
-    }
-  }
-  */
   int i = 0;
 
   init_waitqueue_head(&x8h7_uart_ports[i].wait);
+
+  x8h7_uart_ports[i].port.type     = 150;
+  x8h7_uart_ports[i].port.fifosize = 32;
+  x8h7_uart_ports[i].port.flags    = 0;
+  x8h7_uart_ports[i].port.iotype   = SERIAL_IO_PORT;
+  x8h7_uart_ports[i].port.iobase   = 0;
+  x8h7_uart_ports[i].port.membase  = (void __iomem *)~0;
+  x8h7_uart_ports[i].port.uartclk  = 24*1000*1000;
+  x8h7_uart_ports[i].port.ops      = &x8h7_uart_pops;
 
   x8h7_uart_ports[i].port.line = 0;
   x8h7_uart_ports[i].port.dev  = &pdev->dev;
@@ -845,8 +682,6 @@ static int __init x8h7_uart_init(void)
   int ret;
 
   printk(KERN_INFO "Serial: X8H7 UART driver\n");
-
-  x8h7_uart_init_ports();
 
   ret = uart_register_driver(&x8h7_uart);
   if (ret == 0) {
