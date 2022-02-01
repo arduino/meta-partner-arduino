@@ -36,6 +36,8 @@ struct x8h7_ui_priv {
   uint16_t            rx_len;
 };
 
+static DECLARE_WAIT_QUEUE_HEAD(wq);
+
 struct x8h7_ui_priv *x8h7_ui;
 
 static void x8h7_ui_hook(void *prv, x8h7_pkt_t *pkt)
@@ -49,6 +51,8 @@ static void x8h7_ui_hook(void *prv, x8h7_pkt_t *pkt)
 
   memcpy(&priv->rx_data[priv->rx_len], pkt->data, pkt->size);
   priv->rx_len += pkt->size;
+
+  wake_up_interruptible(&wq);
 }
 
 static int x8h7_ui_open(struct inode *inode, struct file *file)
@@ -80,12 +84,18 @@ static ssize_t x8h7_ui_read(struct file *file,
   if (count > priv->rx_len) {
     count = priv->rx_len;
   }
+
+  // call this only in case of O_BLOCK
+  wait_event_interruptible(wq, priv->rx_len != 0);
+
   if (priv->rx_len) {
     priv->rx_len = 0;
     //DBG_PRINT("cpoy to user %d bytes\n", count);
     if (copy_to_user(buf, priv->rx_data, count)) {
       return -EFAULT;
     }
+  } else {
+    return -EAGAIN;
   }
   return count;
 }
