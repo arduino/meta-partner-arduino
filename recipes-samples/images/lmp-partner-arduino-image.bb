@@ -21,6 +21,7 @@ require recipes-samples/images/lmp-feature-sbin-path-helper.inc
 
 SRC_URI += "\
     file://sudoers-arduino \
+    file://set_board_env.sh \
 "
 
 IMAGE_FEATURES += "ssh-server-openssh"
@@ -77,4 +78,9 @@ fakeroot do_populate_rootfs_add_custom_sudoers () {
     install -m 0440 ${WORKDIR}/sudoers-arduino ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/51-arduino
 }
 
-IMAGE_PREPROCESS_COMMAND += "do_populate_rootfs_add_custom_sudoers; "
+fakeroot do_populate_rootfs_add_custom_board_env () {
+    bbwarn Installing custom board env script for arduino ootb!
+    install -m 0644 ${WORKDIR}/set_board_env.sh ${IMAGE_ROOTFS}${sysconfdir}/profile.d/set_board_env.sh
+}
+
+IMAGE_PREPROCESS_COMMAND += "do_populate_rootfs_add_custom_sudoers; do_populate_rootfs_add_custom_board_env;"
