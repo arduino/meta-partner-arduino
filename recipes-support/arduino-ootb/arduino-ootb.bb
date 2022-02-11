@@ -9,24 +9,20 @@ SRC_URI = " \
     file://connection-status-led.service \
     file://rndis-network.service \
     file://connection_status_led \
-    file://m4-led-forwarder.service \
-    file://m4_led_forwarder \
 "
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "connection-status-led.timer connection-status-led.service rndis-network.service m4-led-forwarder.service"
+SYSTEMD_SERVICE_${PN} = "connection-status-led.timer connection-status-led.service rndis-network.service"
 
 do_install() {
 	install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/connection-status-led.timer ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/connection-status-led.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/rndis-network.service ${D}${systemd_system_unitdir}/
-    install -m 0644 ${WORKDIR}/m4-led-forwarder.service ${D}${systemd_system_unitdir}/
 
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/
-    install -m 0755 ${WORKDIR}/m4_led_forwarder ${D}${bindir}/
 }
 
 FILES_${PN} += " \

@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitor /tmp/arduino/m4-user-sketch.elf file
+Requires=m4-led-forwarder.service
+After=m4-led-forwarder.service
+
+[Path] 
+PathModified=/tmp/arduino/m4-user-sketch.elf
+
+[Install]
+WantedBy=multi-user.target

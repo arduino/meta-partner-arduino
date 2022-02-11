@@ -1,8 +1,13 @@
 [Unit]
 Description=M4 builtin led forwarder
+Requires=stm32h7-program.service
 After=stm32h7-program.service
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/bin/sh /usr/bin/m4_led_forwarder enable
 ExecStop=/bin/sh /usr/bin/m4_led_forwarder disable
+
+[Install]
+WantedBy=multi-user.target

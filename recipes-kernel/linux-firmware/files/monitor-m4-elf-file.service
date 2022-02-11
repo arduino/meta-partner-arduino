@@ -1,0 +1,9 @@
+[Unit]
+Description=Program stm32m4 on Portenta-X8 boards
+ConditionPathExists=/tmp/arduino/m4-user-sketch.elf
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo /tmp/arduino/m4-user-sketch.elf changed, triggered m4 programming"
+#ExecStartPre=/bin/sh -c "echo /tmp/arduino/m4-user-sketch.elf changed, triggered m4 programming"
+#ExecStart=/bin/openocd -f /usr/arduino/extra/openocd_script-imx_gpio.cfg -c "program /tmp/arduino/m4-user-sketch.elf verify reset exit"

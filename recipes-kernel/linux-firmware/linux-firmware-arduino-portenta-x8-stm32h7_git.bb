@@ -12,9 +12,13 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 SRC_URI = " \
     git://github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=https;branch=refactor \
     file://stm32h7-program.service \
+    file://m4-led-forwarder.service \
+    file://m4_led_forwarder \
+    file://monitor-m4-elf-file.path \
+    file://monitor-m4-elf-file.service \
 "
-SRCREV = "b34b8c1f590783fde283c6a695a946649fb5752a"
-PV = "0.0.1"
+SRCREV = "f15803086a7af9bc06f833ac8040bbedc52d4542"
+PV = "0.0.2"
 
 S = "${WORKDIR}/git"
 
@@ -26,7 +30,7 @@ do_compile() {
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "stm32h7-program.service"
+SYSTEMD_SERVICE_${PN} = "stm32h7-program.service m4-led-forwarder.service monitor-m4-elf-file.path monitor-m4-elf-file.service"
 
 do_install() {
     install -d ${D}${nonarch_base_libdir}/firmware/
@@ -44,6 +48,7 @@ do_install() {
     install -d ${D}/usr/arduino/extra
     ln -s ../../..${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin ${D}/usr/arduino/extra/STM32H747AII6_CM7.bin
 
+    # Scripts inside package git repo
     install -m 0744 ${S}/flash.sh ${D}/usr/arduino/extra/flash.sh
     install -m 0744 ${S}/reset.sh ${D}/usr/arduino/extra/reset.sh
     install -m 0744 ${S}/program.sh ${D}/usr/arduino/extra/program.sh
@@ -53,6 +58,13 @@ do_install() {
     # Systemd service
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/stm32h7-program.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/m4-led-forwarder.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/monitor-m4-elf-file.path ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/monitor-m4-elf-file.service ${D}${systemd_system_unitdir}/
+
+    # Scripts in yocto layer
+    install -d ${D}${bindir}
+    install -m 0755 ${WORKDIR}/m4_led_forwarder ${D}${bindir}/
 }
 
 
@@ -67,6 +79,7 @@ FILES_${PN} = " \
     /usr/arduino/extra/load_modules.sh \
     /usr/arduino/extra/openocd_script-imx_gpio.cfg \
     ${systemd_system_unitdir} \
+    ${bindir} \
 "
 
 DEPENDS += " \
