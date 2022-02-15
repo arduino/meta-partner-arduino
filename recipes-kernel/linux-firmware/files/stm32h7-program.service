@@ -4,9 +4,8 @@ Description=Program stm32h7 on Portenta-X8 boards
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/sh -c "echo started h7 verify & programming"
-#ExecStart=/bin/sh /usr/arduino/extra/program.sh
-#ExecStartPost=/bin/sh /usr/arduino/extra/load_modules.sh
+ExecStartPre=/bin/sh /usr/arduino/extra/load_modules.sh
+ExecStart=/bin/sh /usr/arduino/extra/program.sh
 
 [Install]
 WantedBy=multi-user.target
