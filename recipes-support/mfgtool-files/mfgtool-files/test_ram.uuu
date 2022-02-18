@@ -30,6 +30,6 @@ FB: ucmd md.w 0x1000 0x04
 # !!!WARNING!!! This breaks uuu usb communication with Pc
 # !!!WARNING!!! This test is slooooow you decide when it ends
 # with ctrl+c on target console
-# FB: ucmd mtest 0x40000000 0x80000000
+# FB: ucmd mtest ${loadaddr} 0x80000000
 
 FB: done
