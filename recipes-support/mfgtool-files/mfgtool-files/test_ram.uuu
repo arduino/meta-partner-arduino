@@ -1,0 +1,35 @@
+uuu_version 0.64.43
+
+SDP: boot -f imx-boot-mfgtool
+
+SDPV: delay 1000
+SDPV: write -f u-boot-mfgtool.itb
+SDPV: jump
+
+# Show base ram address (offset) for ram commands
+FB: ucmd base
+
+# Display 256 bytes from the address where u-boot binary has
+# been loaded
+FB: ucmd md.w 0x40400000 0x100
+
+# Set starting address and download mfgtool kernel fitImage into ram
+FB: ucmd setenv fastboot_buffer ${loadaddr}
+FB: download -f fitImage-portenta-x8-mfgtool
+
+# Display 256 bytes from the address where mfgtool kernel fitImage has
+# been loaded
+FB: ucmd md.w ${loadaddr} 0x100
+
+# Display a single 32-bit word at address 0x1000
+FB: ucmd md.w 0x1000 0x04
+
+# Perform continuous write/read ram tests on the range
+# that will be used to store kernel fitImage
+# and is suggested in u-boot config menu
+# !!!WARNING!!! This breaks uuu usb communication with Pc
+# !!!WARNING!!! This test is slooooow you decide when it ends
+# with ctrl+c on target console
+# FB: ucmd mtest 0x40000000 0x80000000
+
+FB: done
