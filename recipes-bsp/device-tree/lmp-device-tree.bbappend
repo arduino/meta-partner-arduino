@@ -55,6 +55,12 @@ SRC_URI_append_portenta-x8 = " \
     file://arduino_portenta-x8.dts \
 "
 
+# This patch is necessary since usbc need to be
+# used with specific driver for uuu communication
+SRC_URI_append_lmp-mfgtool = " \
+    file://force-usbc-device-mfgtool.patch \
+"
+
 COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
 
 FILES_${PN}_portenta-mx8mm += " \

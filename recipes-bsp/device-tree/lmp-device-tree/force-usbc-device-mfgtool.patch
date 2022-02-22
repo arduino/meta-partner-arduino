@@ -1,0 +1,64 @@
+diff --git a/arduino_portenta-mx8mm.dtsi b/arduino_portenta-mx8mm.dtsi
+index 0647c23..787d725 100644
+--- a/arduino_portenta-mx8mm.dtsi
++++ b/arduino_portenta-mx8mm.dtsi
+@@ -113,7 +113,7 @@
+ };
+ 
+ &usbotg1 { /* usbc */
+-	dr_mode = "otg";
++	dr_mode = "peripheral";
+ 	hnp-disable;
+ 	srp-disable;
+ 	adp-disable;
+@@ -121,12 +121,11 @@
+ 	picophy,pre-emp-curr-control = <3>;
+ 	picophy,dc-vol-level-adjust = <7>;
+ 	status = "okay";
++};
+ 
+-	port {
+-		usb1_drd_sw: endpoint {
+-			remote-endpoint = <&typec1_dr_sw>;
+-		};
+-	};
++&usbotg2 { /* usb host type-A on Breakout carrier */
++	dr_mode = "host";
++	status = "okay";
+ };
+ 
+ &usdhc3 { /* emmc flash */
+diff --git a/anx7625.dtsi b/anx7625.dtsi
+index 06980b0..91b1676 100644
+--- a/anx7625.dtsi
++++ b/anx7625.dtsi
+@@ -64,29 +64,6 @@
+ 				};
+ 			};
+ 		};
+-
+-		typec1_con: connector {
+-			compatible = "usb-c-connector";
+-			label = "USB-C";
+-			power-role = "dual";
+-			data-role = "dual";
+-			try-power-role = "sink";
+-			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
+-			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
+-			             PDO_VAR(5000, 20000, 3000)>;
+-			op-sink-microwatt = <15000000>;
+-			self-powered;
+-			ports {
+-				#address-cells = <1>;
+-				#size-cells = <0>;
+-				port@1 {
+-					reg = <1>;
+-					typec1_dr_sw: endpoint {
+-						remote-endpoint = <&usb1_drd_sw>;
+-					};
+-				};
+-			};
+-		};
+ 	};
+ };
+ 
