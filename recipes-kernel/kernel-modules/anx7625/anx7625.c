@@ -50,7 +50,7 @@
 #define TIMER_CABLE_DET_POLL_DELAY (1 * HZ)
 #define TIMEOUT_USB_DATA_ROLE 3
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #ifdef DRM_DEV_DEBUG_DRIVER
