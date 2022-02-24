@@ -15,7 +15,7 @@
 
 #define DRIVER_NAME   "x8h7_pwm"
 
-#define DEBUG
+//#define DEBUG
 #include "debug.h"
 
 // Peripheral code

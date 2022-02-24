@@ -16,7 +16,7 @@
 #define DRIVER_NAME "x8h7_rtc"
 #define DEVICE_NAME "x8h7_rtc"
 
-#define DEBUG
+//#define DEBUG
 #include "debug.h"
 
 // Peripheral code

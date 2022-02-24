@@ -30,7 +30,7 @@
 #define DRIVER_NAME "x8h7_can"
 
 /* DEBUG HANDLING */
-#define DEBUG
+// #define DEBUG
 #include "debug.h"
 #ifdef DEBUG
   #define DBG_CAN_STATE(d, s) { \

@@ -4,11 +4,7 @@
 #define __DEBUG_H
 
 #ifdef DEBUG
-/*
-  #define DBG_PRINT(fmt, ...)   printk("%s:%s:%d:in_atomic()=%d  "fmt, DRIVER_NAME, __func__, __LINE__, in_atomic(), ##__VA_ARGS__);
-  #define DBG_ERROR(fmt, ...)   printk("%s:%s:%d:in_atomic()=%d:ERROR:  "fmt, DRIVER_NAME, __func__, __LINE__, in_atomic(), ##__VA_ARGS__);
-*/
-
+  #warning "Verbose debug messages will be activated for this module!"
   #define DBG_PRINT(fmt, ...)   { \
     char  __ctx[7]; \
     __ctx[0] = in_irq()            ? 'H': '-'; \
