@@ -24,7 +24,7 @@ SRC_URI += "\
     file://set_board_env.sh \
 "
 
-IMAGE_FEATURES += "ssh-server-openssh"
+IMAGE_FEATURES += "ssh-server-dropbear"
 
 CORE_IMAGE_BASE_INSTALL_GPLV3 = "\
     packagegroup-core-full-cmdline-utils \
