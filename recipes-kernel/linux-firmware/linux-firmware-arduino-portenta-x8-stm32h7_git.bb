@@ -4,20 +4,20 @@ HOMEPAGE = "https://github.com/bcmi-labs/portentam8-stm32h7-fw"
 SECTION = "kernel"
 LICENSE = "Proprietary"
 #LIC_FILES_CHKSUM = "file://LICENSE.arduino;md5=cbc5f665d04f741f1e006d2096236ba7"
-LIC_FILES_CHKSUM = "file://Makefile;md5=dd9b8b57a3f9b9e8bd5e1c5c97c04850"
+LIC_FILES_CHKSUM = "file://Makefile;md5=2a5dfb05f61d57ada1765d22eaa71466"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = " \
-    git://github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=https;branch=refactor \
+    git://git@github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=ssh;branch=refactor \
     file://stm32h7-program.service \
     file://m4-led-forwarder.service \
     file://m4_led_forwarder \
     file://monitor-m4-elf-file.path \
     file://monitor-m4-elf-file.service \
 "
-SRCREV = "f15803086a7af9bc06f833ac8040bbedc52d4542"
+SRCREV = "99b85f66aa2011ee85c851d790c0c4c11faeb670"
 PV = "0.0.2"
 
 S = "${WORKDIR}/git"
@@ -49,11 +49,11 @@ do_install() {
     ln -s ../../..${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin ${D}/usr/arduino/extra/STM32H747AII6_CM7.bin
 
     # Scripts inside package git repo
-    install -m 0744 ${S}/flash.sh ${D}/usr/arduino/extra/flash.sh
-    install -m 0744 ${S}/reset.sh ${D}/usr/arduino/extra/reset.sh
-    install -m 0744 ${S}/program.sh ${D}/usr/arduino/extra/program.sh
-    install -m 0744 ${S}/load_modules.sh ${D}/usr/arduino/extra/load_modules.sh
-    install -m 0644 ${S}/openocd_script-imx_gpio.cfg ${D}/usr/arduino/extra/openocd_script-imx_gpio.cfg
+    install -m 0744 ${S}/scripts/flash.sh ${D}/usr/arduino/extra/flash.sh
+    install -m 0744 ${S}/scripts/reset.sh ${D}/usr/arduino/extra/reset.sh
+    install -m 0744 ${S}/scripts/program.sh ${D}/usr/arduino/extra/program.sh
+    install -m 0744 ${S}/scripts/load_modules.sh ${D}/usr/arduino/extra/load_modules.sh
+    install -m 0644 ${S}/openocd/openocd_script-imx_gpio.cfg ${D}/usr/arduino/extra/openocd_script-imx_gpio.cfg
 
     # Systemd service
     install -d ${D}${systemd_system_unitdir}
