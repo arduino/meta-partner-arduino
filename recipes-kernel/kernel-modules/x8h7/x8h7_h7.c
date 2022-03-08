@@ -300,6 +300,49 @@ static long x8h7_h7_ioctl(struct file *file, unsigned int cmd, unsigned long arg
   return retval;
 }
 
+
+ssize_t x8h7_read_firmware_version(char * buf, size_t const buf_size)
+{
+  struct x8h7_h7_priv * priv = x8h7_h7;
+  long                  retval = 0;
+
+  x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
+  x8h7_pkt_send();
+  retval = x8h7_h7_pkt_get(priv);
+  if (retval) {
+    return -EFAULT;
+  }
+
+  if ((priv->rx_pkt.peripheral == X8H7_H7_PERIPH) &&
+      (priv->rx_pkt.opcode == X8H7_H7_OC_FW_GET) &&
+      (priv->rx_pkt.size >= 1)) {
+
+      memcpy(buf,
+             &priv->rx_pkt.data,
+             (priv->rx_pkt.size < buf_size) ? priv->rx_pkt.size : buf_size);
+  } else {
+    return -EFAULT;
+  }
+
+  return strlen(buf);
+}
+
+/* This function allows to read the current firmware of
+ * from the H7 and display it by reading from a sysfs node,
+ * i.e.
+ *   $ cat /sys/kernel/x8h7_firmware/version
+ *   0.0.2-next-15c3fee-20220303-dirty
+ */
+static ssize_t sysfs_show_version(struct kobject *kobj,
+                struct kobj_attribute *attr, char *buf)
+{
+        return x8h7_read_firmware_version(buf, PAGE_SIZE);
+}
+
+struct kobject *kobj_ref_x8h7_firmware_version;
+struct kobj_attribute x8h7_firmware_version_attr = __ATTR(version, 0444, sysfs_show_version, NULL);
+
+
  struct file_operations fops = {
   .open           = x8h7_h7_open,
   .release        = x8h7_h7_release,
@@ -369,6 +412,14 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   priv->rxindex = 0;
 /**/
   x8h7_hook_set(X8H7_H7_PERIPH, x8h7_h7_hook, priv);
+
+  /* Creating a sysfs entry for reading the
+   * firmware version of the X8H7 firmware.
+   */
+  kobj_ref_x8h7_firmware_version = kobject_create_and_add("x8h7_firmware", kernel_kobj);
+  if(sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)){
+    DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
+  }
 
   return 0;
 }
