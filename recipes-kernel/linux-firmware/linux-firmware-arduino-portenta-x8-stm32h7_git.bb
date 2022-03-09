@@ -73,9 +73,9 @@ FILES_${PN} = " \
     ${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin \
     ${sysconfdir}/firmware \
     /usr/arduino/extra/STM32H747AII6_CM7.bin \
-    /usr/arduino/extra/flash.sh \
     /usr/arduino/extra/reset.sh \
     /usr/arduino/extra/program.sh \
+    /usr/arduino/extra/program-h7.sh \
     /usr/arduino/extra/load_modules.sh \
     /usr/arduino/extra/openocd_script-imx_gpio.cfg \
     ${systemd_system_unitdir} \
