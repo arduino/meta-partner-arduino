@@ -49,7 +49,6 @@ do_install() {
     ln -s ../../..${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin ${D}/usr/arduino/extra/STM32H747AII6_CM7.bin
 
     # Scripts inside package git repo
-    install -m 0744 ${S}/scripts/flash.sh ${D}/usr/arduino/extra/flash.sh
     install -m 0744 ${S}/scripts/reset.sh ${D}/usr/arduino/extra/reset.sh
     install -m 0744 ${S}/scripts/program.sh ${D}/usr/arduino/extra/program.sh
     install -m 0744 ${S}/scripts/program-h7.sh ${D}/usr/arduino/extra/program-h7.sh
