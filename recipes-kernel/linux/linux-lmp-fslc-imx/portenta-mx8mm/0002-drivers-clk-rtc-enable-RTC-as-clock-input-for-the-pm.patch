@@ -16,8 +16,8 @@ index ae6e5baee330..c1afeb7a2c4b 100644
 --- a/drivers/clk/clk-bd718x7.c
 +++ b/drivers/clk/clk-bd718x7.c
 @@ -10,6 +10,7 @@
- #include <linux/mfd/rohm-bd718x7.h>
- #include <linux/mfd/rohm-bd70528.h>
+ #include <linux/slab.h>
+ #include <linux/mfd/rohm-generic.h>
  #include <linux/clk-provider.h>
 +#include <linux/clk.h>
  #include <linux/clkdev.h>
@@ -35,15 +35,9 @@ index ae6e5baee330..c1afeb7a2c4b 100644
  		.ops = &bd71837_clk_ops,
 +		.flags = CLK_IS_CRITICAL,
  	};
+ 	enum rohm_chip_type chip = platform_get_device_id(pdev)->driver_data;
  
- 	c = devm_kzalloc(&pdev->dev, sizeof(*c), GFP_KERNEL);
-@@ -81,12 +84,20 @@ static int bd71837_clk_probe(struct platform_device *pdev)
- 
- 	init.num_parents = 1;
- 	parent_clk = of_clk_get_parent_name(parent->of_node, 0);
--
- 	init.parent_names = &parent_clk;
- 	if (!parent_clk) {
+@@ -81,6 +84,15 @@ static int bd71837_clk_probe(struct platform_device *pdev)
  		dev_err(&pdev->dev, "No parent clk found\n");
  		return -EINVAL;
  	}
@@ -56,7 +50,7 @@ index ae6e5baee330..c1afeb7a2c4b 100644
 +	if ((clk_prepare_enable(clk)))
 +		return -EINVAL;
 +
- 	switch (mfd->chip_type) {
+ 	switch (chip) {
  	case ROHM_CHIP_TYPE_BD71837:
  	case ROHM_CHIP_TYPE_BD71847:
 diff --git a/drivers/rtc/rtc-pcf8563.c b/drivers/rtc/rtc-pcf8563.c
