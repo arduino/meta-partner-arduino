@@ -1832,7 +1832,7 @@ out:
 	DRM_DEV_DEBUG_DRIVER(dev, "num_modes(%d)\n", num_modes);
 
 	connector->display_info.bus_flags = DRM_BUS_FLAG_DE_LOW |
-	                                    DRM_BUS_FLAG_PIXDATA_NEGEDGE;
+	                                    DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE;
 
 	err = drm_display_info_set_bus_formats(&connector->display_info,
 	                                       &bus_format, 1);
@@ -1954,13 +1954,19 @@ static void anx7625_bridge_detach(struct drm_bridge *bridge)
 		drm_connector_unregister(&ctx->connector);
 }
 
-static int anx7625_bridge_attach(struct drm_bridge *bridge)
+static int anx7625_bridge_attach(struct drm_bridge *bridge,
+				 enum drm_bridge_attach_flags flags)
 {
 	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
 	int err;
 	struct device *dev = &ctx->client->dev;
 
 	DRM_DEV_DEBUG_DRIVER(dev, "drm attach\n");
+
+	if (flags & DRM_BRIDGE_ATTACH_NO_CONNECTOR) {
+		DRM_DEV_ERROR(dev, "Fix bridge driver to make connector optional!");
+		return -EINVAL;
+	}
 
 	if (!bridge->encoder) {
 		DRM_DEV_ERROR(dev, "Parent encoder object not found");
@@ -2007,6 +2013,7 @@ static int anx7625_bridge_attach(struct drm_bridge *bridge)
 
 static enum drm_mode_status
 anx7625_bridge_mode_valid(struct drm_bridge *bridge,
+			  const struct drm_display_info *info,
 			  const struct drm_display_mode *mode)
 {
 	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
@@ -2134,38 +2141,38 @@ static const struct drm_bridge_funcs anx7625_bridge_funcs = {
 static int anx7625_register_i2c_dummy_clients(struct anx7625_data *ctx,
 					      struct i2c_client *client)
 {
-	ctx->i2c.tx_p0_client = i2c_new_dummy(client->adapter,
-	                                      TX_P0_ADDR >> 1);
+	ctx->i2c.tx_p0_client = i2c_new_dummy_device(client->adapter,
+						     TX_P0_ADDR >> 1);
 	if (!ctx->i2c.tx_p0_client)
 		return -ENOMEM;
 
-	ctx->i2c.tx_p1_client = i2c_new_dummy(client->adapter,
-	                                      TX_P1_ADDR >> 1);
+	ctx->i2c.tx_p1_client = i2c_new_dummy_device(client->adapter,
+						     TX_P1_ADDR >> 1);
 	if (!ctx->i2c.tx_p1_client)
 		goto free_tx_p0;
 
-	ctx->i2c.tx_p2_client = i2c_new_dummy(client->adapter,
-	                                      TX_P2_ADDR >> 1);
+	ctx->i2c.tx_p2_client = i2c_new_dummy_device(client->adapter,
+						     TX_P2_ADDR >> 1);
 	if (!ctx->i2c.tx_p2_client)
 		goto free_tx_p1;
 
-	ctx->i2c.rx_p0_client = i2c_new_dummy(client->adapter,
-	                                      RX_P0_ADDR >> 1);
+	ctx->i2c.rx_p0_client = i2c_new_dummy_device(client->adapter,
+						     RX_P0_ADDR >> 1);
 	if (!ctx->i2c.rx_p0_client)
 		goto free_tx_p2;
 
-	ctx->i2c.rx_p1_client = i2c_new_dummy(client->adapter,
-	                                      RX_P1_ADDR >> 1);
+	ctx->i2c.rx_p1_client = i2c_new_dummy_device(client->adapter,
+						     RX_P1_ADDR >> 1);
 	if (!ctx->i2c.rx_p1_client)
 		goto free_rx_p0;
 
-	ctx->i2c.rx_p2_client = i2c_new_dummy(client->adapter,
-	                                      RX_P2_ADDR >> 1);
+	ctx->i2c.rx_p2_client = i2c_new_dummy_device(client->adapter,
+						     RX_P2_ADDR >> 1);
 	if (!ctx->i2c.rx_p2_client)
 		goto free_rx_p1;
 
-	ctx->i2c.tcpc_client = i2c_new_dummy(client->adapter,
-	                                     TCPC_INTERFACE_ADDR >> 1);
+	ctx->i2c.tcpc_client = i2c_new_dummy_device(client->adapter,
+						    TCPC_INTERFACE_ADDR >> 1);
 	if (!ctx->i2c.tcpc_client)
 		goto free_rx_p2;
 
