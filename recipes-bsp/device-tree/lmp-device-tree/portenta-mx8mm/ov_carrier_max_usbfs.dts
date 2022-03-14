@@ -20,8 +20,8 @@
 		target = <&usbotg2>;
 		__overlay__ {
 			dr_mode = "host";
-			picophy,pre-emp-curr-control = <3>;
-			picophy,dc-vol-level-adjust = <7>;
+			samsung,picophy-pre-emp-curr-control = <3>;
+			samsung,picophy-dc-vol-level-adjust = <7>;
 			status = "okay";
 		};
 	};
