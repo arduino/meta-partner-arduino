@@ -788,7 +788,7 @@ static int cs42l52_set_fmt(struct snd_soc_dai *codec_dai, unsigned int fmt)
 	return 0;
 }
 
-static int cs42l52_digital_mute(struct snd_soc_dai *dai, int mute)
+static int cs42l52_mute_stream(struct snd_soc_dai *dai, int mute, int stream)
 {
 	struct snd_soc_component *component = dai->component;
 
@@ -882,7 +882,7 @@ static int cs42l52_set_bias_level(struct snd_soc_component *component,
 
 static const struct snd_soc_dai_ops cs42l52_ops = {
 	.hw_params	= cs42l52_pcm_hw_params,
-	.digital_mute	= cs42l52_digital_mute,
+	.mute_stream	= cs42l52_mute_stream,
 	.set_fmt	= cs42l52_set_fmt,
 	.set_sysclk	= cs42l52_set_sysclk,
 };
