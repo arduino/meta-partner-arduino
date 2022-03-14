@@ -1,3 +1,5 @@
+echo "Using arduino_${fdt_file}"
+
 # Default boot type and device
 setenv bootlimit 5
 setenv devtype mmc
@@ -55,4 +57,50 @@ setenv max_ovl ' \
 # setenv carrier_custom 1
 # setenv overlays 'ov_name1 ov_name2...'
 
+setenv bootcmd_dtb 'imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}'
+setenv ovl_set_envsave ' \
+  if env exist old_carrier_name; then \
+    if test "${carrier_name}" = "${old_carrier_name}"; then \
+      setenv envsave 0 \
+    else \
+      setenv envsave 1 \
+      setenv old_carrier_name $carrier_name \
+    fi \
+  else \
+    setenv envsave 1 \
+  fi'
+setenv bootcmd_ovl_auto_detect ' \
+  if env exist carrier_custom; then true; \
+  else \
+    if test "${is_on_carrier}" = "yes"; then \
+      if test "${carrier_name}" = "breakout"; then \
+        setenv overlays $som_ovl $breakout_ovl \
+      fi \
+      if test "${carrier_name}" = "max"; then \
+        setenv overlays $som_ovl $max_ovl \
+      fi \
+      run ovl_set_envsave \
+    fi \
+  fi'
+setenv bootcmd_saveenv 'if test "${envsave}" = "1"; then run saveenv_mmc; fi'
+setenv bootcmd_overlay ' \
+  for ov in ${overlays}; do; \
+    if imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${ov}.dtbo ${ovl_addr}; then \
+      fdt resize 0x${filesize}; \
+      fdt apply ${ovl_addr}; \
+      echo "Applied ${ov}.dtbo to DTB"; \
+    else \
+      echo "WARN: ${ov}.dtbo not found!"; \
+    fi; \
+  done'
+
+setenv bootcmd_load_fw ' \
+  run bootcmd_dtb; \
+  run bootcmd_ovl_auto_detect; \
+  run bootcmd_overlay; \
+  run bootcmd_saveenv; \
+  setenv bootcmd_run \
+    bootm ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}'
+
+@@INCLUDE_COMMON_IMX@@
 @@INCLUDE_COMMON@@
