@@ -12,6 +12,6 @@ SRC_URI_append_portenta-mx8mm = " \
     file://0001-Uart_2_4_Change_permission.patch \
 "
 
-SRC_URI_append_portenta-x8 = " \
-    file://0001-imx8mm-platform-change-from-uart2-to-uart3.patch \
+EXTRA_OEMAKE_append_portenta-x8 = " \
+    IMX_BOOT_UART_BASE=0x30880000 \
 "

@@ -9,6 +9,5 @@ Index: git/plat/imx/imx8m/imx8mm/imx8mm_bl31_setup.c
 -	RDC_PDAPn(RDC_PDAP_UART4, D1R | D1W),
 +	// RDC_PDAPn(RDC_PDAP_UART4, D1R | D1W), // changed from 0xFC to give back uart 4 to everyone
  	RDC_PDAPn(RDC_PDAP_UART2, D0R | D0W),
- 
- 	/* memory region */
+ 	RDC_PDAPn(RDC_PDAP_UART1, D0R | D0W),
  
