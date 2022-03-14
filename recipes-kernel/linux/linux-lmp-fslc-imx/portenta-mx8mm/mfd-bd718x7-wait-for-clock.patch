@@ -21,12 +21,15 @@ index 85e7f5133365..bdf8b38713cd 100644
  #include <linux/input.h>
  #include <linux/interrupt.h>
  #include <linux/mfd/rohm-bd718x7.h>
-@@ -123,8 +125,17 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
+@@ -123,11 +125,20 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
  			    const struct i2c_device_id *id)
  {
  	struct bd718xx *bd718xx;
 +	struct clk *clk;
  	int ret;
+ 	unsigned int chip_type;
+ 	struct mfd_cell *mfd;
+ 	int cells;
  
 +	clk = devm_clk_get(&i2c->dev, NULL);
 +	if (IS_ERR(clk)) {
