@@ -10,7 +10,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = " \
-    git://git@github.com/bcmi-labs/portentam8-stm32h7-fw.git;protocol=ssh;branch=refactor \
+    git://github.com/MaxPayne86Arduino/portentam8-stm32h7-fw.git;protocol=https;branch=refactor \
     file://stm32h7-program.service \
     file://m4-led-forwarder.service \
     file://m4_led_forwarder \
