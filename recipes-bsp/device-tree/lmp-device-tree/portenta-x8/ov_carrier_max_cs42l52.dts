@@ -30,7 +30,7 @@
 				/* @TODO: fix me cs42l52 clk en and reset pass thru stm32h7 */
 				pinctrl_gpio_cs42l52: gpiocs42l52grp {
 					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6			0x16 /* CLOCK ENABLE (active low) stm32h7 PF8 */
+						//MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6			0x16 /* CLOCK ENABLE (active low) stm32h7 PF8 */
 						MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12			0x16 /* RESET (active low) stm32h7 PF6 */
 					>;
 				};
