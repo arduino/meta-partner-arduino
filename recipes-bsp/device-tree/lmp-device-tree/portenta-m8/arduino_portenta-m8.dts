@@ -179,6 +179,11 @@
 	status = "okay";
 };
 
+&usdhc3 { /* emmc flash */
+	/* @TODO: lowered speed here from 400000000 */
+	assigned-clock-rates = <200000000>;
+};
+
 &iomuxc {
 	imx8mm {
 		pinctrl_gpio_led: gpioledgrp {
