@@ -452,7 +452,6 @@ struct anx7625_data {
 	u8 bridge_attached;
 	struct drm_connector connector;
 	struct mipi_dsi_device *dsi;
-	struct drm_dp_link link;
 	struct drm_display_mode vid_info;
 	struct notifier_block event_nb;
 	struct platform_device *audio_pdev;
