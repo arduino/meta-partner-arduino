@@ -42,12 +42,9 @@ CORE_IMAGE_BASE_INSTALL += " \
 
 # Arduino additions
 
-BOOT = " \
+LMP_EXTRA = " \
     lmp-device-tree \
-"
-
-BRINGUP = " \
-    i2c-tools \
+    lmp-auto-hostname \
 "
 
 ADB = " \
@@ -63,8 +60,7 @@ CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     modemmanager \
     usb-modeswitch \
-    ${BOOT} \
-    ${BRINGUP} \
+    ${LMP_EXTRA} \
     ${ADB} \
     ${ARDUINO} \
 "
