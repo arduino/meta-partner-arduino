@@ -1,0 +1,46 @@
+From 64795d345ac4adc1cf61c53526495d7fb48a5410 Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Mon, 11 Oct 2021 16:03:52 -0700
+Subject: [PATCH 02/45] portenta-m8: sync with imx8mm_evk
+
+- add bootm_size var
+- replace more ocurrances of fdt_addr with fdt_addr_r
+- replace 5 with nandrootfs setting for ubi.mtd kernel param
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ include/configs/portenta-m8.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/include/configs/portenta-m8.h b/include/configs/portenta-m8.h
+index 670dbc4d28..5dcfb6cb13 100644
+--- a/include/configs/portenta-m8.h
++++ b/include/configs/portenta-m8.h
+@@ -130,13 +130,13 @@
+ 	"fdt_high=0xffffffffffffffff\0" \
+ 	"mtdparts=" MFG_NAND_PARTITION "\0" \
+ 	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
+-	"bootargs=console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ubi.mtd=5 "  \
++	"bootargs=console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ubi.mtd=nandrootfs "  \
+ 		"root=ubi0:nandrootfs rootfstype=ubifs "		     \
+ 		MFG_NAND_PARTITION \
+ 		"\0" \
+ 	"bootcmd=nand read ${loadaddr} 0x5000000 0x2000000;"\
+-		"nand read ${fdt_addr} 0x7000000 0x100000;"\
+-		"booti ${loadaddr} - ${fdt_addr}"
++		"nand read ${fdt_addr_r} 0x7000000 0x100000;"\
++		"booti ${loadaddr} - ${fdt_addr_r}"
+ 
+ #else
+ #define CONFIG_EXTRA_ENV_SETTINGS		\
+@@ -154,6 +154,7 @@
+ 	"boot_fit=no\0" \
+ 	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
+ 	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
++	"bootm_size=0x10000000\0" \
+ 	"initrd_addr=0x43800000\0"		\
+ 	"initrd_high=0xffffffffffffffff\0" \
+ 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
+-- 
+2.35.1
+

@@ -1,0 +1,25 @@
+From a3c5faf264c1c187a981c5999bd29635afa2bb7f Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Mon, 18 Oct 2021 12:33:15 +0200
+Subject: [PATCH 13/45] Enhanced probe is not available for our eMMC part, need
+ to be disabled both in dtsi and config
+
+---
+ arch/arm/dts/portenta-x8-u-boot.dtsi | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/dts/portenta-x8-u-boot.dtsi b/arch/arm/dts/portenta-x8-u-boot.dtsi
+index aab8845b73..c3300877d8 100644
+--- a/arch/arm/dts/portenta-x8-u-boot.dtsi
++++ b/arch/arm/dts/portenta-x8-u-boot.dtsi
+@@ -88,7 +88,6 @@
+ &usdhc3 {
+ 	u-boot,dm-spl;
+ 	mmc-hs400-1_8v;
+-	mmc-hs400-enhanced-strobe;
+ 	assigned-clocks = <&clk IMX8MM_CLK_USDHC3>;
+ 	assigned-clock-rates = <400000000>;
+ 	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_400M>;
+-- 
+2.35.1
+

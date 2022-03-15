@@ -1,0 +1,25 @@
+From 9960ab9626445bad70dc597019143f4d76eb5268 Mon Sep 17 00:00:00 2001
+From: Martino Facchin <m.facchin@arduino.cc>
+Date: Wed, 1 Dec 2021 14:27:24 +0100
+Subject: [PATCH 37/45] portenta_x8: change usb hub i2c bus fox max carrier
+
+---
+ board/arduino/portenta-x8/portenta-x8.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
+index 885e1ea4d0..2ddab36467 100644
+--- a/board/arduino/portenta-x8/portenta-x8.c
++++ b/board/arduino/portenta-x8/portenta-x8.c
+@@ -30,7 +30,7 @@
+  * External USB Hub configuration
+  */
+ #define EXT_USB_HUB
+-#define EXT_USB_HUB_I2C_BUS  0
++#define EXT_USB_HUB_I2C_BUS  2
+ #define EXT_USB_HUB_I2C_ADR  0x2C
+ /**
+  * USB2514B/M2 configuration data
+-- 
+2.35.1
+

@@ -1,0 +1,107 @@
+From 12b69fd8787f582ccd2f1ae5151031d83eb956a2 Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Mon, 11 Oct 2021 16:06:29 -0700
+Subject: [PATCH 03/45] portenta-m8: support high-speed mmc
+
+Sync mmc speed settings w/ imx8mm-evk
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ arch/arm/dts/portenta-m8-u-boot.dtsi |  2 +-
+ arch/arm/dts/portenta-m8.dts         | 18 +++++++++++++-----
+ configs/portenta-m8_defconfig        |  6 +++---
+ 3 files changed, 17 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm/dts/portenta-m8-u-boot.dtsi b/arch/arm/dts/portenta-m8-u-boot.dtsi
+index 386ad60208..440bc9b335 100644
+--- a/arch/arm/dts/portenta-m8-u-boot.dtsi
++++ b/arch/arm/dts/portenta-m8-u-boot.dtsi
+@@ -82,11 +82,11 @@
+ 	assigned-clocks = <&clk IMX8MM_CLK_USDHC2>;
+ 	assigned-clock-rates = <400000000>;
+ 	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_400M>;
++	fsl,signal-voltage-switch-extra-delay-ms = <8>;
+ };
+ 
+ &usdhc3 {
+ 	u-boot,dm-spl;
+-	mmc-hs400-1_8v;
+ 	mmc-hs400-enhanced-strobe;
+ 	assigned-clocks = <&clk IMX8MM_CLK_USDHC3>;
+ 	assigned-clock-rates = <400000000>;
+diff --git a/arch/arm/dts/portenta-m8.dts b/arch/arm/dts/portenta-m8.dts
+index b7c81833b5..9edc11ebfc 100644
+--- a/arch/arm/dts/portenta-m8.dts
++++ b/arch/arm/dts/portenta-m8.dts
+@@ -213,8 +213,12 @@
+ };
+ 
+ &usdhc2 {
+-	pinctrl-names = "default";
++	assigned-clocks = <&clk IMX8MM_CLK_USDHC2>;
++	assigned-clock-rates = <200000000>;
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+ 	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
++	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
++	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+ 	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
+ 	bus-width = <4>;
+ 	vmmc-supply = <&reg_usdhc2_vmmc>;
+@@ -222,8 +226,12 @@
+ };
+ 
+ &usdhc3 {
+-	pinctrl-names = "default";
++	assigned-clocks = <&clk IMX8MM_CLK_USDHC3_ROOT>;
++	assigned-clock-rates = <400000000>;
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+ 	pinctrl-0 = <&pinctrl_usdhc3>;
++	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
++	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
+ 	bus-width = <8>;
+ 	non-removable;
+ 	status = "okay";
+@@ -365,7 +373,7 @@
+ 
+ 	pinctrl_usdhc3: usdhc3grp {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x40000190
++			MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x190
+ 			MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD		0x1d0
+ 			MX8MM_IOMUXC_NAND_DATA04_USDHC3_DATA0		0x1d0
+ 			MX8MM_IOMUXC_NAND_DATA05_USDHC3_DATA1		0x1d0
+@@ -381,7 +389,7 @@
+ 
+ 	pinctrl_usdhc3_100mhz: usdhc3grp100mhz {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x40000194
++			MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x194
+ 			MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD		0x1d4
+ 			MX8MM_IOMUXC_NAND_DATA04_USDHC3_DATA0		0x1d4
+ 			MX8MM_IOMUXC_NAND_DATA05_USDHC3_DATA1		0x1d4
+@@ -397,7 +405,7 @@
+ 
+ 	pinctrl_usdhc3_200mhz: usdhc3grp200mhz {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x40000196
++			MX8MM_IOMUXC_NAND_WE_B_USDHC3_CLK		0x196
+ 			MX8MM_IOMUXC_NAND_WP_B_USDHC3_CMD		0x1d6
+ 			MX8MM_IOMUXC_NAND_DATA04_USDHC3_DATA0		0x1d6
+ 			MX8MM_IOMUXC_NAND_DATA05_USDHC3_DATA1		0x1d6
+diff --git a/configs/portenta-m8_defconfig b/configs/portenta-m8_defconfig
+index a1e5b23c2f..a94b2d907b 100644
+--- a/configs/portenta-m8_defconfig
++++ b/configs/portenta-m8_defconfig
+@@ -142,6 +142,6 @@ CONFIG_RESET_DISPMIX=y
+ CONFIG_VIDEO_IMX_SEC_DSI=y
+ CONFIG_DM_VIDEO=y
+ 
+-# TODO
+-# CONFIG_MMC_HS400_SUPPORT is not set
+-# CONFIG_MMC_HS400_ES_SUPPORT is not set
++CONFIG_MMC_HS400_SUPPORT=y
++CONFIG_MMC_HS400_ES_SUPPORT=y
++CONFIG_MMC_HS200_SUPPORT=y
+-- 
+2.35.1
+

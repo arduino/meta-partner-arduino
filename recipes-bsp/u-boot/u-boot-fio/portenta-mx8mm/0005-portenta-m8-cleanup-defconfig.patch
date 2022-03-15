@@ -1,0 +1,55 @@
+From d46db22b9157697868d87fee5f49dffdb8c41848 Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Tue, 12 Oct 2021 15:25:03 -0700
+Subject: [PATCH 05/45] portenta-m8: cleanup defconfig
+
+Establish better default configs
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ configs/portenta-m8_defconfig | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/configs/portenta-m8_defconfig b/configs/portenta-m8_defconfig
+index 0e17c52a01..16cdd840a8 100644
+--- a/configs/portenta-m8_defconfig
++++ b/configs/portenta-m8_defconfig
+@@ -5,7 +5,7 @@ CONFIG_SPL_GPIO_SUPPORT=y
+ CONFIG_SPL_LIBCOMMON_SUPPORT=y
+ CONFIG_SPL_LIBGENERIC_SUPPORT=y
+ CONFIG_SYS_MALLOC_F_LEN=0x10000
+-CONFIG_ENV_SIZE=0x1000
++CONFIG_ENV_SIZE=0x4000
+ CONFIG_ENV_OFFSET=0x400000
+ CONFIG_SYS_MEMTEST_START=0x40000000
+ CONFIG_SYS_MEMTEST_END=0x80000000
+@@ -22,8 +22,6 @@ CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
+ CONFIG_SPL=y
+ CONFIG_DEFAULT_DEVICE_TREE="portenta-m8"
+ CONFIG_CSF_SIZE=0x2000
+-CONFIG_BOOTCOUNT_LIMIT=y
+-CONFIG_BOOTCOUNT_ENV=y
+ CONFIG_DISTRO_DEFAULTS=y
+ CONFIG_BOOTCOMMAND="run distro_bootcmd;run bsp_bootcmd"
+ CONFIG_FIT=y
+@@ -41,7 +39,7 @@ CONFIG_SPL_POWER_SUPPORT=y
+ CONFIG_NR_DRAM_BANKS=2
+ CONFIG_HUSH_PARSER=y
+ CONFIG_SYS_PROMPT="u-boot=> "
+-CONFIG_CMD_EXPORTENV=y
++# CONFIG_CMD_EXPORTENV is not set
+ CONFIG_CMD_IMPORTENV=y
+ # CONFIG_CMD_CRC32 is not set
+ # CONFIG_BOOTM_NETBSD is not set
+@@ -118,7 +116,7 @@ CONFIG_MXC_UART=y
+ CONFIG_SYSRESET=y
+ CONFIG_SYSRESET_PSCI=y
+ CONFIG_DM_THERMAL=y
+-CONFIG_NXP_TMU=y
++CONFIG_IMX_TMU=y
+ # CONFIG_USB_TCPC is not set
+ CONFIG_USB=y
+ CONFIG_USB_GADGET=y
+-- 
+2.35.1
+

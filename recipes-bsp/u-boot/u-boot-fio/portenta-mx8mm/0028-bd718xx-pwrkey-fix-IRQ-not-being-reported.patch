@@ -1,0 +1,36 @@
+From f28ca3a15bc6f77f795d35910103af1d98a36f97 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Fri, 5 Nov 2021 18:53:47 +0100
+Subject: [PATCH 28/45] bd718xx-pwrkey: fix IRQ not being reported
+
+---
+ arch/arm/dts/portenta-x8.dts | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
+index 5219c6cd30..a33a628511 100644
+--- a/arch/arm/dts/portenta-x8.dts
++++ b/arch/arm/dts/portenta-x8.dts
+@@ -70,8 +70,8 @@
+ 		reg = <0x4b>;
+ 		pinctrl-0 = <&pinctrl_pmic>;
+ 		pinctrl-names = "default";
+-		interrupt-parent = <&gpio1>;
+-		interrupts = <3 GPIO_ACTIVE_LOW>;
++		interrupt-parent = <&gpio3>;
++		interrupts = <8 GPIO_ACTIVE_LOW>;
+ 		rohm,reset-snvs-powered;
+ 		clocks = <&pmic_refclk>;
+ 
+@@ -215,7 +215,7 @@
+ 
+ 	pinctrl_pmic: pmicirq {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_GPIO1_IO03_GPIO1_IO3		0x41
++			MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x141
+ 		>;
+ 	};
+ 
+-- 
+2.35.1
+

@@ -1,0 +1,103 @@
+From 9030150d182dc85f6064b3957c7f837e8b5bf715 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Mon, 29 Nov 2021 19:24:22 +0100
+Subject: [PATCH 36/45] Switching console from uart2 to uart3 on portenta-x8
+
+---
+ arch/arm/dts/portenta-x8.dts            | 12 +++++-------
+ board/arduino/portenta-x8/portenta-x8.c |  6 +++---
+ include/configs/portenta-x8.h           |  8 ++++----
+ 3 files changed, 12 insertions(+), 14 deletions(-)
+
+diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
+index a33a628511..dfeaaf949f 100644
+--- a/arch/arm/dts/portenta-x8.dts
++++ b/arch/arm/dts/portenta-x8.dts
+@@ -183,9 +183,9 @@
+ 	};
+ };
+ 
+-&uart2 { /* console */
++&uart3 { /* console */
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_uart2>;
++	pinctrl-0 = <&pinctrl_uart3>;
+ 	status = "okay";
+ };
+ 
+@@ -219,12 +219,10 @@
+ 		>;
+ 	};
+ 
+-	pinctrl_uart2: uart2grp {
++	pinctrl_uart3: uart3grp {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
+-			MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX		0x140
+-			MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B		0x140
+-			MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B		0x140
++			MX8MM_IOMUXC_UART3_RXD_UART3_DCE_RX		0x140
++			MX8MM_IOMUXC_UART3_TXD_UART3_DCE_TX		0x140
+ 		>;
+ 	};
+ 
+diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
+index 901f98f2bc..885e1ea4d0 100644
+--- a/board/arduino/portenta-x8/portenta-x8.c
++++ b/board/arduino/portenta-x8/portenta-x8.c
+@@ -100,8 +100,8 @@ DECLARE_GLOBAL_DATA_PTR;
+ #define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+ 
+ static iomux_v3_cfg_t const uart_pads[] = {
+-	IMX8MM_PAD_SAI3_TXFS_UART2_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+-	IMX8MM_PAD_SAI3_TXC_UART2_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MM_PAD_UART3_RXD_UART3_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MM_PAD_UART3_TXD_UART3_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+ };
+ 
+ static iomux_v3_cfg_t const wdog_pads[] = {
+@@ -152,7 +152,7 @@ int board_early_init_f(void)
+ 
+ 	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
+ 
+-	init_uart_clk(1);
++	init_uart_clk(2);
+ 
+ #ifdef CONFIG_NAND_MXS
+ 	setup_gpmi_nand(); /* SPL will call the board_early_init_f */
+diff --git a/include/configs/portenta-x8.h b/include/configs/portenta-x8.h
+index bc785e0356..329375c4fc 100644
+--- a/include/configs/portenta-x8.h
++++ b/include/configs/portenta-x8.h
+@@ -127,8 +127,8 @@
+ 	"fdt_addr=0x43000000\0"			\
+ 	"fdt_high=0xffffffffffffffff\0" \
+ 	"mtdparts=" MFG_NAND_PARTITION "\0" \
+-	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
+-	"bootargs=console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ubi.mtd=nandrootfs "  \
++	"console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200\0" \
++	"bootargs=console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200 ubi.mtd=nandrootfs "  \
+ 		"root=ubi0:nandrootfs rootfstype=ubifs "		     \
+ 		MFG_NAND_PARTITION \
+ 		"\0" \
+@@ -145,7 +145,7 @@
+ 	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
+ 	"bsp_script=boot.scr\0" \
+ 	"image=Image\0" \
+-	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
++	"console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200\0" \
+ 	"fdt_addr_r=0x43000000\0"			\
+ 	"fdt_addr=0x43000000\0"			\
+ 	"fdt_high=0xffffffffffffffff\0"		\
+@@ -237,7 +237,7 @@
+ #define PHYS_SDRAM                      0x40000000
+ #define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
+ 
+-#define CONFIG_MXC_UART_BASE		UART2_BASE_ADDR
++#define CONFIG_MXC_UART_BASE		UART3_BASE_ADDR
+ 
+ /* Monitor Command Prompt */
+ #define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
+-- 
+2.35.1
+

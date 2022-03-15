@@ -1,0 +1,60 @@
+From ac45ba1a7f1e9d43870a474805a60c94979fc6ee Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Tue, 12 Oct 2021 16:37:56 -0700
+Subject: [PATCH 06/45] portenta-m8: disable HS400 ES
+
+This change was missed, but this is the actual cause of flashing
+breakage on portenta-m8.
+
+TODO: needs debugging to determine why:
+
+Detect USB boot. Will enter fastboot mode!
+Fastboot: Normal
+Boot from USB for uuu
+Detect USB boot. Will enter fastboot mode!
+flash target is MMC:2
+Detect USB boot. Will enter fastboot mode!
+switch to partitions #1, OK
+mmc2(part 1) is current device
+
+MMC erase: dev # 2, block # 0, count 8192 ... 8192 blocks erased: OK
+Detect USB boot. Will enter fastboot mode!
+Starting download of 16776232 bytes
+..........................................................................
+.....................................................
+downloading of 16776232 bytes finished
+writing to partition 'all'
+sparse flash target is mmc:2
+writing to partition 'all' for sparse, buffer size 16776232
+Flashing sparse image at offset 0
+Flashing Sparse Image
+mmc write failed
+mmc write failed
+mmc write failed
+mmc write failed
+mmc write failed
+mmc write failed
+mmc write failed
+mmc write failed
+write_sparse_image: Write failed, block #0 [0]
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ configs/portenta-m8_defconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/configs/portenta-m8_defconfig b/configs/portenta-m8_defconfig
+index 16cdd840a8..69a4e5f918 100644
+--- a/configs/portenta-m8_defconfig
++++ b/configs/portenta-m8_defconfig
+@@ -143,5 +143,6 @@ CONFIG_VIDEO_IMX_SEC_DSI=y
+ CONFIG_DM_VIDEO=y
+ 
+ CONFIG_MMC_HS400_SUPPORT=y
+-CONFIG_MMC_HS400_ES_SUPPORT=y
++# TODO: Examine why HS400 ES support breaks
++# CONFIG_MMC_HS400_ES_SUPPORT is not set
+ CONFIG_MMC_HS200_SUPPORT=y
+-- 
+2.35.1
+
