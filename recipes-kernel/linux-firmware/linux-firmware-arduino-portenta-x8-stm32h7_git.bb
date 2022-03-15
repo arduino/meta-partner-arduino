@@ -10,14 +10,14 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = " \
-    git://github.com/MaxPayne86Arduino/portentam8-stm32h7-fw.git;protocol=https;branch=refactor \
+    git://github.com/MaxPayne86Arduino/portentam8-stm32h7-fw.git;protocol=https;branch=master \
     file://stm32h7-program.service \
     file://m4-led-forwarder.service \
     file://m4_led_forwarder \
     file://monitor-m4-elf-file.path \
     file://monitor-m4-elf-file.service \
 "
-SRCREV = "0596eb550d0eb656e8784ffa51245beac0d5a744"
+SRCREV = "5c7e4e394be860615deba68317bee385b9b076b3"
 PV = "0.0.2"
 
 S = "${WORKDIR}/git"
