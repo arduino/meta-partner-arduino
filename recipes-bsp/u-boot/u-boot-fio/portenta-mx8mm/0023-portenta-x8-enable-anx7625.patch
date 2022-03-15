@@ -1,0 +1,54 @@
+From 42855c47b321511f8694964e0fe554ab486bd887 Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Sat, 6 Nov 2021 16:06:42 -0700
+Subject: [PATCH 23/45] portenta-x8: enable anx7625
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ board/arduino/portenta-x8/portenta-x8.c | 8 ++++++++
+ board/arduino/portenta-x8/spl.c         | 3 +++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
+index 467366772f..6ed6374629 100644
+--- a/board/arduino/portenta-x8/portenta-x8.c
++++ b/board/arduino/portenta-x8/portenta-x8.c
+@@ -24,6 +24,8 @@
+ #include <imx_sip.h>
+ #include <linux/arm-smccc.h>
+ 
++#include "../common/anx7625.h"
++
+ /**
+  * External USB Hub configuration
+  */
+@@ -391,6 +393,12 @@ int board_init(void)
+ 	setup_fec();
+ #endif
+ 
++	/* ANX7625 usb typec controller and power delivery configuration on portenta-m8 */
++	/* @TODO: selectable with CONFIG_USB_TCPC? */
++#ifndef CONFIG_SPL_BUILD
++	anx7625_probe();
++#endif
++
+ 	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
+ 		      DISPMIX, true, 0, 0, 0, 0, &res);
+ 	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
+diff --git a/board/arduino/portenta-x8/spl.c b/board/arduino/portenta-x8/spl.c
+index a6c5275b93..c512e0e1fb 100644
+--- a/board/arduino/portenta-x8/spl.c
++++ b/board/arduino/portenta-x8/spl.c
+@@ -216,6 +216,9 @@ int power_init_board(void)
+ 	pmic_reg_write(p, BD718XX_4TH_NODVS_BUCK_VOLT, 0x28);
+ #endif
+ 
++	/* enable LDO5 and set to 3.0V for ANX7625 */
++	pmic_reg_write(p, BD718XX_LDO5_VOLT, 0xcc);
++
+ 	/* lock the PMIC regs */
+ 	pmic_reg_write(p, BD718XX_REGLOCK, 0x11);
+ 
+-- 
+2.35.1
+

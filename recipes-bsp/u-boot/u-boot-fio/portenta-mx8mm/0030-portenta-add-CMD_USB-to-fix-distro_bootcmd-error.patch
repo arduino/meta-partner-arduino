@@ -1,0 +1,38 @@
+From ca2917f8f29f742886530b3eeae1a36ef7a3bb71 Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Mon, 8 Nov 2021 09:16:31 -0800
+Subject: [PATCH 30/45] portenta: add CMD_USB to fix distro_bootcmd error
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ configs/portenta-m8_defconfig | 1 +
+ configs/portenta-x8_defconfig | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/configs/portenta-m8_defconfig b/configs/portenta-m8_defconfig
+index 16524f38ef..5f81b78750 100644
+--- a/configs/portenta-m8_defconfig
++++ b/configs/portenta-m8_defconfig
+@@ -58,6 +58,7 @@ CONFIG_CMD_EXT4=y
+ CONFIG_CMD_EXT4_WRITE=y
+ CONFIG_CMD_FAT=y
+ CONFIG_CMD_SF=y
++CONFIG_CMD_USB=y
+ CONFIG_OF_CONTROL=y
+ CONFIG_ENV_OVERWRITE=y
+ CONFIG_DEFAULT_FDT_FILE="portenta-m8.dtb"
+diff --git a/configs/portenta-x8_defconfig b/configs/portenta-x8_defconfig
+index b9960ac623..6df0b436a0 100644
+--- a/configs/portenta-x8_defconfig
++++ b/configs/portenta-x8_defconfig
+@@ -58,6 +58,7 @@ CONFIG_CMD_EXT4=y
+ CONFIG_CMD_EXT4_WRITE=y
+ CONFIG_CMD_FAT=y
+ CONFIG_CMD_SF=y
++CONFIG_CMD_USB=y
+ CONFIG_OF_CONTROL=y
+ CONFIG_ENV_OVERWRITE=y
+ CONFIG_DEFAULT_FDT_FILE="portenta-x8.dtb"
+-- 
+2.35.1
+

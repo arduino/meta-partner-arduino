@@ -1,0 +1,42 @@
+From 075d1a9da835dc359eca60fb55b79007b0ce8b9b Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Sat, 6 Nov 2021 16:15:31 -0700
+Subject: [PATCH 26/45] portenta-common: anx7625: add portenta-x8 HW settings
+
+Add GPIO settings for ANX and LEDs.
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ board/arduino/common/anx7625.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
+index b00c2f66a2..df08dffdca 100644
+--- a/board/arduino/common/anx7625.c
++++ b/board/arduino/common/anx7625.c
+@@ -130,12 +130,21 @@ enum anx7625_pd_msg_type {
+ #define POWER_DELIVERY_TIMEOUT_MS 5000
+ #define OCM_LOADING_TIME          10
+ 
++#if defined(CONFIG_TARGET_PORTENTA_M8)
+ #define ANX7625_POWER_EN_PAD      IMX_GPIO_NR(4, 21)
+ #define ANX7625_RESET_N_PAD       IMX_GPIO_NR(4, 27)
+-
+ #define LEDR_PAD                  IMX_GPIO_NR(5, 2)
+ #define LEDG_PAD                  IMX_GPIO_NR(4, 28)
+ #define LEDB_PAD                  IMX_GPIO_NR(4, 29)
++#elif defined(CONFIG_TARGET_PORTENTA_X8)
++#define ANX7625_POWER_EN_PAD      IMX_GPIO_NR(1, 9)
++#define ANX7625_RESET_N_PAD       IMX_GPIO_NR(1, 13)
++#define LEDR_PAD                  IMX_GPIO_NR(5, 2)
++#define LEDG_PAD                  IMX_GPIO_NR(4, 28)
++#define LEDB_PAD                  IMX_GPIO_NR(5, 1)
++#else
++#error ANX/LED GPIOs not configured for this board
++#endif
+ 
+ #define ANX7625_DUMP_MSG              1
+ /* #define ANX7625_VERBOSE              1 */
+-- 
+2.35.1
+

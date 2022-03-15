@@ -1,0 +1,27 @@
+From f88a6c94d246c961b871f4a99409831cf649d4e5 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Fri, 24 Dec 2021 12:10:24 +0100
+Subject: [PATCH 42/45] Added hw changes in anx for x8 hw v4.1
+
+---
+ board/arduino/common/anx7625.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
+index 308d93c97f..208065b228 100644
+--- a/board/arduino/common/anx7625.c
++++ b/board/arduino/common/anx7625.c
+@@ -137,8 +137,8 @@ enum anx7625_pd_msg_type {
+ #define LEDG_PAD                  IMX_GPIO_NR(4, 28)
+ #define LEDB_PAD                  IMX_GPIO_NR(4, 29)
+ #elif defined(CONFIG_TARGET_PORTENTA_X8)
+-#define ANX7625_POWER_EN_PAD      IMX_GPIO_NR(1, 9)
+-#define ANX7625_RESET_N_PAD       IMX_GPIO_NR(1, 13)
++#define ANX7625_POWER_EN_PAD      IMX_GPIO_NR(4, 25)
++#define ANX7625_RESET_N_PAD       IMX_GPIO_NR(4, 26)
+ #define LEDR_PAD                  IMX_GPIO_NR(5, 2)
+ #define LEDG_PAD                  IMX_GPIO_NR(4, 28)
+ #define LEDB_PAD                  IMX_GPIO_NR(5, 1)
+-- 
+2.35.1
+

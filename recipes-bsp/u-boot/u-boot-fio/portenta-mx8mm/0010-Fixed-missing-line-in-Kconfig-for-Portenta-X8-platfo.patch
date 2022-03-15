@@ -1,0 +1,24 @@
+From db2e038733ce34f78939320adade12a4e581dda3 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Thu, 14 Oct 2021 19:28:45 +0200
+Subject: [PATCH 10/45] Fixed missing line in Kconfig for Portenta-X8 platform
+
+---
+ arch/arm/mach-imx/imx8m/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-imx/imx8m/Kconfig b/arch/arm/mach-imx/imx8m/Kconfig
+index 886171a45a..b7acb37ebd 100644
+--- a/arch/arm/mach-imx/imx8m/Kconfig
++++ b/arch/arm/mach-imx/imx8m/Kconfig
+@@ -205,6 +205,7 @@ config TARGET_PHYCORE_IMX8MP
+ endchoice
+ 
+ source "board/arduino/portenta-m8/Kconfig"
++source "board/arduino/portenta-x8/Kconfig"
+ source "board/freescale/imx8mq_evk/Kconfig"
+ source "board/freescale/imx8mq_val/Kconfig"
+ source "board/freescale/imx8mm_evk/Kconfig"
+-- 
+2.35.1
+

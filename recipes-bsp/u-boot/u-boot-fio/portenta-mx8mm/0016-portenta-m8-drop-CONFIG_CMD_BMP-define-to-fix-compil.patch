@@ -1,0 +1,28 @@
+From 3e1d158b8ac7b13d4deacf947f4e1c0b93be85c5 Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Mon, 18 Oct 2021 11:59:48 -0700
+Subject: [PATCH 16/45] portenta-m8: drop CONFIG_CMD_BMP define to fix compile
+ spew
+
+This is now enabled in defconfig
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ include/configs/portenta-m8.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/include/configs/portenta-m8.h b/include/configs/portenta-m8.h
+index 7ff4f8a30c..cfc6ec4459 100644
+--- a/include/configs/portenta-m8.h
++++ b/include/configs/portenta-m8.h
+@@ -297,7 +297,6 @@
+ #define CONFIG_VIDEO_LOGO
+ #define CONFIG_SPLASH_SCREEN
+ #define CONFIG_SPLASH_SCREEN_ALIGN
+-#define CONFIG_CMD_BMP
+ #define CONFIG_BMP_16BPP
+ #define CONFIG_BMP_24BPP
+ #define CONFIG_BMP_32BPP
+-- 
+2.35.1
+

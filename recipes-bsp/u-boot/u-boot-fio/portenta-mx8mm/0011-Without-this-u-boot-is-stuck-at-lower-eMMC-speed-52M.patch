@@ -1,0 +1,25 @@
+From 00874e426357b2d5f8b09423d5c0e0366214c3b7 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Thu, 14 Oct 2021 19:56:31 +0200
+Subject: [PATCH 11/45] Without this, u-boot is stuck at lower eMMC speed
+ (52Mhz)
+
+---
+ arch/arm/dts/portenta-x8-u-boot.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/dts/portenta-x8-u-boot.dtsi b/arch/arm/dts/portenta-x8-u-boot.dtsi
+index 5685734aeb..aab8845b73 100644
+--- a/arch/arm/dts/portenta-x8-u-boot.dtsi
++++ b/arch/arm/dts/portenta-x8-u-boot.dtsi
+@@ -87,6 +87,7 @@
+ 
+ &usdhc3 {
+ 	u-boot,dm-spl;
++	mmc-hs400-1_8v;
+ 	mmc-hs400-enhanced-strobe;
+ 	assigned-clocks = <&clk IMX8MM_CLK_USDHC3>;
+ 	assigned-clock-rates = <400000000>;
+-- 
+2.35.1
+

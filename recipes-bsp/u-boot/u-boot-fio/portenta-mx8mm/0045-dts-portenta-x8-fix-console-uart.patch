@@ -1,0 +1,26 @@
+From 073f9700741cf1aee0eb9b7cb3b0fb4b098a880c Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Mon, 14 Mar 2022 18:40:18 -0700
+Subject: [PATCH 45/45] dts: portenta-x8: fix console uart
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ arch/arm/dts/portenta-x8.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
+index dfeaaf949f..c1c8f00a19 100644
+--- a/arch/arm/dts/portenta-x8.dts
++++ b/arch/arm/dts/portenta-x8.dts
+@@ -18,7 +18,7 @@
+ 	model = "Arduino Portenta X8 i.MX8MM board";
+ 
+ 	chosen {
+-		stdout-path = &uart2;
++		stdout-path = &uart3;
+ 	};
+ 
+ 	leds {
+-- 
+2.35.1
+

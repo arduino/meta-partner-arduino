@@ -1,0 +1,143 @@
+From dd57405b2aa63f01d4be95a77d395b5698c63a7c Mon Sep 17 00:00:00 2001
+From: Michael Scott <mike@foundries.io>
+Date: Tue, 12 Oct 2021 12:45:54 -0700
+Subject: [PATCH 04/45] portenta-m8: support ethernet in u-boot
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+---
+ arch/arm/dts/portenta-m8-u-boot.dtsi    |  4 +++-
+ arch/arm/dts/portenta-m8.dts            |  5 ++++-
+ board/arduino/portenta-m8/portenta-m8.c | 28 +++++--------------------
+ configs/portenta-m8_defconfig           |  4 +++-
+ include/configs/portenta-m8.h           |  1 -
+ 5 files changed, 15 insertions(+), 27 deletions(-)
+
+diff --git a/arch/arm/dts/portenta-m8-u-boot.dtsi b/arch/arm/dts/portenta-m8-u-boot.dtsi
+index 440bc9b335..5685734aeb 100644
+--- a/arch/arm/dts/portenta-m8-u-boot.dtsi
++++ b/arch/arm/dts/portenta-m8-u-boot.dtsi
+@@ -116,7 +116,9 @@
+ };
+ 
+ &fec1 {
+-	phy-reset-gpios = <&gpio4 22 GPIO_ACTIVE_LOW>;
++	phy-reset-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
++	phy-reset-duration = <100>;
++	phy-reset-post-delay = <1>;
+ };
+ 
+ &wdog1 {
+diff --git a/arch/arm/dts/portenta-m8.dts b/arch/arm/dts/portenta-m8.dts
+index 9edc11ebfc..08718d28da 100644
+--- a/arch/arm/dts/portenta-m8.dts
++++ b/arch/arm/dts/portenta-m8.dts
+@@ -57,6 +57,8 @@
+ 		ethphy0: ethernet-phy@0 {
+ 			compatible = "ethernet-phy-ieee802.3-c22";
+ 			reg = <1>;
++			reset-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
++			reset-assert-us = <100000>;
+ 		};
+ 	};
+ };
+@@ -264,7 +266,8 @@
+ 			MX8MM_IOMUXC_ENET_RXC_ENET1_RGMII_RXC		0x91
+ 			MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL	0x91
+ 			MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL	0x1f
+-			/* MX8MM_IOMUXC_SAI2_RXC_GPIO4_IO22		0x19 */
++			MX8MM_IOMUXC_NAND_DATA00_GPIO3_IO6		0x16
++			MX8MM_IOMUXC_NAND_DATA01_GPIO3_IO7		0x41
+ 		>;
+ 	};
+ 
+diff --git a/board/arduino/portenta-m8/portenta-m8.c b/board/arduino/portenta-m8/portenta-m8.c
+index 73de2752c1..f8427a0046 100644
+--- a/board/arduino/portenta-m8/portenta-m8.c
++++ b/board/arduino/portenta-m8/portenta-m8.c
+@@ -160,29 +160,11 @@ int board_early_init_f(void)
+ }
+ 
+ #if IS_ENABLED(CONFIG_FEC_MXC)
+-#define FEC_RST_PAD       IMX_GPIO_NR(3, 6)
+-
+-static void setup_iomux_fec(void)
+-{
+-	printf("setup_iomux_fec\n");
+-
+-	/* reset PHY and ensure RX_DV/CLK125_EN is pulled high to enable TX_REF_CLK */
+-	//imx_iomux_v3_setup_multiple_pads(fec1_rst_pads, ARRAY_SIZE(fec1_rst_pads));
+-	gpio_request(FEC_RST_PAD, "fec1_rst");
+-	gpio_direction_output(FEC_RST_PAD, 0);
+-	udelay(500);
+-	gpio_direction_output(FEC_RST_PAD, 1);
+-	udelay(100000);
+-	gpio_free(FEC_RST_PAD);
+-}
+-
+ static int setup_fec(void)
+ {
+ 	struct iomuxc_gpr_base_regs *gpr =
+ 		(struct iomuxc_gpr_base_regs *)IOMUXC_GPR_BASE_ADDR;
+ 
+-	setup_iomux_fec();
+-
+ 	/* Use 125M anatop REF_CLK1 for ENET1, not from external */
+ 	clrsetbits_le32(&gpr->gpr[1], IOMUXC_GPR_GPR1_GPR_ENET1_TX_CLK_SEL_MASK, 0);
+ 	return set_clk_enet(ENET_125MHZ);
+@@ -190,6 +172,10 @@ static int setup_fec(void)
+ 
+ int board_phy_config(struct phy_device *phydev)
+ {
++	if (phydev->drv->config)
++		phydev->drv->config(phydev);
++
++#ifndef CONFIG_DM_ETH
+ 	/* enable rgmii rxc skew and phy mode select to RGMII copper */
+ 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
+ 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
+@@ -198,12 +184,8 @@ int board_phy_config(struct phy_device *phydev)
+ 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x82ee);
+ 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x05);
+ 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x100);
++#endif
+ 
+-	printf("board_phy_config PHYADDR %d\n", CONFIG_FEC_MXC_PHYADDR);
+-	phydev->drv->writeext(phydev, CONFIG_FEC_MXC_PHYADDR, 2, 8, 0x294);
+-
+-	if (phydev->drv->config)
+-		phydev->drv->config(phydev);
+ 	return 0;
+ }
+ #endif
+diff --git a/configs/portenta-m8_defconfig b/configs/portenta-m8_defconfig
+index a94b2d907b..0e17c52a01 100644
+--- a/configs/portenta-m8_defconfig
++++ b/configs/portenta-m8_defconfig
+@@ -104,9 +104,11 @@ CONFIG_SF_DEFAULT_MODE=0
+ 
+ CONFIG_PHYLIB=y
+ CONFIG_PHY_MICREL=y
+-CONFIG_PHY_MICREL_KSZ9031=y
+ CONFIG_PHY_MICREL_KSZ90X1=y
+ CONFIG_DM_ETH=y
++CONFIG_FEC_MXC=y
++CONFIG_MII=y
++CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_PINCTRL=y
+ CONFIG_PINCTRL_IMX8M=y
+ CONFIG_DM_REGULATOR=y
+diff --git a/include/configs/portenta-m8.h b/include/configs/portenta-m8.h
+index 5dcfb6cb13..0153e7dfb3 100644
+--- a/include/configs/portenta-m8.h
++++ b/include/configs/portenta-m8.h
+@@ -80,7 +80,6 @@
+ 
+ #define CONFIG_FEC_XCV_TYPE             RGMII
+ #define CONFIG_FEC_MXC_PHYADDR          1
+-#define FEC_QUIRK_ENET_MAC
+ 
+ #define IMX_FEC_BASE			0x30BE0000
+ #endif
+-- 
+2.35.1
+
