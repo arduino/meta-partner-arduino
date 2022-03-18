@@ -64,6 +64,10 @@ start()
         mkdir -p /dev/usb-ffs/adb
         mount -o uid=1000,gid=1000 -t functionfs adb /dev/usb-ffs/adb
 
+        # add ecm support for MacOS
+        mkdir functions/ecm.usb1
+        ln -s functions/ecm.usb1 configs/c.1
+
         # execute adbd
         # /usr/bin/adbd
 
