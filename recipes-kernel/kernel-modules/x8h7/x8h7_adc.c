@@ -90,7 +90,9 @@ static int x8h7_adc_read_chan(struct x8h7_adc *adc, unsigned int ch)
 {
   x8h7_pkt_enq(X8H7_ADC_PERIPH, ch + 1, 0, NULL);
   x8h7_pkt_send();
-  x8h7_adc_pkt_get(adc, ch);
+  if (x8h7_adc_pkt_get(adc, ch) < 0)
+    return -ETIMEDOUT;
+
   return adc->val[ch].val;
 }
 

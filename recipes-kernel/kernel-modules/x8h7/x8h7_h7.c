@@ -237,8 +237,8 @@ static long x8h7_h7_ioctl(struct file *file, unsigned int cmd, unsigned long arg
     x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
     x8h7_pkt_send();
     retval = x8h7_h7_pkt_get(priv);
-    if (retval) {
-      return -EFAULT;
+    if (retval < 0) {
+      return -ETIMEDOUT;
     }
     if ((priv->rx_pkt.peripheral == X8H7_H7_PERIPH) &&
         (priv->rx_pkt.opcode == X8H7_H7_OC_FW_GET) &&
@@ -308,10 +308,8 @@ ssize_t x8h7_read_firmware_version(char * buf, size_t const buf_size)
 
   x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
   x8h7_pkt_send();
-  retval = x8h7_h7_pkt_get(priv);
-  if (retval) {
-    return -EFAULT;
-  }
+  if (x8h7_h7_pkt_get(priv) < 0)
+    return -ETIMEDOUT;
 
   if ((priv->rx_pkt.peripheral == X8H7_H7_PERIPH) &&
       (priv->rx_pkt.opcode == X8H7_H7_OC_FW_GET) &&

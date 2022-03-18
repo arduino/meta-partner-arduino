@@ -132,7 +132,9 @@ static int x8h7_gpio_get(struct gpio_chip *chip, unsigned offset)
   data[0] = offset;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_RD, 1, data);
   x8h7_pkt_send();
-  x8h7_gpio_pkt_get(inf);
+  if (x8h7_gpio_pkt_get(inf) < 0)
+    return -ETIMEDOUT;
+
   if ((inf->rx_pkt.peripheral == X8H7_GPIO_PERIPH) &&
       (inf->rx_pkt.opcode == X8H7_GPIO_OC_RD) &&
       (inf->rx_pkt.size == 2)) {

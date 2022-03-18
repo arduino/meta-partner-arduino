@@ -95,7 +95,8 @@ static int x8h7_pwm_capture(struct pwm_chip *chip, struct pwm_device *pwm,
   x8h7->pkt.duty = 0;
   x8h7->pkt.period = 0;
 
-  x8h7_pwm_pkt_get(x8h7, timeout);
+  if (x8h7_pwm_pkt_get(x8h7, timeout) < 0)
+    return -ETIMEDOUT;
 
   result->duty_cycle = x8h7->pkt.duty;
   result->period = x8h7->pkt.period;

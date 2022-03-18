@@ -76,7 +76,8 @@ static int x8h7_rtc_read_time(struct device *dev, struct rtc_time *tm)
   DBG_PRINT("\n");
   x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_GET_DATE, 0, NULL);
   x8h7_pkt_send();
-  x8h7_rtc_pkt_get(rtc);
+  if (x8h7_rtc_pkt_get(rtc) < 0)
+    return -ETIMEDOUT;
 
   if ((rtc->rx_pkt.peripheral == X8H7_RTC_PERIPH) &&
       (rtc->rx_pkt.opcode == X8H7_RTC_GET_DATE) &&
@@ -134,7 +135,8 @@ int x8h7_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *wa)
 
   x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_GET_ALARM, 0, NULL);
   x8h7_pkt_send();
-  x8h7_rtc_pkt_get(rtc);
+  if (x8h7_rtc_pkt_get(rtc) < 0)
+    return -ETIMEDOUT;
 
   if ((rtc->rx_pkt.peripheral == X8H7_RTC_PERIPH) &&
       (rtc->rx_pkt.opcode == X8H7_RTC_GET_ALARM) &&
