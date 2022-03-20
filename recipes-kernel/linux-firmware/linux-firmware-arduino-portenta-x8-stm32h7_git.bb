@@ -78,6 +78,7 @@ FILES_${PN} = " \
     /usr/arduino/extra/program.sh \
     /usr/arduino/extra/program-h7.sh \
     /usr/arduino/extra/load_modules.sh \
+    /usr/arduino/extra/unload_modules.sh \
     /usr/arduino/extra/openocd_script-imx_gpio.cfg \
     ${systemd_system_unitdir} \
     ${bindir} \
