@@ -54,6 +54,7 @@ ADB = " \
 
 ARDUINO = " \
     arduino-ootb \
+    m4-proxy \
 "
 
 CORE_IMAGE_BASE_INSTALL += " \
