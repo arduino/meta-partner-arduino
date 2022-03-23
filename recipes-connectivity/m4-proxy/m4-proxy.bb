@@ -8,12 +8,12 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 RDEPENDS_${PN} = "bash"
 RDEPENDS_${PN}-dev = "bash"
 
-GO_IMPORT = "github.com/bcmi-labs/portentax8-m4-proxy"
+GO_IMPORT = "github.com/MaxPayne86Arduino/portentax8-m4-proxy"
 
 GO_INSTALL = "${GO_IMPORT}/proxy"
 
 SRC_URI = " \
-    git://git@${GO_IMPORT}.git;protocol=ssh;destsuffix=${BPN}-${PV}/src/${GO_IMPORT} \
+    git://${GO_IMPORT}.git;protocol=https;destsuffix=${BPN}-${PV}/src/${GO_IMPORT} \
     file://m4-proxy.service \
 "
 
