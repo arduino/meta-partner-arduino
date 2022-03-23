@@ -1,0 +1,12 @@
+[Unit]
+Description=M4 builtin led forwarder
+Requires=stm32h7-program.service
+After=stm32h7-program.service
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/usr/bin/m4_proxy
+
+[Install]
+WantedBy=multi-user.target

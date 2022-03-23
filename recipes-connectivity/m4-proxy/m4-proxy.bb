@@ -14,6 +14,7 @@ GO_INSTALL = "${GO_IMPORT}/proxy"
 
 SRC_URI = " \
     git://git@${GO_IMPORT}.git;protocol=ssh;destsuffix=${BPN}-${PV}/src/${GO_IMPORT} \
+    file://m4-proxy.service \
 "
 
 SRCREV = "master"
@@ -23,8 +24,24 @@ inherit go-mod
 do_compile() {
     cd ${B}/src/${GO_INSTALL}
     mkdir -p ${B}/${GO_BUILD_BINDIR}
-    ${GO} build ${GOBUILDFLAGS} -o ${B}/${GO_BUILD_BINDIR}/m4-proxy
-    cd ${B}
+    ${GO} build ${GOBUILDFLAGS} -o ${B}/${GO_BUILD_BINDIR}/m4_proxy
 }
 
-USERADD_PACKAGES = "${PN}"
+inherit systemd
+
+SYSTEMD_SERVICE_${PN} = "m4-proxy.service"
+
+do_install() {
+    # Binary
+    install -d ${D}/usr/bin
+    install -m 0744 ${B}/bin/linux_arm64/m4_proxy ${D}/usr/bin/m4_proxy
+
+    # Systemd service
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/m4-proxy.service ${D}${systemd_system_unitdir}/
+}
+
+FILES_${PN} += "\
+    /usr/bin \
+    ${systemd_system_unitdir} \
+"
