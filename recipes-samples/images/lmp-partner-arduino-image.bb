@@ -45,6 +45,7 @@ CORE_IMAGE_BASE_INSTALL += " \
 LMP_EXTRA = " \
     lmp-device-tree \
     lmp-auto-hostname \
+    compose-apps-early-start \
 "
 
 ADB = " \
