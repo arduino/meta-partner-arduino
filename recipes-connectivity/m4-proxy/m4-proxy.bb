@@ -13,11 +13,10 @@ GO_IMPORT = "github.com/MaxPayne86Arduino/portentax8-m4-proxy"
 GO_INSTALL = "${GO_IMPORT}/proxy"
 
 SRC_URI = " \
-    git://${GO_IMPORT}.git;protocol=https;destsuffix=${BPN}-${PV}/src/${GO_IMPORT} \
+    git://${GO_IMPORT}.git;protocol=https;destsuffix=${BPN}-${PV}/src/${GO_IMPORT};branch=master \
     file://m4-proxy.service \
 "
-
-SRCREV = "master"
+SRCREV = "b9af564047a2db923443dbc360d1393a24fb5409"
 
 inherit go-mod
 
