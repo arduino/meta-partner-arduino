@@ -61,7 +61,7 @@
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
-				gpio = <&gpio1 6 GPIO_ACTIVE_LOW>; /* stm32h7 PF8 */
+				//gpio = <&gpio1 6 GPIO_ACTIVE_LOW>; /* stm32h7 PF8 */
 				startup-delay-us = <10000>;
 				enable-active-low;
 			};
