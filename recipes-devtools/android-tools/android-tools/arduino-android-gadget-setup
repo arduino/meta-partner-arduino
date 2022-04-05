@@ -36,7 +36,7 @@ start()
         # populate config, optional
         mkdir configs/c.1/strings/0x409
         echo \"adb+cdc\" > configs/c.1/strings/0x409/configuration
-        echo 120 > configs/c.1/MaxPower
+        echo 900 > configs/c.1/MaxPower
 
         # os_desc, optional
         ln -s configs/c.1 os_desc
