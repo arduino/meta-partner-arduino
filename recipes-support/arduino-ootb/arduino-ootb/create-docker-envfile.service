@@ -1,0 +1,14 @@
+[Unit]
+Description=Create /var/run/arduino_hw_info.env that can used by docker containers
+After=local-fs.target
+Before=docker.service
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c '\
+echo "BOARD=$(fw_printenv board | cut -d '=' -f 2)" > /var/run/arduino_hw_info.env &&\
+echo "IS_ON_CARRIER=$(fw_printenv is_on_carrier | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env && \
+echo "CARRIER_NAME=$(fw_printenv carrier_name | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env'
+
+[Install]
+WantedBy=multi-user.target
