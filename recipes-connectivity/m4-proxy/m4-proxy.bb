@@ -8,7 +8,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 RDEPENDS_${PN} = "bash"
 RDEPENDS_${PN}-dev = "bash"
 
-GO_IMPORT = "github.com/MaxPayne86Arduino/portentax8-m4-proxy"
+GO_IMPORT = "github.com/arduino/portentax8-m4-proxy"
 
 GO_INSTALL = "${GO_IMPORT}/proxy"
 

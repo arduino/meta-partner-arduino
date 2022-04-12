@@ -1,6 +1,6 @@
 SUMMARY = "Linux kernel firmware files from Arduino"
 DESCRIPTION = "Arduino smt32h7 firmware for Portenta-X8 boards"
-HOMEPAGE = "https://github.com/bcmi-labs/portentam8-stm32h7-fw"
+HOMEPAGE = "https://github.com/arduino/portentam8-stm32h7-fw"
 SECTION = "kernel"
 LICENSE = "Proprietary"
 #LIC_FILES_CHKSUM = "file://LICENSE.arduino;md5=cbc5f665d04f741f1e006d2096236ba7"
@@ -10,7 +10,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = " \
-    git://github.com/MaxPayne86Arduino/portentam8-stm32h7-fw.git;protocol=https;branch=master \
+    git://github.com/arduino/portentam8-stm32h7-fw.git;protocol=https;branch=master \
     file://stm32h7-program.service \
     file://m4-led-forwarder.service \
     file://m4_led_forwarder \
