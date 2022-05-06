@@ -2,11 +2,15 @@
 Description=M4 builtin led forwarder
 Requires=stm32h7-program.service
 After=stm32h7-program.service
+StartLimitIntervalSec=120
+StartLimitBurst=10
 
 [Service]
 Type=simple
 RemainAfterExit=yes
 ExecStart=/usr/bin/m4_proxy
+Restart=on-failure
+RestartSec=2s
 
 [Install]
 WantedBy=multi-user.target
