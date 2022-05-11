@@ -31,7 +31,7 @@
 				pinctrl_gpio_cs42l52: gpiocs42l52grp {
 					fsl,pins = <
 						//MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6			0x16 /* CLOCK ENABLE (active low) stm32h7 PF8 */
-						MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12			0x16 /* RESET (active low) stm32h7 PF6 */
+						//MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12			0x16 /* RESET (active low) stm32h7 PF6 */
 					>;
 				};
 			};
@@ -61,7 +61,7 @@
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
-				//gpio = <&gpio1 6 GPIO_ACTIVE_LOW>; /* stm32h7 PF8 */
+				gpio = <&x8h7_gpio 0 GPIO_ACTIVE_LOW>; /* stm32h7 PF8 */
 				startup-delay-us = <10000>;
 				enable-active-low;
 			};
@@ -124,7 +124,7 @@
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_gpio_cs42l52>;
 				reg = <0x4a>;
-				cirrus,reset-gpio = <&gpio1 12 GPIO_ACTIVE_LOW>; /* stm32h7 PF6 */
+				cirrus,reset-gpio = <&x8h7_gpio 1 GPIO_ACTIVE_LOW>; /* stm32h7 PF6 */
 				cirrus,chgfreq-divisor = <0x05>;
 				cirrus.mica-differential-cfg;
 				cirrus,micbias-lvl = <5>;

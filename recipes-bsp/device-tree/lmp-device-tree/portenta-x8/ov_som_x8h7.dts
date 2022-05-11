@@ -71,8 +71,13 @@
 				compatible = "portenta,x8h7_adc";
 			};
 
-			x8h7_gpio {
+			x8h7_gpio: x8h7_gpio {
 				compatible = "portenta,x8h7_gpio";
+				base = <160>;
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupt-controller;
+				#interrupt-cells = <2>;
 			};
 
 			x8h7_pwm {
