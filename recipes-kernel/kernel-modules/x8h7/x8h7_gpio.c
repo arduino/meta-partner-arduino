@@ -9,6 +9,10 @@
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
 #include <linux/interrupt.h>
+#include <linux/pinctrl/pinconf.h>
+#include <linux/pinctrl/pinctrl.h>
+#include <linux/pinctrl/pinmux.h>
+#include <linux/pinctrl/pinconf-generic.h>
 
 #include "x8h7.h"
 
@@ -53,6 +57,8 @@ struct x8h7_gpio_info {
   wait_queue_head_t   wait;
   int                 rx_cnt;
   x8h7_pkt_t          rx_pkt;
+  struct pinctrl_dev *pctldev;
+  struct pinctrl_desc pinctrl_desc;
   struct gpio_chip    gc;
   uint32_t            gpio_dir;
   uint32_t            gpio_val;
@@ -60,6 +66,14 @@ struct x8h7_gpio_info {
   struct irq_domain  *irq;
 };
 
+// @TODO: add remaining gpios
+static const struct pinctrl_pin_desc x8h7_gpio_31_pins[] = {
+  PINCTRL_PIN(0, "gpio0"),
+  PINCTRL_PIN(1, "gpio1"),
+  PINCTRL_PIN(2, "gpio2"),
+  PINCTRL_PIN(3, "gpio3"),
+  PINCTRL_PIN(4, "gpio4"),
+};
 
 static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
 {
@@ -355,6 +369,110 @@ static const struct irq_domain_ops x8h7_gpio_irq_ops = {
   .xlate = irq_domain_xlate_twocell,
 };
 
+static int x8h7_gpio_pinctrl_get_groups_count(struct pinctrl_dev *pctldev)
+{
+  return 0;
+}
+
+static const char *x8h7_gpio_pinctrl_get_group_name(struct pinctrl_dev *pctldev,
+                                                 unsigned int group)
+{
+  return NULL;
+}
+
+static int x8h7_gpio_pinctrl_get_group_pins(struct pinctrl_dev *pctldev,
+                                         unsigned int group,
+                                         const unsigned int **pins,
+                                         unsigned int *num_pins)
+{
+  return -ENOTSUPP;
+}
+
+static const struct pinctrl_ops x8h7_gpio_pinctrl_ops = {
+  .get_groups_count = x8h7_gpio_pinctrl_get_groups_count,
+  .get_group_name = x8h7_gpio_pinctrl_get_group_name,
+  .get_group_pins = x8h7_gpio_pinctrl_get_group_pins,
+// @TODO: fixme map ops needed?
+#if 0
+#ifdef CONFIG_OF
+  dt_node_to_map = pinconf_generic_dt_node_to_map_pin,
+  dt_free_map = pinctrl_utils_free_map,
+#endif
+#endif
+};
+
+static int x8h7_gpio_pinconf_get(struct pinctrl_dev *pctldev, unsigned int pin,
+                              unsigned long *config)
+{
+  struct x8h7_gpio_info *inf = pinctrl_dev_get_drvdata(pctldev);
+  unsigned int param = pinconf_to_config_param(*config);
+  int ret;
+  u32 arg;
+  unsigned int data;
+
+  switch (param) {
+  case PIN_CONFIG_OUTPUT:
+    ret = x8h7_gpio_get_direction(&inf->gc, pin);
+    if (ret < 0)
+      return ret;
+
+    if (ret)
+      return -EINVAL;
+
+    ret = x8h7_gpio_get(&inf->gc, pin);
+    if (ret < 0)
+      return ret;
+
+    arg = ret;
+    break;
+
+  default:
+    DBG_ERROR("Feature not supported, param = %d", param);
+    return -ENOTSUPP;
+  }
+
+  *config = pinconf_to_config_packed(param, arg);
+
+  return 0;
+}
+
+static int x8h7_gpio_pinconf_set(struct pinctrl_dev *pctldev, unsigned int pin,
+                              unsigned long *configs, unsigned int num_configs)
+{
+  struct x8h7_gpio_info *inf = pinctrl_dev_get_drvdata(pctldev);
+  enum pin_config_param param;
+  u32 arg;
+  int i;
+  int ret;
+
+  for (i = 0; i < num_configs; i++) {
+    param = pinconf_to_config_param(configs[i]);
+    arg = pinconf_to_config_argument(configs[i]);
+
+    switch (param) {
+    case PIN_CONFIG_OUTPUT:
+      ret = x8h7_gpio_direction_output(&inf->gc,
+                                         pin, arg);
+      if (ret < 0)
+        return ret;
+
+      break;
+
+    default:
+      DBG_ERROR("Feature not supported, param = %d", param);
+      return -ENOTSUPP;
+    }
+  } /* for each config */
+
+  return 0;
+}
+
+static const struct pinconf_ops x8h7_gpio_pinconf_ops = {
+  .pin_config_get = x8h7_gpio_pinconf_get,
+  .pin_config_set = x8h7_gpio_pinconf_set,
+  .is_generic = true,
+};
+
 static int x8h7_gpio_probe(struct platform_device *pdev)
 {
   struct x8h7_gpio_info  *inf;
@@ -377,6 +495,28 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   init_waitqueue_head(&inf->wait);
   inf->rx_cnt = 0;
 
+  /* Pinctrl_desc */
+  inf->pinctrl_desc.name = "x8h7_gpio-pinctrl";
+  inf->pinctrl_desc.pctlops = &x8h7_gpio_pinctrl_ops;
+  inf->pinctrl_desc.confops = &x8h7_gpio_pinconf_ops;
+  inf->pinctrl_desc.pins = x8h7_gpio_31_pins;
+  inf->pinctrl_desc.npins = X8H7_GPIO_NUM;
+  inf->pinctrl_desc.owner = THIS_MODULE;
+
+  ret = devm_pinctrl_register_and_init(inf->dev, &inf->pinctrl_desc,
+               inf, &inf->pctldev);
+  if (ret) {
+    DBG_ERROR("Failed to register pinctrl device\n");
+    return ret;
+  }
+
+  ret = pinctrl_enable(inf->pctldev);
+  if (ret) {
+    DBG_ERROR("Failed to enable pinctrl device\n");
+    return ret;
+  }
+
+  /* Register GPIO controller */
   inf->gc.label            = "x8h7_gpio";
   inf->gc.direction_input  = x8h7_gpio_direction_input;
   inf->gc.get              = x8h7_gpio_get;
@@ -388,7 +528,9 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->gc.base             = base;
   inf->gc.ngpio            = X8H7_GPIO_NUM;
   inf->gc.parent           = &pdev->dev;
+#ifdef CONFIG_OF_GPIO
   inf->gc.of_node          = pdev->dev.of_node;
+#endif
 
   inf->irq = irq_domain_add_linear(node, X8H7_GPIO_NUM,
                                    &x8h7_gpio_irq_ops, inf);
