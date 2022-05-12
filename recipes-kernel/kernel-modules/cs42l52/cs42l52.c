@@ -1156,11 +1156,15 @@ static int cs42l52_i2c_probe(struct i2c_client *i2c_client,
 			pdata->reset_gpio =
 				of_get_named_gpio(i2c_client->dev.of_node,
 						"cirrus,reset-gpio", 0);
+			if ((int)pdata->reset_gpio < 0) {
+				dev_info(&i2c_client->dev, "%s %d cannot obtain reset-gpio\n", __func__, __LINE__);
+				return (int)pdata->reset_gpio;
+			}
 		}
 		cs42l52->pdata = *pdata;
 	}
 
-	if (cs42l52->pdata.reset_gpio) {
+	if ((int)cs42l52->pdata.reset_gpio >= 0) {
 		ret = devm_gpio_request_one(&i2c_client->dev,
 					    cs42l52->pdata.reset_gpio,
 					    GPIOF_OUT_INIT_HIGH,
