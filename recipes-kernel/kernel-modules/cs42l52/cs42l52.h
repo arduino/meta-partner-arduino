@@ -11,6 +11,24 @@
 #ifndef __CS42L52_H__
 #define __CS42L52_H__
 
+struct cs42l52_platform_data {
+
+	/* MICBIAS Level. Check datasheet Pg48 */
+	unsigned int micbias_lvl;
+
+	/* MICA mode selection Differential or Single-ended */
+	bool mica_diff_cfg;
+
+	/* MICB mode selection Differential or Single-ended */
+	bool micb_diff_cfg;
+
+	/* Charge Pump Freq. Check datasheet Pg73 */
+	unsigned int chgfreq;
+
+	/* Reset GPIO */
+	unsigned int reset_gpio;
+};
+
 #define CS42L52_NAME				"CS42L52"
 #define CS42L52_DEFAULT_CLK			12000000
 #define CS42L52_MIN_CLK				11000000

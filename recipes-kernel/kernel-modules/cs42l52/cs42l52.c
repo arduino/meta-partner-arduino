@@ -28,7 +28,6 @@
 #include <sound/soc-dapm.h>
 #include <sound/initval.h>
 #include <sound/tlv.h>
-#include <sound/cs42l52.h>
 #include "cs42l52.h"
 
 struct sp_config {
