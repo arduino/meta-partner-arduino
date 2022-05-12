@@ -67,12 +67,41 @@ struct x8h7_gpio_info {
 };
 
 // @TODO: add remaining gpios
-static const struct pinctrl_pin_desc x8h7_gpio_31_pins[] = {
+static const struct pinctrl_pin_desc x8h7_gpio_34_pins[] = {
   PINCTRL_PIN(0, "gpio0"),
   PINCTRL_PIN(1, "gpio1"),
   PINCTRL_PIN(2, "gpio2"),
   PINCTRL_PIN(3, "gpio3"),
   PINCTRL_PIN(4, "gpio4"),
+  PINCTRL_PIN(5, "gpio5"),
+  PINCTRL_PIN(6, "gpio6"),
+  PINCTRL_PIN(7, "gpio7"),
+  PINCTRL_PIN(8, "gpio8"),
+  PINCTRL_PIN(9, "gpio9"),
+  PINCTRL_PIN(10, "gpio10"),
+  PINCTRL_PIN(11, "gpio11"),
+  PINCTRL_PIN(12, "gpio12"),
+  PINCTRL_PIN(13, "gpio13"),
+  PINCTRL_PIN(14, "gpio14"),
+  PINCTRL_PIN(15, "gpio15"),
+  PINCTRL_PIN(16, "gpio16"),
+  PINCTRL_PIN(17, "gpio17"),
+  PINCTRL_PIN(18, "gpio18"),
+  PINCTRL_PIN(19, "gpio19"),
+  PINCTRL_PIN(20, "gpio20"),
+  PINCTRL_PIN(21, "gpio21"),
+  PINCTRL_PIN(22, "gpio22"),
+  PINCTRL_PIN(23, "gpio23"),
+  PINCTRL_PIN(24, "gpio24"),
+  PINCTRL_PIN(25, "gpio25"),
+  PINCTRL_PIN(26, "gpio26"),
+  PINCTRL_PIN(27, "gpio27"),
+  PINCTRL_PIN(28, "gpio28"),
+  PINCTRL_PIN(29, "gpio29"),
+  PINCTRL_PIN(30, "gpio30"),
+  PINCTRL_PIN(31, "gpio31"),
+  PINCTRL_PIN(32, "gpio32"),
+  PINCTRL_PIN(33, "gpio33"),
 };
 
 static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
@@ -499,7 +528,7 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->pinctrl_desc.name = "x8h7_gpio-pinctrl";
   inf->pinctrl_desc.pctlops = &x8h7_gpio_pinctrl_ops;
   inf->pinctrl_desc.confops = &x8h7_gpio_pinconf_ops;
-  inf->pinctrl_desc.pins = x8h7_gpio_31_pins;
+  inf->pinctrl_desc.pins = x8h7_gpio_34_pins;
   inf->pinctrl_desc.npins = X8H7_GPIO_NUM;
   inf->pinctrl_desc.owner = THIS_MODULE;
 
