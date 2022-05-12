@@ -26,14 +26,6 @@
 						MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0		0xd6
 					>;
 				};
-
-				/* @TODO: fix me cs42l52 clk en and reset pass thru stm32h7 */
-				pinctrl_gpio_cs42l52: gpiocs42l52grp {
-					fsl,pins = <
-						//MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6			0x16 /* CLOCK ENABLE (active low) stm32h7 PF8 */
-						//MX8MM_IOMUXC_GPIO1_IO12_GPIO1_IO12			0x16 /* RESET (active low) stm32h7 PF6 */
-					>;
-				};
 			};
 		};
 	};
@@ -121,8 +113,6 @@
 			cs42l52: cs42l52@4a {
 				#sound-dai-cells = <0>;
 				compatible = "cirrus,cs42l52";
-				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_gpio_cs42l52>;
 				reg = <0x4a>;
 				cirrus,reset-gpio = <&x8h7_gpio 1 GPIO_ACTIVE_LOW>; /* stm32h7 PF6 */
 				cirrus,chgfreq-divisor = <0x05>;
