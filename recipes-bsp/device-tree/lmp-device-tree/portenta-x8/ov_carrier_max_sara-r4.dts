@@ -4,9 +4,22 @@
  * Enable SARA-R4 modem serial port on Arduino Max carrier board.
  * No audio signals are connected to the modem.
  * In order for the modem to work ov_carrier_enuc_usbfs overlay need to be included.
- * Gpios:
- * - Reset pin active low
- * - Power on pin active high
+ * Gpios controlled by stm32h7:
+ * - Reset pin active low (stm32h7 PF3, 162 in /sys/class/gpio/export)
+ * - Power on pin active high (stm32h7 PF12, 164 in /sys/class/gpio/export)
+ *
+ * Example script to start the modem:
+ *
+ * #!/bin/sh
+ * echo 162 > /sys/class/gpio/export
+ * echo 164 > /sys/class/gpio/export
+ * echo out > /sys/class/gpio/gpio162/direction
+ * echo out > /sys/class/gpio/gpio164/direction
+ * echo 1 > /sys/class/gpio/gpio164/value
+ * echo 0 > /sys/class/gpio/gpio162/value
+ * echo 1 > /sys/class/gpio/gpio162/value
+ * sleep 1
+ * echo 0 > /sys/class/gpio/gpio162/value
  */
 
 /dts-v1/;
@@ -35,14 +48,6 @@
 						MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX			0x140
 						MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B		0x140
 						MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B		0x140
-					>;
-				};
-
-				/* @TODO: fix me Sara-R4 modem reset and power on pass thru stm32h7 */
-				pinctrl_gpio_sara: gpiosaragrp {
-					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO15_GPIO1_IO15			0x44 /* RST active low stm32h7 PF3 */
-						// MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20			0x44 /* POWER_ON active high stm32h7 PF12 */
 					>;
 				};
 			};
