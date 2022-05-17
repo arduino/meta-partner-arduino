@@ -376,20 +376,20 @@ static void x8h7_gpio_irq_bus_sync_unlock(struct irq_data *d)
   unsigned long           irq;
 
   DBG_PRINT("\n");
+
   irq = irqd_to_hwirq(d);
 
   // Send interrupt type
   data[0] = irq;
   data[1] = inf->irq_conf;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
-  x8h7_pkt_send();
 
   // Send mask
   data[0] = irq;
   data[1] = inf->gpio_ien;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
-  x8h7_pkt_send();
 
+  x8h7_pkt_send();
   mutex_unlock(&inf->lock);
 }
 
