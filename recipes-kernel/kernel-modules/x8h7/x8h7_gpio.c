@@ -394,7 +394,7 @@ static void x8h7_gpio_irq_bus_sync_unlock(struct irq_data *d)
 }
 
 static struct irq_chip x8h7_gpio_irq_chip = {
-  .name         = "x8h7-gpio",
+  .name         = "x8h7_gpio-irq",
   .irq_unmask   = x8h7_gpio_irq_unmask,
   .irq_mask     = x8h7_gpio_irq_mask,
   .irq_ack      = x8h7_gpio_irq_ack,
