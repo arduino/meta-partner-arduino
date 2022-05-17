@@ -17,50 +17,32 @@
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
 	fragment@0 {
-		target = <&iomuxc>;
-		__overlay__ {
-			imx8mm {
-				/* @TODO: fix me bq24195 irq line pass thru stm32h7 */
-				pinctrl_gpio_bq24195: gpiobq24195grp {
-					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO05_GPIO1_IO5		0x141 /* Interrupt pin pull-up stm32h7 PE11 */
-					>;
-				};
-			};
-		};
-	};
-
-	fragment@1 {
 		target-path = "/";
 		__overlay__ {
 			bat: battery {
 				compatible = "simple-battery";
 				precharge-current-microamp = <256000>;
 				charge-term-current-microamp = <128000>;
-				/*
-				compatible = "simple-battery";
+				/*compatible = "simple-battery";
 				voltage-min-design-microvolt = <3200000>;
 				energy-full-design-microwatt-hours = <5290000>;
 				charge-full-design-microamp-hours = <1430000>;
 				precharge-current-microamp = <256000>;
 				charge-term-current-microamp = <128000>;
 				constant-charge-current-max-microamp = <900000>;
-				constant-charge-voltage-max-microvolt = <4200000>;
-				*/
+				constant-charge-voltage-max-microvolt = <4200000>;*/
 			};
 		};
 	};
 
-	fragment@2 {
+	fragment@1 {
 		target = <&i2c3>;
 		__overlay__ {
 			bq24195: charger@6b {
 				compatible = "ti,bq24195";
-				pinctrl-names = "default";
-				pinctrl-0 = <&pinctrl_gpio_bq24195>;
 				reg = <0x6b>;
-				interrupt-parent = <&gpio1>;
-				interrupts = <5 IRQ_TYPE_NONE>; /* Edge set in drv module stm32h7 PE11 */
+				interrupt-parent = <&x8h7_gpio>;
+				interrupts = <6 IRQ_TYPE_NONE>; /* Edge set in drv module stm32h7 PE11 */
 				monitored-battery = <&bat>;
 				ti,system-minimum-microvolt = <3200000>;
 				omit-battery-class;
