@@ -67,11 +67,11 @@
 	fragment@2 {
 		target-path = "/";
 		__overlay__ {
-			x8h7_adc {
+			x8h7_adc: x8h7adc {
 				compatible = "portenta,x8h7_adc";
 			};
 
-			x8h7_gpio: x8h7_gpio {
+			x8h7_gpio: x8h7gpio {
 				compatible = "portenta,x8h7_gpio";
 				base = <160>;
 				gpio-controller;
@@ -80,11 +80,12 @@
 				#interrupt-cells = <2>;
 			};
 
-			x8h7_pwm {
+			x8h7_pwm: x8h7pwm {
 				compatible = "portenta,x8h7_pwm";
+				#pwm-cells = <2>;
 			};
 
-			x8h7_rtc {
+			x8h7_rtc: x8h7rtc {
 				compatible = "portenta,x8h7_rtc";
 			};
 
@@ -96,15 +97,15 @@
 				compatible = "portenta,x8h7_can";
 			};
 
-			x8h7_uart {
+			x8h7_uart: x8h7uart {
 				compatible = "portenta,x8h7_uart";
 			};
 
-			x8h7_ui {
+			x8h7_ui: x8h7ui {
 				compatible = "portenta,x8h7_ui";
 			};
 
-			x8h7_h7 {
+			x8h7_h7: x8h7h7 {
 				compatible = "portenta,x8h7_h7";
 			};
 		};
