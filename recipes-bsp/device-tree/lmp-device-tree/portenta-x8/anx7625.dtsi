@@ -173,9 +173,23 @@
 				pixelclk-active = <0>;
 			};
 
+			timing_2: 1024x600 {
+				clock-frequency = <60000000>;
+				hactive = <1024>;
+				vactive = <600>;
+				hback-porch = <60>;
+				hfront-porch = <6>;
+				vback-porch = <0>;
+				vfront-porch = <0>;
+				hsync-len = <0>;
+				vsync-len = <0>;
+				de-active = <0>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				pixelclk-active = <0>;
+			};
 		};
 	};
-
 };
 
 &sai6 {
