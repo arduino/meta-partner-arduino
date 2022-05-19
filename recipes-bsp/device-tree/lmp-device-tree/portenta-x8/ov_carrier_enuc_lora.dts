@@ -5,6 +5,16 @@
  * no RTS CTS only TX RX.
  * Gpios:
  * - Reset pin active low, ext. pull up of 1M on carrier
+ *   (stm32h7 PF4, 163 in /sys/class/gpio/export)
+ *
+ * Example script to reset the modem:
+ *
+ * #!/bin/sh
+ * echo 163 > /sys/class/gpio/export
+ * echo out > /sys/class/gpio/gpio163/direction
+ * echo 0 > /sys/class/gpio/gpio163/value
+ * sleep 1
+ * echo 1 > /sys/class/gpio/gpio163/value
  */
 
 /dts-v1/;
@@ -26,13 +36,6 @@
 						MX8MM_IOMUXC_UART4_TXD_UART4_DCE_TX			0x140
 					>;
 				};
-
-				/* @TODO: fix me Lora modem reset pass thru stm32h7 */
-				pinctrl_gpio_lora: gpioloragrp {
-					fsl,pins = <
-						MX8MM_IOMUXC_GPIO1_IO14_GPIO1_IO14			0x16 /* RST active low stm32h7 PF4 */
-					>;
-				};
 			};
 		};
 	};
@@ -41,7 +44,7 @@
 		target = <&uart4>;
 		__overlay__ {
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_uart4>, <&pinctrl_gpio_lora>;
+			pinctrl-0 = <&pinctrl_uart4>;
 			assigned-clocks = <&clk IMX8MM_CLK_UART4>;
 			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 			status = "okay";
