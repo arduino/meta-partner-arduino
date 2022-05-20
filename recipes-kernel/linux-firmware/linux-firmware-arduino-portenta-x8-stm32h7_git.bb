@@ -2,9 +2,8 @@ SUMMARY = "Linux kernel firmware files from Arduino"
 DESCRIPTION = "Arduino smt32h7 firmware for Portenta-X8 boards"
 HOMEPAGE = "https://github.com/arduino/portentam8-stm32h7-fw"
 SECTION = "kernel"
-LICENSE = "Proprietary"
-#LIC_FILES_CHKSUM = "file://LICENSE.arduino;md5=cbc5f665d04f741f1e006d2096236ba7"
-LIC_FILES_CHKSUM = "file://Makefile;md5=2a5dfb05f61d57ada1765d22eaa71466"
+LICENSE = "GPL-3.0-only"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=36f5ec3b7b5f969e397ea32973eb0e44"
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
@@ -17,7 +16,7 @@ SRC_URI = " \
     file://monitor-m4-elf-file.path \
     file://monitor-m4-elf-file.service \
 "
-SRCREV = "bc2d96155f819ee911ee7a19dd47a70f59a0c8fb"
+SRCREV = "ca59eca82d7fa70c30dc75fc5ed54135bae2fcc6"
 PV = "0.0.2"
 
 S = "${WORKDIR}/git"
