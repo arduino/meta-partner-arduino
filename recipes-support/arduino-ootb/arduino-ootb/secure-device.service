@@ -1,7 +1,7 @@
 [Unit]
 Description=Disable adbd usb eth gadgets dropbear ssh server for increased security
 ConditionPathExists=/var/secure_device
-Before=dropbear.socket dropbear.service android-tools-adbd.service rndis-network.service ecm-network.service
+Before=dropbear.socket android-tools-adbd.service rndis-network.service ecm-network.service
 
 [Service]
 Type=simple
