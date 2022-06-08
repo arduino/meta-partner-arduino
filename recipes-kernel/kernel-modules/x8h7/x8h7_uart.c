@@ -257,9 +257,9 @@ static void x8h7_uart_mctrl_check(struct x8h7_uart_port *sport)
  * This is our per-port timeout handler, for checking the
  * modem status signals: RI DSR CAR CTS.
  */
-static void x8h7_uart_timeout(struct timer_list *t)
+/*static void x8h7_uart_timeout(struct timer_list *t)
 {
-}
+}*/
 
 /**
  * Stop receiving - port is in process of being closed.
@@ -353,7 +353,7 @@ static void x8h7_uart_break_ctl(struct uart_port *port, int break_state)
  */
 static int x8h7_uart_startup(struct uart_port *port)
 {
-  struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
+  //struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
 
   return 0;
 }

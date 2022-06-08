@@ -393,7 +393,6 @@ static void x8h7_gpio_irq_bus_lock(struct irq_data *d)
 static void x8h7_gpio_irq_bus_sync_unlock(struct irq_data *d)
 {
   struct x8h7_gpio_info *inf = irq_data_get_irq_chip_data(d);
-  unsigned long           irq;
 
   DBG_PRINT("\n");
 
@@ -466,7 +465,6 @@ static int x8h7_gpio_pinconf_get(struct pinctrl_dev *pctldev, unsigned int pin,
   unsigned int param = pinconf_to_config_param(*config);
   int ret;
   u32 arg;
-  unsigned int data;
 
   switch (param) {
   case PIN_CONFIG_OUTPUT:

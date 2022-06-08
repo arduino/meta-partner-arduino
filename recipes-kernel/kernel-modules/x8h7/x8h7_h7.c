@@ -304,7 +304,6 @@ static long x8h7_h7_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 ssize_t x8h7_read_firmware_version(char * buf, size_t const buf_size)
 {
   struct x8h7_h7_priv * priv = x8h7_h7;
-  long                  retval = 0;
 
   x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
   x8h7_pkt_send();

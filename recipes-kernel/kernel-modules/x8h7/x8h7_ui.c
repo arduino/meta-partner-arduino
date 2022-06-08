@@ -80,13 +80,14 @@ static ssize_t x8h7_ui_read(struct file *file,
                             char __user *buf, size_t count, loff_t *offset)
 {
   struct x8h7_ui_priv *priv = x8h7_ui;
+  ssize_t ret;
 
   // call this only in case of O_BLOCK
   wait_event_interruptible(wq, priv->rx_len != 0);
 
   *offset = 0;
   //DBG_PRINT("cpoy to user %d bytes\n", count);
-  ssize_t ret = simple_read_from_buffer(buf, count, offset, priv->rx_data, priv->rx_len);
+  ret = simple_read_from_buffer(buf, count, offset, priv->rx_data, priv->rx_len);
   priv->rx_len = 0;
 
   return ret;
