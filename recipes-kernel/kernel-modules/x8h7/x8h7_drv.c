@@ -45,7 +45,7 @@
 #define DRIVER_NAME     "x8h7"
 #define X8H7_BUF_SIZE   (64*1024)
 
-#define DEBUG
+//#define DEBUG
 #include "debug.h"
 
 
@@ -153,7 +153,7 @@ x8h7_periph_t x8h7_periph[X8H7_PERIPH_NUM];
 
 /**
  */
-#if defined(DEBUG) && (DEBUG == 3)
+#if defined(DEBUG)
 
 #define X8H7_PERIPH_ADC     0x01
 #define X8H7_PERIPH_PWM     0x02
