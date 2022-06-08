@@ -109,15 +109,15 @@ static const struct pinctrl_pin_desc x8h7_gpio_34_pins[] = {
 static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
 {
   struct x8h7_gpio_info  *inf = (struct x8h7_gpio_info*)priv;
+  unsigned int cur_irq = 0;
 
   if ((pkt->peripheral == X8H7_GPIO_PERIPH) &&
       (pkt->opcode == X8H7_GPIO_OC_INT) &&
       (pkt->size == 1)) {
     if (pkt->data[0] < X8H7_GPIO_NUM) {
-      int ret;
-      ret = generic_handle_irq(irq_linear_revmap(inf->irq, pkt->data[0]));
-      DBG_PRINT("call generic_handle_irq(%d) return %d\n",
-                irq_linear_revmap(inf->irq, pkt->data[0]), ret);
+      cur_irq = irq_linear_revmap(inf->irq, pkt->data[0]);
+      handle_nested_irq(cur_irq);
+      DBG_PRINT("call handle_nested_irq(%d)\n", cur_irq);
     }
   } else {
     memcpy(&inf->rx_pkt, pkt, sizeof(x8h7_pkt_t));
@@ -416,6 +416,8 @@ static int x8h7_gpio_irq_map(struct irq_domain *h, unsigned int irq,
 {
   irq_set_chip_data(irq, h->host_data);
   irq_set_chip_and_handler(irq, &x8h7_gpio_irq_chip, handle_edge_irq);
+  irq_set_nested_thread(irq, 1);
+  irq_set_noprobe(irq);
 
   return 0;
 }
