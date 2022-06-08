@@ -320,15 +320,15 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
 
 static void x8h7_gpio_irq_ack(struct irq_data *d)
 {
-//  struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
+  //struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
   uint8_t                 data[1];
   unsigned long           irq;
 
   irq = irqd_to_hwirq(d);
   DBG_PRINT("irq %ld\n", irqd_to_hwirq(d));
   data[0] = irq;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 1, data);
-  x8h7_pkt_send();
+  //x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 1, data);
+  //x8h7_pkt_send();
 }
 
 static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
