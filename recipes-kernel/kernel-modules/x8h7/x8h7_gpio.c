@@ -300,10 +300,17 @@ static int x8h7_gpio_to_irq(struct gpio_chip *gc, unsigned offset)
 static void x8h7_gpio_irq_unmask(struct irq_data *d)
 {
   struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
+  uint8_t                 data[2];
   unsigned long           irq;
 
   irq = irqd_to_hwirq(d);
   inf->gpio_ien = 1;
+
+  // Send mask
+  data[0] = irq;
+  data[1] = inf->gpio_ien;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
 
@@ -315,27 +322,36 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
 
   irq = irqd_to_hwirq(d);
   inf->gpio_ien = 0;
+
+  // Send mask
+  data[0] = irq;
+  data[1] = inf->gpio_ien;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
 
 static void x8h7_gpio_irq_ack(struct irq_data *d)
 {
   //struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
-  uint8_t                 data[1];
+  //uint8_t                 data[2];
   unsigned long           irq;
 
   irq = irqd_to_hwirq(d);
   DBG_PRINT("irq %ld\n", irqd_to_hwirq(d));
-  data[0] = irq;
-  //x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 1, data);
-  //x8h7_pkt_send();
+  //data[0] = irq;
+  //data[1] = 0x55;
+  //x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
 }
 
 static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
 {
   struct x8h7_gpio_info *inf = irq_data_get_irq_chip_data(d);
+  uint8_t                 data[2];
+  unsigned long           irq;
 
-  DBG_PRINT("irq %ld flow_type %d\n", irqd_to_hwirq(d), flow_type);
+  irq = irqd_to_hwirq(d);
+  DBG_PRINT("irq %ld flow_type %d\n", irq, flow_type);
 
   switch (flow_type) {
   case IRQ_TYPE_EDGE_RISING:
@@ -357,6 +373,11 @@ static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
     return -EINVAL;
   }
 
+  // Send interrupt type
+  data[0] = irq;
+  data[1] = inf->irq_conf;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
+
   return 0;
 }
 
@@ -372,22 +393,9 @@ static void x8h7_gpio_irq_bus_lock(struct irq_data *d)
 static void x8h7_gpio_irq_bus_sync_unlock(struct irq_data *d)
 {
   struct x8h7_gpio_info *inf = irq_data_get_irq_chip_data(d);
-  uint8_t                 data[2];
   unsigned long           irq;
 
   DBG_PRINT("\n");
-
-  irq = irqd_to_hwirq(d);
-
-  // Send interrupt type
-  data[0] = irq;
-  data[1] = inf->irq_conf;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
-
-  // Send mask
-  data[0] = irq;
-  data[1] = inf->gpio_ien;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
 
   x8h7_pkt_send();
   mutex_unlock(&inf->lock);
