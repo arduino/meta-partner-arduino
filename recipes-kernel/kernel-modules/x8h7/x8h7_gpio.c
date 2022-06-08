@@ -62,7 +62,7 @@ struct x8h7_gpio_info {
   struct gpio_chip    gc;
   uint32_t            gpio_dir;
   uint32_t            gpio_val;
-  uint32_t            gpio_ien;
+  uint8_t             gpio_ien;
   uint8_t             irq_conf;
   struct irq_domain  *irq;
   struct mutex lock;
@@ -303,8 +303,8 @@ static void x8h7_gpio_irq_unmask(struct irq_data *d)
   unsigned long           irq;
 
   irq = irqd_to_hwirq(d);
-  inf->gpio_ien &= ~(1 << irq);
-  DBG_PRINT("irq %ld, ien %08Xld\n", irq, inf->gpio_ien);
+  inf->gpio_ien = 1;
+  DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
 
 static void x8h7_gpio_irq_mask(struct irq_data *d)
@@ -314,8 +314,8 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
   unsigned long           irq;
 
   irq = irqd_to_hwirq(d);
-  inf->gpio_ien |= (1 << irq);
-  DBG_PRINT("irq %ld, ien %08Xld\n", irq, inf->gpio_ien);
+  inf->gpio_ien = 0;
+  DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
 
 static void x8h7_gpio_irq_ack(struct irq_data *d)
