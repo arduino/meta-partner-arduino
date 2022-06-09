@@ -19,8 +19,7 @@ setenv breakout_ovl ' \
   ov_carrier_breakout_spi1 \
   ov_carrier_breakout_uart1 \
   ov_carrier_breakout_uart3 \
-  ov_carrier_breakout_usbfs \
-  ov_carrier_breakout_fan0'
+  ov_carrier_breakout_usbfs'
 
 # Max carrier ov list
 # Warning!!! You need to provide +9Vdc (VIN)
