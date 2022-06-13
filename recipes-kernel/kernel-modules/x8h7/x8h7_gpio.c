@@ -110,6 +110,7 @@ static const struct pinctrl_pin_desc x8h7_gpio_34_pins[] = {
   PINCTRL_PIN(33, "gpio33"),
 };
 
+/* We can't use x8h7_pkt_send directly in x8h7_gpio_hook since it's a deadlock */
 static void x8h7_gpio_irq_ack(struct x8h7_gpio_info *inf)
 {
   if(inf->workqueue)
