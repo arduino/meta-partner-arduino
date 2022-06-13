@@ -13,6 +13,7 @@
 #include <linux/pinctrl/pinctrl.h>
 #include <linux/pinctrl/pinmux.h>
 #include <linux/pinctrl/pinconf-generic.h>
+#include <linux/workqueue.h>
 
 #include "x8h7.h"
 
@@ -66,6 +67,9 @@ struct x8h7_gpio_info {
   uint8_t             irq_conf;
   struct irq_domain  *irq;
   struct mutex lock;
+  struct work_struct work;
+  struct workqueue_struct *workqueue;
+  uint64_t ack_irq;
 };
 
 // @TODO: add remaining gpios
@@ -333,15 +337,23 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
 
 static void x8h7_gpio_irq_ack(struct irq_data *d)
 {
-  //struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
-  //uint8_t                 data[2];
-  unsigned long           irq;
+  struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
 
-  irq = irqd_to_hwirq(d);
-  DBG_PRINT("irq %ld\n", irqd_to_hwirq(d));
-  //data[0] = irq;
-  //data[1] = 0x55;
-  //x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
+  inf->ack_irq = irqd_to_hwirq(d);
+  if(inf->workqueue)
+    queue_work(inf->workqueue, &inf->work);
+}
+
+/* Worqueue for gpio_irq_ack handling */
+static void gpio_irq_ack_work_func(struct work_struct *work)
+{
+  struct x8h7_gpio_info *inf = container_of(work, struct x8h7_gpio_info, work);
+  uint8_t                 data[2];
+
+  data[0] = inf->ack_irq;
+  data[1] = 0x55;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
+  return;
 }
 
 static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
@@ -552,6 +564,13 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->rx_cnt = 0;
 
   mutex_init(&inf->lock);
+
+  INIT_WORK(&inf->work, gpio_irq_ack_work_func);
+  inf->workqueue = create_workqueue("x8h7_gpio_irq_ack_work");
+  if (!inf->workqueue) {
+    DBG_ERROR("Failed to create work queue\n");
+    ret = -ENOMEM;
+  }
 
   /* Pinctrl_desc */
   inf->pinctrl_desc.name = "x8h7_gpio-pinctrl";
