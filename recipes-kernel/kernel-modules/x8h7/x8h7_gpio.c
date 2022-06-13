@@ -122,9 +122,11 @@ static void gpio_irq_ack_work_func(struct work_struct *work)
   struct x8h7_gpio_info *inf = container_of(work, struct x8h7_gpio_info, work);
   uint8_t                 data[2];
 
+  DBG_PRINT("\n");
   data[0] = inf->ack_irq;
   data[1] = 0x55;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
+  x8h7_pkt_send();
   return;
 }
 
