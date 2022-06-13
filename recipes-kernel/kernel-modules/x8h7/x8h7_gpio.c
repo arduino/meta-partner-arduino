@@ -110,6 +110,24 @@ static const struct pinctrl_pin_desc x8h7_gpio_34_pins[] = {
   PINCTRL_PIN(33, "gpio33"),
 };
 
+static void x8h7_gpio_irq_ack(struct x8h7_gpio_info *inf)
+{
+  if(inf->workqueue)
+    queue_work(inf->workqueue, &inf->work);
+}
+
+/* Worqueue for gpio_irq_ack handling */
+static void gpio_irq_ack_work_func(struct work_struct *work)
+{
+  struct x8h7_gpio_info *inf = container_of(work, struct x8h7_gpio_info, work);
+  uint8_t                 data[2];
+
+  data[0] = inf->ack_irq;
+  data[1] = 0x55;
+  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
+  return;
+}
+
 static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
 {
   struct x8h7_gpio_info  *inf = (struct x8h7_gpio_info*)priv;
@@ -122,6 +140,9 @@ static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
       cur_irq = irq_linear_revmap(inf->irq, pkt->data[0]);
       handle_nested_irq(cur_irq);
       DBG_PRINT("call handle_nested_irq(%d)\n", cur_irq);
+      inf->ack_irq = cur_irq;
+      x8h7_gpio_irq_ack(inf);
+      DBG_PRINT("call x8h7_gpio_irq_ack(%d)\n", cur_irq);
     }
   } else {
     memcpy(&inf->rx_pkt, pkt, sizeof(x8h7_pkt_t));
@@ -335,27 +356,6 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
 
-static void x8h7_gpio_irq_ack(struct irq_data *d)
-{
-  struct x8h7_gpio_info  *inf = irq_data_get_irq_chip_data(d);
-
-  inf->ack_irq = irqd_to_hwirq(d);
-  if(inf->workqueue)
-    queue_work(inf->workqueue, &inf->work);
-}
-
-/* Worqueue for gpio_irq_ack handling */
-static void gpio_irq_ack_work_func(struct work_struct *work)
-{
-  struct x8h7_gpio_info *inf = container_of(work, struct x8h7_gpio_info, work);
-  uint8_t                 data[2];
-
-  data[0] = inf->ack_irq;
-  data[1] = 0x55;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
-  return;
-}
-
 static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
 {
   struct x8h7_gpio_info *inf = irq_data_get_irq_chip_data(d);
@@ -416,7 +416,6 @@ static struct irq_chip x8h7_gpio_irq_chip = {
   .name         = "x8h7_gpio-irq",
   .irq_unmask   = x8h7_gpio_irq_unmask,
   .irq_mask     = x8h7_gpio_irq_mask,
-  .irq_ack      = x8h7_gpio_irq_ack,
   .irq_set_type = x8h7_gpio_irq_set_type,
   .irq_bus_lock = x8h7_gpio_irq_bus_lock,
   .irq_bus_sync_unlock = x8h7_gpio_irq_bus_sync_unlock,
