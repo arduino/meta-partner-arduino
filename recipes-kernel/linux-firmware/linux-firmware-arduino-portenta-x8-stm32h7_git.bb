@@ -16,7 +16,7 @@ SRC_URI = " \
     file://monitor-m4-elf-file.path \
     file://monitor-m4-elf-file.service \
 "
-SRCREV = "ac47883d4ac0a17f21345c8fac08b85f740a004e"
+SRCREV = "adbdc44e983830e2c4b7e2a92fce06eddac11d62"
 PV = "0.0.2"
 
 S = "${WORKDIR}/git"
@@ -51,7 +51,8 @@ do_install() {
     install -m 0744 ${S}/scripts/reset.sh ${D}/usr/arduino/extra/reset.sh
     install -m 0744 ${S}/scripts/program.sh ${D}/usr/arduino/extra/program.sh
     install -m 0744 ${S}/scripts/program-h7.sh ${D}/usr/arduino/extra/program-h7.sh
-    install -m 0744 ${S}/scripts/load_modules.sh ${D}/usr/arduino/extra/load_modules.sh
+    install -m 0744 ${S}/scripts/load_modules.sh ${D}/usr/arduino/extra/load_modules_pre.sh
+    install -m 0744 ${S}/scripts/load_modules.sh ${D}/usr/arduino/extra/load_modules_post.sh
     install -m 0744 ${S}/scripts/unload_modules.sh ${D}/usr/arduino/extra/unload_modules.sh
     install -m 0644 ${S}/openocd/openocd_script-imx_gpio.cfg ${D}/usr/arduino/extra/openocd_script-imx_gpio.cfg
 
