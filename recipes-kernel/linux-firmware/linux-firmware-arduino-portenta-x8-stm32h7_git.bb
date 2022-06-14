@@ -24,7 +24,7 @@ S = "${WORKDIR}/git"
 do_compile() {
     bbnote "Building stm32h7 firmware with cortex-m7 arch"
     unset LDFLAGS CFLAGS CPPFLAGS CFLAGS_ASM
-    make debug
+    make
 }
 
 inherit systemd
