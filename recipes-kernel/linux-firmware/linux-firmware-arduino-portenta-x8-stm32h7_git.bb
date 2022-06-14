@@ -51,8 +51,8 @@ do_install() {
     install -m 0744 ${S}/scripts/reset.sh ${D}/usr/arduino/extra/reset.sh
     install -m 0744 ${S}/scripts/program.sh ${D}/usr/arduino/extra/program.sh
     install -m 0744 ${S}/scripts/program-h7.sh ${D}/usr/arduino/extra/program-h7.sh
-    install -m 0744 ${S}/scripts/load_modules.sh ${D}/usr/arduino/extra/load_modules_pre.sh
-    install -m 0744 ${S}/scripts/load_modules.sh ${D}/usr/arduino/extra/load_modules_post.sh
+    install -m 0744 ${S}/scripts/load_modules_pre.sh ${D}/usr/arduino/extra/load_modules_pre.sh
+    install -m 0744 ${S}/scripts/load_modules_pre.sh ${D}/usr/arduino/extra/load_modules_post.sh
     install -m 0744 ${S}/scripts/unload_modules.sh ${D}/usr/arduino/extra/unload_modules.sh
     install -m 0644 ${S}/openocd/openocd_script-imx_gpio.cfg ${D}/usr/arduino/extra/openocd_script-imx_gpio.cfg
 
@@ -77,7 +77,8 @@ FILES_${PN} = " \
     /usr/arduino/extra/reset.sh \
     /usr/arduino/extra/program.sh \
     /usr/arduino/extra/program-h7.sh \
-    /usr/arduino/extra/load_modules.sh \
+    /usr/arduino/extra/load_modules_pre.sh \
+    /usr/arduino/extra/load_modules_post.sh \
     /usr/arduino/extra/unload_modules.sh \
     /usr/arduino/extra/openocd_script-imx_gpio.cfg \
     ${systemd_system_unitdir} \
