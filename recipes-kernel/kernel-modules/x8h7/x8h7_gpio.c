@@ -57,6 +57,7 @@ struct x8h7_gpio_info {
   struct device      *dev;
   wait_queue_head_t   wait;
   int                 rx_cnt;
+  int                 tx_cnt;
   x8h7_pkt_t          rx_pkt;
   struct pinctrl_dev *pctldev;
   struct pinctrl_desc pinctrl_desc;
@@ -340,6 +341,7 @@ static void x8h7_gpio_irq_unmask(struct irq_data *d)
   data[0] = irq;
   data[1] = inf->gpio_ien;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+  inf->tx_cnt++;
 
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
@@ -357,6 +359,7 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
   data[0] = irq;
   data[1] = inf->gpio_ien;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+  inf->tx_cnt++;
 
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
 }
@@ -394,6 +397,7 @@ static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
   data[0] = irq;
   data[1] = inf->irq_conf;
   x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
+  inf->tx_cnt++;
 
   return 0;
 }
@@ -413,7 +417,11 @@ static void x8h7_gpio_irq_bus_sync_unlock(struct irq_data *d)
 
   DBG_PRINT("\n");
 
-  x8h7_pkt_send();
+  /* Invoke send only if there are pending events */
+  if(inf->tx_cnt != 0) {
+    x8h7_pkt_send();
+    inf->tx_cnt = 0;
+  }
   mutex_unlock(&inf->lock);
 }
 
@@ -566,6 +574,7 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->dev = &pdev->dev;
   init_waitqueue_head(&inf->wait);
   inf->rx_cnt = 0;
+  inf->tx_cnt = 0;
 
   mutex_init(&inf->lock);
 
