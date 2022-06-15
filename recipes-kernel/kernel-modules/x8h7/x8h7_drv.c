@@ -113,7 +113,7 @@ MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
 
 /*-------------------------------------------------------------------------*/
 
-struct spidev_data   *x8h7_spidev;
+struct spidev_data  *x8h7_spidev;
 
 /**
  */
@@ -344,14 +344,14 @@ int x8h7_spi_trx(struct spi_device *spi,
  * Function to send/receive physically data over SPI,
  * moreover in this function we process received data
  * and dispatch to corresponding peripheral
+ * @TODO: remove arg?
  */
 static inline int x8h7_pkt_send_priv(int arg)
 {
   struct spidev_data   *spidev = x8h7_spidev;
   x8h7_pkthdr_t        *hdr;
   int                   len;
-  //int                   retry;
-//@TODO: check arg
+
   DBG_PRINT("Send %d bytes\n", spidev->x8h7_txl);
   mutex_lock(&spidev->buf_lock);
 
