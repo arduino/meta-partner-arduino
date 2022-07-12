@@ -40,8 +40,6 @@
 #define GPIO_MODE_INPUT         0x00   /*!< Input Floating Mode */
 #define GPIO_MODE_IN_RE         0x01   /*!< Input interrupt rising edge */
 #define GPIO_MODE_IN_FE         0x02   /*!< Input interrupt falling edge */
-#define GPIO_MODE_IN_AH         0x04   /*!< Input interrupt active high */
-#define GPIO_MODE_IN_AL         0x08   /*!< Input interrupt active low */
 
 #define GPIO_MODE_OUTPUT_PP     0x01   /*!< Output Push Pull Mode */
 #define GPIO_MODE_OUTPUT_OD     0x11   /*!< Output Open Drain Mode */
@@ -384,10 +382,12 @@ static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
     inf->irq_conf = GPIO_MODE_IN_RE | GPIO_MODE_IN_FE;
     break;
   case IRQ_TYPE_LEVEL_HIGH:
-    inf->irq_conf = GPIO_MODE_IN_AH;
+    DBG_ERROR("trigger on active high not supported.\n");
+    return -EINVAL;
     break;
   case IRQ_TYPE_LEVEL_LOW:
-    inf->irq_conf = GPIO_MODE_IN_AL;
+    DBG_ERROR("trigger on active low not supported.\n");
+    return -EINVAL;
     break;
   default:
     return -EINVAL;
