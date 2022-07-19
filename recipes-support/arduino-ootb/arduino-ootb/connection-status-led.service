@@ -3,5 +3,6 @@ Description=Connection status led
 After=network-online.target
 
 [Service]
+LogLevelMax=3
 Type=oneshot
 ExecStart=/bin/sh /usr/bin/connection_status_led
