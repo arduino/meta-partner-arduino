@@ -1,7 +1,6 @@
 [Unit]
 Description=Disable adbd usb eth gadgets dropbear ssh server for increased security
 ConditionPathExists=/var/secure_device
-Before=dropbear.socket android-tools-adbd.service
 
 [Service]
 Type=simple
@@ -13,4 +12,4 @@ ln -s /dev/null /etc/systemd/system-preset/98-android-tools-adbd.preset &&\
 ln -s /dev/null /etc/systemd/system-preset/98-dropbear.preset'
 
 [Install]
-WantedBy=sockets.target
+WantedBy=sysinit.target
