@@ -10,4 +10,4 @@ ExecStart=/bin/sh /usr/arduino/extra/program-h7.sh
 ExecStartPost=/bin/sh /usr/arduino/extra/load_modules_post.sh
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=basic.target
