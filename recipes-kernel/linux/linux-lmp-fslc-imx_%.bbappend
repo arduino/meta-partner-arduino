@@ -9,6 +9,7 @@ SRC_URI_append_portenta-mx8mm = " \
   file://1000-TEMP-FIX_PCIe_reset_after_clock.patch \
   file://mfd-bd718x7-wait-for-clock.patch \
   file://uart-imx-0001-Bug-rx-uart1-doesn-t-work-with-DMA-channels.patch \
+  file://change-trip0-to-75.patch \
 "
 
 SRC_URI_append_portenta-m8 = " \
