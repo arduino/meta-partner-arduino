@@ -12,7 +12,7 @@ static struct spi_driver mcp251x_can_driver = {
 	},
 	.id_table = mcp251x_id_table,
 	.probe = mcp251x_can_probe,
-	.remove = mcp251x_can_remove,
+	.remove = mcp251x_can:remove,
 };
 module_spi_driver(mcp251x_can_driver);
 

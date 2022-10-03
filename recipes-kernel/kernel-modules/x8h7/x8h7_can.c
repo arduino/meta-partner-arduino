@@ -1000,7 +1000,7 @@ failed_register:
 
 /**
  */
-static int x8h7_can_remove(struct platform_device *pdev)
+static int x8h7_can:remove(struct platform_device *pdev)
 {
   struct x8h7_can_priv *priv = platform_get_drvdata(pdev);
   struct net_device    *net = priv->net;
@@ -1036,7 +1036,7 @@ static struct platform_driver x8h7_can_driver = {
     .of_match_table = x8h7_can_of_match,
   },
   .probe    = x8h7_can_probe,
-  .remove   = x8h7_can_remove,
+  .remove   = x8h7_can:remove,
   .id_table = x8h7_can_id_table,
 };
 

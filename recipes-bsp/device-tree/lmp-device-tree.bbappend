@@ -1,6 +1,6 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-DTB_OVERLAYS_portenta-mx8mm = " \
+DTB_OVERLAYS:portenta-mx8mm = " \
     file://ov_som_lbee5kl1dx.dts \
     file://ov_carrier_breakout_uart3.dts \
     file://ov_carrier_breakout_spdif.dts \
@@ -10,7 +10,7 @@ DTB_OVERLAYS_portenta-mx8mm = " \
     file://ov_carrier_max_sdc.dts \
 "
 
-DTB_OVERLAYS_append_portenta-m8 = " \
+DTB_OVERLAYS:append:portenta-m8 = " \
     file://ov_carrier_breakout_uart0.dts \
     file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_spi0.dts \
@@ -25,7 +25,7 @@ DTB_OVERLAYS_append_portenta-m8 = " \
     file://ov_carrier_max_sara-r4.dts \
 "
 
-DTB_OVERLAYS_append_portenta-x8 = " \
+DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_som_x8h7.dts \
     file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_spi0.dts \
@@ -41,28 +41,28 @@ DTB_OVERLAYS_append_portenta-x8 = " \
     file://ov_carrier_max_sara-r4.dts \
 "
 
-SRC_URI_append_portenta-mx8mm = " \
+SRC_URI:append:portenta-mx8mm = " \
     file://anx7625.dtsi \
     file://arduino_portenta-mx8mm.dtsi \
     ${DTB_OVERLAYS} \
 "
 
-SRC_URI_append_portenta-m8 = " \
+SRC_URI:append:portenta-m8 = " \
     file://arduino_portenta-m8.dts \
 "
 
-SRC_URI_append_portenta-x8 = " \
+SRC_URI:append:portenta-x8 = " \
     file://arduino_portenta-x8.dts \
 "
 
 # This patch is necessary since usbc need to be
 # used with specific driver for uuu communication
-SRC_URI_append_lmp-mfgtool = " \
+SRC_URI:append:lmp-mfgtool = " \
     file://force-usbc-device-mfgtool.patch \
 "
 
-COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
+COMPATIBLE_MACHINE:portenta-mx8mm = ".*"
 
-FILES_${PN}_portenta-mx8mm += " \
+FILES:${PN}:portenta-mx8mm += " \
     /boot/devicetree/* \
 "

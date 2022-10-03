@@ -1,5 +1,5 @@
 # common Arduino u-boot-fio settings
-SRC_URI_append_portenta-mx8mm = " \
+SRC_URI:append:portenta-mx8mm = " \
     file://0001-portenta-m8-add-initial-board-support.patch \
     file://0002-portenta-m8-sync-with-imx8mm_evk.patch \
     file://0003-portenta-m8-support-high-speed-mmc.patch \

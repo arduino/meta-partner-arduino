@@ -1,5 +1,5 @@
 SUMMARY = "Minimal partner image which includes OTA Lite, Docker, and OpenSSH support"
-FILESEXTRAPATHS_prepend := "${THISDIR}/configs:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/configs:"
 
 require recipes-samples/images/lmp-image-common.inc
 
@@ -67,7 +67,7 @@ CORE_IMAGE_BASE_INSTALL += " \
 "
 
 # Packages to be installed in Portenta-X8 machine only
-IMAGE_INSTALL_append_portenta-x8 = " openocd"
+IMAGE_INSTALL:append:portenta-x8 = " openocd"
 
 fakeroot do_populate_rootfs_add_custom_sudoers () {
     # Allow sudo group users to use sudo

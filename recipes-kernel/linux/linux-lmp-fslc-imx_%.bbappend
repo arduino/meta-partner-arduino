@@ -1,8 +1,8 @@
 DESCRIPTION = "kernel for Arduino Portenta MX8MM platform"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI_append_portenta-mx8mm = " \
+SRC_URI:append:portenta-mx8mm = " \
   file://portenta-mx8mm.cfg \
   file://0002-drivers-clk-rtc-enable-RTC-as-clock-input-for-the-pm.patch \
   file://0002-Extcon-GPIO_Add_DT_bindings.patch \
@@ -12,12 +12,12 @@ SRC_URI_append_portenta-mx8mm = " \
   file://change-trip0-to-75.patch \
 "
 
-SRC_URI_append_portenta-m8 = " \
+SRC_URI:append:portenta-m8 = " \
   file://portenta-m8-standard.scc \
   file://portenta-m8.cfg \
 "
 
-SRC_URI_append_portenta-x8 = " \
+SRC_URI:append:portenta-x8 = " \
   file://portenta-x8-standard.scc \
   file://portenta-x8.cfg \
   file://0001-rohm-bd718xx-add-dt-configurable-button-keycode.patch \

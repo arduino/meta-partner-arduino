@@ -26,7 +26,7 @@ SRC_URI = " \
 
 S = "${WORKDIR}"
 
-#KERNEL_MODULE_AUTOLOAD_append = "x8h7 x8h7_drv x8h7_adc x8h7_gpio x8h7_pwm x8h7_rtc x8h7_can x8h7_uart"
+#KERNEL_MODULE_AUTOLOAD:append = "x8h7 x8h7_drv x8h7_adc x8h7_gpio x8h7_pwm x8h7_rtc x8h7_can x8h7_uart"
 
 # @TODO: following customization is necessary since modules under standard path are executed by default,
 # revert when module devel is ended
@@ -41,4 +41,4 @@ do_install() {
 	           ${MODULES_INSTALL_TARGET}
 }
 
-FILES_${PN} = "/"
+FILES:${PN} = "/"

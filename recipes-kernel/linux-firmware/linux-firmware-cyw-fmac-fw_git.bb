@@ -22,11 +22,11 @@ do_install() {
     install -m 0644 ${S}/cyfmac43430-sdio.1DX.clm_blob ${D}${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.clm_blob
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/firmware/LICENCE.cyw-fmac-fw \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.bin \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.clm_blob \
 "
 
 COMPATIBLE_MACHINE ?= "^$"
-COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
+COMPATIBLE_MACHINE:portenta-mx8mm = ".*"

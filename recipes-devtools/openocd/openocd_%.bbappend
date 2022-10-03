@@ -1,2 +1,2 @@
-EXTRA_OECONF_append += " --enable-imx_gpio"
-PACKAGECONFIG_append = " sysfsgpio"
+EXTRA_OECONF:append += " --enable-imx_gpio"
+PACKAGECONFIG:append = " sysfsgpio"

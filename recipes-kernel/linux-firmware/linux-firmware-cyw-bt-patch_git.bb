@@ -31,21 +31,21 @@ do_install() {
     ln -s ..${nonarch_base_libdir}/firmware firmware
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/firmware/LICENCE.cyw-bt-patch \
     ${nonarch_base_libdir}/firmware/brcm/BCM43430A1.hcd \
     ${nonarch_base_libdir}/firmware/brcm/BCM43430A1.1DX.hcd \
     ${sysconfdir}/firmware \
 "
 
-RCONFLICTS_${PN} = "\
+RCONFLICTS:${PN} = "\
     linux-firmware-bcm43430 \
     linux-firmware-raspbian-bcm43430 \
 "
-RREPLACES_${PN} = "\
+RREPLACES:${PN} = "\
     linux-firmware-bcm43430 \
     linux-firmware-raspbian-bcm43430 \
 "
 
 COMPATIBLE_MACHINE ?= "^$"
-COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
+COMPATIBLE_MACHINE:portenta-mx8mm = ".*"

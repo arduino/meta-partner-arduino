@@ -1,6 +1,6 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SYSTEMD_AUTO_ENABLE_portenta-mx8mm = "disable"
+SYSTEMD_AUTO_ENABLE:portenta-mx8mm = "disable"
 
 SRC_URI += " \
     file://tweak-modemmanager-service.patch \
@@ -8,13 +8,13 @@ SRC_URI += " \
     file://modem_off.sh \
 "
 
-do_install_append () {
+do_install:append () {
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/modem_on.sh ${D}${bindir}/
     install -m 0755 ${WORKDIR}/modem_off.sh ${D}${bindir}/
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${bindir}/modem_on.sh \
     ${bindir}/modem_off.sh \
 "

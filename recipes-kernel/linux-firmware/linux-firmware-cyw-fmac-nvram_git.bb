@@ -21,10 +21,10 @@ do_install() {
     install -m 0644 ${S}/cyfmac43430-sdio.1DX.txt ${D}${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt
 }
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/firmware/LICENCE.cyw-fmac-nvram \
     ${nonarch_base_libdir}/firmware/brcm/brcmfmac43430-sdio.txt \
 "
 
 COMPATIBLE_MACHINE ?= "^$"
-COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
+COMPATIBLE_MACHINE:portenta-mx8mm = ".*"

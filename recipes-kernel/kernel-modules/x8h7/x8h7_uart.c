@@ -649,14 +649,14 @@ static int x8h7_uart_probe(struct platform_device *pdev)
   return 0;
 }
 
-static int x8h7_uart_remove(struct platform_device *pdev)
+static int x8h7_uart:remove(struct platform_device *pdev)
 {
   struct x8h7_uart_port *sport = platform_get_drvdata(pdev);
 
   DBG_PRINT("destroying work queue\n");
   destroy_workqueue(sport->workqueue);
   if (sport) {
-    uart_remove_one_port(&x8h7_uart, &sport->port);
+    uart:remove_one_port(&x8h7_uart, &sport->port);
   }
   return 0;
 }
@@ -674,7 +674,7 @@ static struct platform_driver x8h7_uart_driver = {
     .of_match_table = x8h7_uart_dt_ids,
   },
   .probe    = x8h7_uart_probe,
-  .remove   = x8h7_uart_remove,
+  .remove   = x8h7_uart:remove,
 };
 
 static int __init x8h7_uart_init(void)

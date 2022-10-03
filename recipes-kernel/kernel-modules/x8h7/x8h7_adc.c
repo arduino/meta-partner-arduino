@@ -169,7 +169,7 @@ static int x8h7_adc_probe(struct platform_device *pdev)
   return 0;
 }
 
-static int x8h7_adc_remove(struct platform_device *pdev)
+static int x8h7_adc:remove(struct platform_device *pdev)
 {
   return 0;
 }
@@ -182,7 +182,7 @@ MODULE_DEVICE_TABLE(of, x8h7_adc_match);
 
 static struct platform_driver x8h7_adc_driver = {
   .probe  = x8h7_adc_probe,
-  .remove = x8h7_adc_remove,
+  .remove = x8h7_adc:remove,
   .driver = {
     .name           = "x8h7_adc",
     .of_match_table = x8h7_adc_match,

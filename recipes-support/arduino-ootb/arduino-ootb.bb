@@ -2,7 +2,7 @@ SUMMARY = "Arduino OOTB"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-RDEPENDS_${PN} += "systemd"
+RDEPENDS:${PN} += "systemd"
 
 SRC_URI = " \
     file://connection-status-led.timer \
@@ -16,7 +16,7 @@ SRC_URI = " \
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "connection-status-led.timer connection-status-led.service rndis-network.service ecm-network.service secure-device.service create-docker-envfile.service"
+SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service rndis-network.service ecm-network.service secure-device.service create-docker-envfile.service"
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
@@ -31,7 +31,7 @@ do_install() {
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${bindir} \
     ${systemd_system_unitdir} \
 "

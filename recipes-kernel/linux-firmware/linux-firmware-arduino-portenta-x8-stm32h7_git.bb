@@ -4,7 +4,7 @@ HOMEPAGE = "https://github.com/arduino/portentam8-stm32h7-fw"
 SECTION = "kernel"
 LICENSE = "GPL-3.0-only"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=36f5ec3b7b5f969e397ea32973eb0e44"
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -29,7 +29,7 @@ do_compile() {
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "stm32h7-program.service m4-led-forwarder.service monitor-m4-elf-file.path monitor-m4-elf-file.service"
+SYSTEMD_SERVICE:${PN} = "stm32h7-program.service m4-led-forwarder.service monitor-m4-elf-file.path monitor-m4-elf-file.service"
 
 do_install() {
     install -d ${D}${nonarch_base_libdir}/firmware/
@@ -69,7 +69,7 @@ do_install() {
 }
 
 
-FILES_${PN} = " \
+FILES:${PN} = " \
     ${nonarch_base_libdir}/firmware/LICENSE.arduino-stm32h7-fw \
     ${nonarch_base_libdir}/firmware/arduino/stm32h7-fw/STM32H747AII6_CM7.bin \
     ${sysconfdir}/firmware \
@@ -90,4 +90,4 @@ DEPENDS += " \
 "
 
 COMPATIBLE_MACHINE ?= "^$"
-COMPATIBLE_MACHINE_portenta-mx8mm = ".*"
+COMPATIBLE_MACHINE:portenta-mx8mm = ".*"

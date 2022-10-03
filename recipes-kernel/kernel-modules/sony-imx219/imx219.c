@@ -1437,7 +1437,7 @@ error_power_off:
 	return ret;
 }
 
-static int imx219_remove(struct i2c_client *client)
+static int imx219:remove(struct i2c_client *client)
 {
 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
 	struct imx219 *imx219 = to_imx219(sd);
@@ -1472,7 +1472,7 @@ static struct i2c_driver imx219_i2c_driver = {
 		.pm = &imx219_pm_ops,
 	},
 	.probe_new = imx219_probe,
-	.remove = imx219_remove,
+	.remove = imx219:remove,
 };
 
 module_i2c_driver(imx219_i2c_driver);

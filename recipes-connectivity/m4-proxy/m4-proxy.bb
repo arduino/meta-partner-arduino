@@ -3,10 +3,10 @@ DESCRIPTION = "Portenta X8 Proxy server for communication with M4 arduino sketch
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-RDEPENDS_${PN} = "bash"
-RDEPENDS_${PN}-dev = "bash"
+RDEPENDS:${PN} = "bash"
+RDEPENDS:${PN}-dev = "bash"
 
 GO_IMPORT = "github.com/arduino/portentax8-m4-proxy"
 
@@ -28,7 +28,7 @@ do_compile() {
 
 inherit systemd
 
-SYSTEMD_SERVICE_${PN} = "m4-proxy.service"
+SYSTEMD_SERVICE:${PN} = "m4-proxy.service"
 
 do_install() {
     # Binary
@@ -40,7 +40,7 @@ do_install() {
     install -m 0644 ${WORKDIR}/m4-proxy.service ${D}${systemd_system_unitdir}/
 }
 
-FILES_${PN} += "\
+FILES:${PN} += "\
     /usr/bin \
     ${systemd_system_unitdir} \
 "
