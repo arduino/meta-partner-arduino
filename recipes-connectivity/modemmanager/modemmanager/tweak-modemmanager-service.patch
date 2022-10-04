@@ -1,14 +1,15 @@
 diff --git a/data/ModemManager.service.in b/data/ModemManager.service.in
-index 23bf809..6239ee6 100644
+index 4e4472d9..295f9f1e 100644
 --- a/data/ModemManager.service.in
 +++ b/data/ModemManager.service.in
-@@ -1,12 +1,14 @@
+@@ -1,13 +1,15 @@
  [Unit]
  Description=Modem Manager
 -After=@MM_POLKIT_SERVICE@
 -Requires=@MM_POLKIT_SERVICE@
 +After=@MM_POLKIT_SERVICE@ stm32h7-program.service create-docker-envfile.service
 +Requires=@MM_POLKIT_SERVICE@ stm32h7-program.service create-docker-envfile.service
+ ConditionVirtualization=!container
  
  [Service]
  Type=dbus
@@ -18,4 +19,4 @@ index 23bf809..6239ee6 100644
 +ExecStopPost=@sbindir@/modem_off.sh
  StandardError=null
  Restart=on-abort
- CapabilityBoundingSet=CAP_SYS_ADMIN
+ CapabilityBoundingSet=CAP_SYS_ADMIN CAP_NET_ADMIN
