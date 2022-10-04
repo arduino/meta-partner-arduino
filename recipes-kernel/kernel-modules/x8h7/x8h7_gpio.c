@@ -642,7 +642,7 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   return 0;
 }
 
-static int x8h7_gpio:remove(struct platform_device *pdev)
+static int x8h7_gpio_remove(struct platform_device *pdev)
 {
 //  struct x8h7_gpio_info *inf = platform_get_drvdata(pdev);
 
@@ -660,7 +660,7 @@ static struct platform_driver x8h7_gpio_driver = {
     .of_match_table = x8h7_gpio_of_match,
   },
   .probe  = x8h7_gpio_probe,
-  .remove = x8h7_gpio:remove,
+  .remove = x8h7_gpio_remove,
 };
 
 module_platform_driver(x8h7_gpio_driver);

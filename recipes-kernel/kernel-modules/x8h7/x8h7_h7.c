@@ -421,7 +421,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   return 0;
 }
 
-static int x8h7_h7:remove(struct platform_device *pdev)
+static int x8h7_h7_remove(struct platform_device *pdev)
 {
   struct x8h7_h7_priv *priv = platform_get_drvdata(pdev);
 
@@ -444,7 +444,7 @@ static struct platform_driver x8h7_h7_driver = {
     .of_match_table = x8h7_h7_of_match,
   },
   .probe  = x8h7_h7_probe,
-  .remove = x8h7_h7:remove,
+  .remove = x8h7_h7_remove,
 };
 
 module_platform_driver(x8h7_h7_driver);

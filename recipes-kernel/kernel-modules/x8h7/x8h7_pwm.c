@@ -172,11 +172,11 @@ static int x8h7_pwm_probe(struct platform_device *pdev)
   return ret;
 }
 
-static int x8h7_pwm:remove(struct platform_device *pdev)
+static int x8h7_pwm_remove(struct platform_device *pdev)
 {
   struct x8h7_pwm_chip *x8h7_pwm = platform_get_drvdata(pdev);
 
-  return pwmchip:remove(&x8h7_pwm->chip);
+  return pwmchip_remove(&x8h7_pwm->chip);
 }
 
 static struct platform_driver x8h7_pwm_driver = {
@@ -185,7 +185,7 @@ static struct platform_driver x8h7_pwm_driver = {
     .of_match_table = of_match_ptr(x8h7_pwm_dt_ids),
   },
   .probe  = x8h7_pwm_probe,
-  .remove = x8h7_pwm:remove,
+  .remove = x8h7_pwm_remove,
 };
 module_platform_driver(x8h7_pwm_driver);
 

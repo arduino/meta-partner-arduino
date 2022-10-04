@@ -136,7 +136,7 @@ static void dtbocfg_overlay_item_release(struct dtbocfg_overlay_item *overlay)
 {
     if (overlay->id >= 0) {
 #if (LINUX_VERSION_CODE >= 0x040F00)
-        of_overlay:remove(&overlay->id);
+        of_overlay_remove(&overlay->id);
 #else        
         of_overlay_destroy(overlay->id);
 #endif        

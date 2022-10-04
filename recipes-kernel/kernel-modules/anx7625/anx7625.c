@@ -2741,11 +2741,11 @@ free_platform:
 	return ret;
 }
 
-static int anx7625_i2c:remove(struct i2c_client *client)
+static int anx7625_i2c_remove(struct i2c_client *client)
 {
 	struct anx7625_data *platform = i2c_get_clientdata(client);
 
-	drm_bridge:remove(&platform->bridge);
+	drm_bridge_remove(&platform->bridge);
 
 	if (platform->pdata.intp_irq)
 		destroy_workqueue(platform->workqueue);
@@ -2792,7 +2792,7 @@ static struct i2c_driver anx7625_driver = {
 #endif
 	},
 	.probe = anx7625_i2c_probe,
-	.remove = anx7625_i2c:remove,
+	.remove = anx7625_i2c_remove,
 
 	.id_table = anx7625_id,
 };

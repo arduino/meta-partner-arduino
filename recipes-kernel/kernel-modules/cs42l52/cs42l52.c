@@ -1032,7 +1032,7 @@ static void cs42l52_free_beep(struct snd_soc_component *component)
 {
 	struct cs42l52_private *cs42l52 = snd_soc_component_get_drvdata(component);
 
-	device:remove_file(component->dev, &dev_attr_beep);
+	device_remove_file(component->dev, &dev_attr_beep);
 	cancel_work_sync(&cs42l52->beep_work);
 	cs42l52->beep = NULL;
 
@@ -1057,14 +1057,14 @@ static int cs42l52_probe(struct snd_soc_component *component)
 	return 0;
 }
 
-static void cs42l52:remove(struct snd_soc_component *component)
+static void cs42l52_remove(struct snd_soc_component *component)
 {
 	cs42l52_free_beep(component);
 }
 
 static const struct snd_soc_component_driver soc_component_dev_cs42l52 = {
 	.probe			= cs42l52_probe,
-	.remove			= cs42l52:remove,
+	.remove			= cs42l52_remove,
 	.set_bias_level		= cs42l52_set_bias_level,
 	.controls		= cs42l52_snd_controls,
 	.num_controls		= ARRAY_SIZE(cs42l52_snd_controls),

@@ -1156,7 +1156,7 @@ static int spidev_probe(struct spi_device *spi)
   return status;
 }
 
-static int spidev:remove(struct spi_device *spi)
+static int spidev_remove(struct spi_device *spi)
 {
   struct spidev_data	*spidev = spi_get_drvdata(spi);
 
@@ -1189,7 +1189,7 @@ static struct spi_driver spidev_spi_driver = {
     .of_match_table   = of_match_ptr(spidev_dt_ids),
   },
   .probe  = spidev_probe,
-  .remove = spidev:remove,
+  .remove = spidev_remove,
 
   /* NOTE:  suspend/resume methods are not necessary here.
   * We don't do anything except pass the requests to/from

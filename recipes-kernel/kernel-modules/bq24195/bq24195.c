@@ -495,9 +495,9 @@ static int bq24195_sysfs_create_group(struct bq24195_dev_info *bdi)
       &bq24195_sysfs_attr_group);
 }
 
-static void bq24195_sysfs:remove_group(struct bq24195_dev_info *bdi)
+static void bq24195_sysfs_remove_group(struct bq24195_dev_info *bdi)
 {
-  sysfs:remove_group(&bdi->charger->dev.kobj, &bq24195_sysfs_attr_group);
+  sysfs_remove_group(&bdi->charger->dev.kobj, &bq24195_sysfs_attr_group);
 }
 #else
 static int bq24195_sysfs_create_group(struct bq24195_dev_info *bdi)
@@ -505,7 +505,7 @@ static int bq24195_sysfs_create_group(struct bq24195_dev_info *bdi)
   return 0;
 }
 
-static inline void bq24195_sysfs:remove_group(struct bq24195_dev_info *bdi) {}
+static inline void bq24195_sysfs_remove_group(struct bq24195_dev_info *bdi) {}
 #endif
 
 #ifdef CONFIG_REGULATOR
@@ -1811,7 +1811,7 @@ static int bq24195_probe(struct i2c_client *client,
   return 0;
 
 out_sysfs:
-  bq24195_sysfs:remove_group(bdi);
+  bq24195_sysfs_remove_group(bdi);
 
 out_charger:
   if (!IS_ERR_OR_NULL(bdi->battery))
@@ -1825,7 +1825,7 @@ out_pmrt:
   return ret;
 }
 
-static int bq24195:remove(struct i2c_client *client)
+static int bq24195_remove(struct i2c_client *client)
 {
   struct bq24195_dev_info *bdi = i2c_get_clientdata(client);
   int error;
@@ -1837,7 +1837,7 @@ static int bq24195:remove(struct i2c_client *client)
   }
 
   bq24195_register_reset(bdi);
-  bq24195_sysfs:remove_group(bdi);
+  bq24195_sysfs_remove_group(bdi);
   if (bdi->battery)
     power_supply_unregister(bdi->battery);
   power_supply_unregister(bdi->charger);
@@ -1957,7 +1957,7 @@ static const struct of_device_id bq24195_of_match[] = {
 
 static struct i2c_driver bq24195_driver = {
   .probe    = bq24195_probe,
-  .remove   = bq24195:remove,
+  .remove   = bq24195_remove,
   .id_table = bq24195_i2c_ids,
   .driver = {
     .name           = "bq24195-charger",
