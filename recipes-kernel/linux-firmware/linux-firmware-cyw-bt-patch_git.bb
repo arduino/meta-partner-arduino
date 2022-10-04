@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://LICENCE.cypress;md5=cbc5f665d04f741f1e006d2096236ba7"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = " \
-    git://github.com/murata-wireless/cyw-bt-patch;protocol=https \
+    git://github.com/murata-wireless/cyw-bt-patch;protocol=https;branch=master \
     file://BCM43430A1.hcd \
 "
 SRCREV = "580abcb5b5f06c9ccfb1438b1f52d8bccdff57e6"
