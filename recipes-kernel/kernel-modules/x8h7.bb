@@ -39,6 +39,18 @@ do_install() {
 	           CC="${KERNEL_CC}" LD="${KERNEL_LD}" \
 	           O=${STAGING_KERNEL_BUILDDIR} \
 	           ${MODULES_INSTALL_TARGET}
+
+	if [ ! -e "${B}/${MODULES_MODULE_SYMVERS_LOCATION}/Module.symvers" ] ; then
+		bbwarn "Module.symvers not found in ${B}/${MODULES_MODULE_SYMVERS_LOCATION}"
+		bbwarn "Please consider setting MODULES_MODULE_SYMVERS_LOCATION to a"
+		bbwarn "directory below B to get correct inter-module dependencies"
+	else
+		install -Dm0644 "${B}/${MODULES_MODULE_SYMVERS_LOCATION}"/Module.symvers ${D}${includedir}/${BPN}/Module.symvers
+		# Module.symvers contains absolute path to the build directory.
+		# While it doesn't actually seem to matter which path is specified,
+		# clear them out to avoid confusion
+		sed -e 's:${B}/::g' -i ${D}${includedir}/${BPN}/Module.symvers
+	fi
 }
 
 FILES:${PN} = "/"
