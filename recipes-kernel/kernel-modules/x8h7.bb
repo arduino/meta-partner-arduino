@@ -22,35 +22,15 @@ SRC_URI = " \
   file://x8h7_h7.c \
   file://debug.h \
   file://COPYING \
+  file://blacklist.conf \
 "
 
 S = "${WORKDIR}"
 
-#KERNEL_MODULE_AUTOLOAD:append = "x8h7 x8h7_drv x8h7_adc x8h7_gpio x8h7_pwm x8h7_rtc x8h7_can x8h7_uart"
-
-# @TODO: following customization is necessary since modules under standard path are executed by default,
-# revert when module devel is ended
-do_install() {
-	bbwarn "Copying x8h7 modules into /usr/arduino/extra"
-	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
-	install -d ${D}/usr/arduino/extra
-	oe_runmake DEPMOD=echo MODLIB="${D}/usr/arduino" \
-	           INSTALL_FW_PATH="${D}${nonarch_base_libdir}/firmware" \
-	           CC="${KERNEL_CC}" LD="${KERNEL_LD}" \
-	           O=${STAGING_KERNEL_BUILDDIR} \
-	           ${MODULES_INSTALL_TARGET}
-
-	if [ ! -e "${B}/${MODULES_MODULE_SYMVERS_LOCATION}/Module.symvers" ] ; then
-		bbwarn "Module.symvers not found in ${B}/${MODULES_MODULE_SYMVERS_LOCATION}"
-		bbwarn "Please consider setting MODULES_MODULE_SYMVERS_LOCATION to a"
-		bbwarn "directory below B to get correct inter-module dependencies"
-	else
-		install -Dm0644 "${B}/${MODULES_MODULE_SYMVERS_LOCATION}"/Module.symvers ${D}${includedir}/${BPN}/Module.symvers
-		# Module.symvers contains absolute path to the build directory.
-		# While it doesn't actually seem to matter which path is specified,
-		# clear them out to avoid confusion
-		sed -e 's:${B}/::g' -i ${D}${includedir}/${BPN}/Module.symvers
-	fi
+do_install:append() {
+    bbwarn "Blacklisting x8h7 modules"
+    install -d ${D}/${sysconfdir}/modprobe.d
+    install -m 644 ${WORKDIR}/blacklist.conf ${D}/${sysconfdir}/modprobe.d/blacklist.conf
 }
 
 FILES:${PN} = "/"
