@@ -1,0 +1,83 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2022
+ * Rasp-tenta support for
+ * IQ Audio Codec Zero
+ * Note: CONFIG_SND_SOC_DA7213=m
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_sai5: sai5grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI5_RXD2_SAI5_TX_BCLK			0xd6
+						MX8MM_IOMUXC_SAI5_RXD1_SAI5_TX_SYNC			0xd6
+						MX8MM_IOMUXC_SAI5_RXD0_SAI5_RX_DATA0		0xd6
+						MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0		0xd6
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&sai5>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_sai5>;
+			assigned-clocks = <&clk IMX8MM_CLK_SAI5>;
+			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
+			assigned-clock-rates = <24000000>;
+			#sound-dai-cells = <0>;
+			fsl,shared-interrupt;
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			sound-da7213 {
+				compatible = "simple-audio-card";
+				simple-audio-card,name = "da7213-audio";
+				simple-audio-card,format = "i2s";
+				simple-audio-card,bitclock-master = <&dailink0_master>;
+				simple-audio-card,frame-master = <&dailink0_master>;
+
+				dailink0_master: simple-audio-card,cpu {
+					sound-dai = <&sai5>;
+					dai-tdm-slot-num = <2>;
+					dai-tdm-slot-width = <32>;
+				};
+
+				 simple-audio-card,codec {
+					sound-dai = <&da2713>;
+				};
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <&i2c4>;
+		__overlay__ {
+			da2713: da2713@1a {
+				#sound-dai-cells = <0>;
+				compatible = "dlg,da7213";
+				reg = <0x1a>;
+				status = "okay";
+			};
+		};
+	};
+};

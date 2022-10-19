@@ -39,6 +39,7 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_max_cs42l52.dts \
     file://ov_carrier_enuc_lora.dts \
     file://ov_carrier_max_sara-r4.dts \
+    file://ov_rasptenta_iqaudio_codec.dts \
 "
 
 SRC_URI:append:portenta-mx8mm = " \
