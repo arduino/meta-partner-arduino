@@ -28,6 +28,13 @@
 						MX8MM_IOMUXC_SAI5_RXD3_SAI5_TX_DATA0		0xd6
 					>;
 				};
+
+				pinctrl_gpio_leds_da7213: gpioledsda7213grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI1_TXC_GPIO4_IO11		0x19
+						MX8MM_IOMUXC_SAI1_TXFS_GPIO4_IO10		0x19
+					>;
+				};
 			};
 		};
 	};
@@ -69,7 +76,7 @@
 		};
 	};
 
-	fragment@4 {
+	fragment@3 {
 		target = <&i2c4>;
 		__overlay__ {
 			da2713: da2713@1a {
@@ -77,6 +84,29 @@
 				compatible = "dlg,da7213";
 				reg = <0x1a>;
 				status = "okay";
+			};
+		};
+	};
+
+	fragment@4 {
+		target-path = "/";
+		__overlay__ {
+			leds-da7213 {
+				compatible = "gpio-leds";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_gpio_leds_da7213>;
+
+				ledR {
+					label = "redl";
+					gpios = <&gpio4 11 GPIO_ACTIVE_LOW>;
+					default-state = "off";
+				};
+
+				ledG {
+					label = "greenl";
+					gpios = <&gpio4 10 GPIO_ACTIVE_LOW>;
+					default-state = "off";
+				};
 			};
 		};
 	};
