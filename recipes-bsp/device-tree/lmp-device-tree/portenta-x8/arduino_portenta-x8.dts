@@ -18,7 +18,7 @@
 	leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_gpio_led>;
+		pinctrl-0 = <&pinctrl_gpio_leds>;
 
 		ledR {
 			label = "ledR";
@@ -179,7 +179,7 @@
 
 &iomuxc {
 	imx8mm {
-		pinctrl_gpio_led: gpioledgrp {
+		pinctrl_gpio_leds: gpioledsgrp {
 			fsl,pins = <
 				MX8MM_IOMUXC_SAI3_MCLK_GPIO5_IO2		0x19
 				MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28		0x19
