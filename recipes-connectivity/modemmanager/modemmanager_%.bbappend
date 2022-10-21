@@ -9,12 +9,13 @@ SRC_URI += " \
 "
 
 do_install:append () {
-    install -d ${D}${bindir}
-    install -m 0755 ${WORKDIR}/modem_on.sh ${D}${bindir}/
-    install -m 0755 ${WORKDIR}/modem_off.sh ${D}${bindir}/
+    install -d ${D}${sbindir}
+    install -m 0755 ${WORKDIR}/modem_on.sh ${D}${sbindir}/
+    install -m 0755 ${WORKDIR}/modem_off.sh ${D}${sbindir}/
 }
 
 FILES:${PN} += " \
-    ${bindir}/modem_on.sh \
-    ${bindir}/modem_off.sh \
+    ${sbindir}/modem_on.sh \
+    ${sbindir}/modem_off.sh \
 "
+
