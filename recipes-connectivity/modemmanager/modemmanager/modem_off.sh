@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ENV_FILE= "/var/run/arduino_hw_info.env"
+ENV_FILE="/var/run/arduino_hw_info.env"
 
 if [ -s $ENV_FILE ]; then
     . $ENV_FILE
@@ -10,8 +10,7 @@ else
 fi
 
 if [ "$IS_ON_CARRIER"=="yes" ]; then
-    if [ $CARRIER_NAME=="max" ]; then
-    else
+    if ! [ "$CARRIER_NAME"=="max" ]; then
         echo "Not on Max Carrier"
         exit 1
     fi
