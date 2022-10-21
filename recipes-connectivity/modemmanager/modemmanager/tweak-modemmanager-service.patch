@@ -14,9 +14,9 @@ index 4e4472d9..295f9f1e 100644
  [Service]
  Type=dbus
  BusName=org.freedesktop.ModemManager1
-+ExecStartPre=@bindir@/modem_on.sh
++ExecStartPre=@sbindir@/modem_on.sh
  ExecStart=@sbindir@/ModemManager
-+ExecStopPost=@bindir@/modem_off.sh
++ExecStopPost=@sbindir@/modem_off.sh
  StandardError=null
  Restart=on-abort
  CapabilityBoundingSet=CAP_SYS_ADMIN CAP_NET_ADMIN
