@@ -3,7 +3,8 @@
  * Arduino 2022
  * Rasp-tenta support for
  * IQ Audio Codec Zero
- * Note: CONFIG_SND_SOC_DA7213=m
+ * Notes:
+ * - CONFIG_SND_SOC_DA7213=m
  */
 
 /dts-v1/;
