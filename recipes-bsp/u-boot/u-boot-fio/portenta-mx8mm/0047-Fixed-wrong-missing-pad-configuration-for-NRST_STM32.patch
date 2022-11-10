@@ -1,0 +1,26 @@
+From a0ceb3f6223e1a9a02417530995e7b3f4a3a4b6c Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Thu, 10 Nov 2022 16:03:47 +0100
+Subject: [PATCH] Fixed wrong/missing pad configuration for NRST_STM32
+
+---
+ arch/arm/dts/portenta-x8.dts | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
+index c1c8f00a19..b0dec17fe6 100644
+--- a/arch/arm/dts/portenta-x8.dts
++++ b/arch/arm/dts/portenta-x8.dts
+@@ -229,7 +229,8 @@
+ 	/* Some of these pins are leaved configured by internal ROM code */
+ 	pinctrl_hog_1: hoggrp-1 {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x110 /* BOOT0_STM */
++			MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10		0x160 /* NRST_STM32 output open drain pull up */
++			MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x110 /* BOOT0_STM32 input pull down */
+ 		>;
+ 	};
+ };
+-- 
+2.25.1
+
