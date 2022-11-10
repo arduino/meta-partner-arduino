@@ -48,3 +48,5 @@ MACHINE_EXTRA_RRECOMMENDS += " bq24195 cs42l52 anx7625"
 CORE_IMAGE_BASE_INSTALL:remove:portenta-mx8mm = " \
     linux-firmware-bcm43430 \
 "
+
+KERNEL_MODULE_AUTOLOAD:portenta-mx8mm += "i2c-dev"
