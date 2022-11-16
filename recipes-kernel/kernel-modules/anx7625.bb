@@ -15,5 +15,3 @@ SRC_URI = " \
 "
 
 S = "${WORKDIR}"
-
-KERNEL_MODULE_AUTOLOAD:append = "anx7625"
