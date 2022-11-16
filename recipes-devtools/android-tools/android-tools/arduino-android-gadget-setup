@@ -20,9 +20,6 @@ start()
         # USB ids
         echo 0x$VID > idVendor
         echo 0x$PID > idProduct
-        echo 0xEF > bDeviceClass
-        echo 0x02 > bDeviceSubClass
-        echo 0x01 > bDeviceProtocol
 
         # USB strings, optional
         mkdir strings/0x409
@@ -37,12 +34,6 @@ start()
         mkdir configs/c.1/strings/0x409
         echo \"adb+cdc\" > configs/c.1/strings/0x409/configuration
         echo 900 > configs/c.1/MaxPower
-
-        # os_desc, optional
-        ln -s configs/c.1 os_desc
-        echo 1       > os_desc/use
-        echo 0xcd    > os_desc/b_vendor_code
-        echo MSFT100 > os_desc/qw_sign
 
         # create the adb necessary functions
         mkdir functions/acm.GS0
