@@ -1,0 +1,9 @@
+define KMACHINE portenta-x8
+define KARCH aarch64
+define KTYPE preempt-rt
+
+include ktypes/standard/standard.scc
+
+include bsp/imx/imx8mmevk.scc
+
+include ktypes/preempt-rt/preempt-rt.scc

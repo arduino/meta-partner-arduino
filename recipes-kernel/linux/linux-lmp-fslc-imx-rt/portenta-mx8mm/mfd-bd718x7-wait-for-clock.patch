@@ -1,0 +1,47 @@
+From df7ffd5476597f61a0014549c44a7887bb6dac9a Mon Sep 17 00:00:00 2001
+From: Jorge Ramirez-Ortiz <jorge@foundries.io>
+Date: Mon, 1 Feb 2021 09:38:25 +0100
+Subject: [PATCH] mfd: bd718x7: wait for clock
+
+Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
+---
+ drivers/mfd/rohm-bd718x7.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/mfd/rohm-bd718x7.c b/drivers/mfd/rohm-bd718x7.c
+index 85e7f5133365..bdf8b38713cd 100644
+--- a/drivers/mfd/rohm-bd718x7.c
++++ b/drivers/mfd/rohm-bd718x7.c
+@@ -9,6 +9,8 @@
+ 
+ #include <linux/gpio_keys.h>
+ #include <linux/i2c.h>
++#include <linux/of_platform.h>
++#include <linux/clk.h>
+ #include <linux/input.h>
+ #include <linux/interrupt.h>
+ #include <linux/mfd/rohm-bd718x7.h>
+@@ -123,11 +125,20 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
+ 			    const struct i2c_device_id *id)
+ {
+ 	struct bd718xx *bd718xx;
++	struct clk *clk;
+ 	int ret;
+ 	unsigned int chip_type;
+ 	struct mfd_cell *mfd;
+ 	int cells;
+ 
++	clk = devm_clk_get(&i2c->dev, NULL);
++	if (IS_ERR(clk)) {
++		if (PTR_ERR(clk) == -EPROBE_DEFER) {
++			/* wait for the clock*/
++			return PTR_ERR(clk);
++		}
++	}
++
+ 	if (!i2c->irq) {
+ 		dev_err(&i2c->dev, "No IRQ configured\n");
+ 		return -EINVAL;
+-- 
+2.17.1
+

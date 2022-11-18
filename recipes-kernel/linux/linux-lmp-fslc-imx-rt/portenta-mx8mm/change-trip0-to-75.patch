@@ -1,0 +1,13 @@
+diff --git a/arch/arm64/boot/dts/freescale/imx8mm.dtsi b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
+index b7069714ea94..7cc065200626 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mm.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
+@@ -341,7 +341,7 @@
+ 			thermal-sensors = <&tmu>;
+ 			trips {
+ 				cpu_alert0: trip0 {
+-					temperature = <85000>;
++					temperature = <75000>;
+ 					hysteresis = <2000>;
+ 					type = "passive";
+ 				};

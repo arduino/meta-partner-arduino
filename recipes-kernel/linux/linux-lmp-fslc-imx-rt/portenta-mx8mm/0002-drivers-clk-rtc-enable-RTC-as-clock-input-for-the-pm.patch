@@ -1,0 +1,95 @@
+From a3100ee30840048b3006add17cd6e9035eaa4599 Mon Sep 17 00:00:00 2001
+From: Jorge Ramirez-Ortiz <jorge@foundries.io>
+Date: Thu, 10 Dec 2020 15:40:23 +0100
+Subject: [PATCH] drivers: clk/rtc: enable RTC as clock input for the pmic
+
+The RTC clockout is use as an oscillator input to the pmic
+
+Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
+---
+ drivers/clk/clk-bd718x7.c                   | 13 ++++++++++++-
+ drivers/rtc/rtc-pcf8563.c                   | 10 +++++++++-
+ 3 files changed, 25 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/clk/clk-bd718x7.c b/drivers/clk/clk-bd718x7.c
+index ae6e5baee330..c1afeb7a2c4b 100644
+--- a/drivers/clk/clk-bd718x7.c
++++ b/drivers/clk/clk-bd718x7.c
+@@ -10,6 +10,7 @@
+ #include <linux/slab.h>
+ #include <linux/mfd/rohm-generic.h>
+ #include <linux/clk-provider.h>
++#include <linux/clk.h>
+ #include <linux/clkdev.h>
+ #include <linux/regmap.h>
+ 
+@@ -68,11 +69,13 @@ static int bd71837_clk_probe(struct platform_device *pdev)
+ 	struct bd718xx_clk *c;
+ 	int rval = -ENOMEM;
+ 	const char *parent_clk;
++	struct clk *clk;
+ 	struct device *parent = pdev->dev.parent;
+ 	struct rohm_regmap_dev *mfd = dev_get_drvdata(parent);
+ 	struct clk_init_data init = {
+ 		.name = "bd718xx-32k-out",
+ 		.ops = &bd71837_clk_ops,
++		.flags = CLK_IS_CRITICAL,
+ 	};
+ 	enum rohm_chip_type chip = platform_get_device_id(pdev)->driver_data;
+ 
+@@ -81,6 +84,15 @@ static int bd71837_clk_probe(struct platform_device *pdev)
+ 		dev_err(&pdev->dev, "No parent clk found\n");
+ 		return -EINVAL;
+ 	}
++
++	/* make sure the parent clock is enabled */
++	clk = of_clk_get(parent->of_node, 0);
++	if (IS_ERR(clk))
++		return PTR_ERR(clk);
++
++	if ((clk_prepare_enable(clk)))
++		return -EINVAL;
++
+ 	switch (chip) {
+ 	case ROHM_CHIP_TYPE_BD71837:
+ 	case ROHM_CHIP_TYPE_BD71847:
+diff --git a/drivers/rtc/rtc-pcf8563.c b/drivers/rtc/rtc-pcf8563.c
+index 24baa4767b11..9b1d65f7da9c 100644
+--- a/drivers/rtc/rtc-pcf8563.c
++++ b/drivers/rtc/rtc-pcf8563.c
+@@ -59,6 +59,9 @@
+ 
+ static struct i2c_driver pcf8563_driver;
+ 
++/* the generated clock will be used as an always-on fixed-rate oscillator */
++#define IMPLEMENT_FIXED_RATE_OSCILLATOR  1
++
+ struct pcf8563 {
+ 	struct rtc_device *rtc;
+ 	/*
+@@ -506,6 +509,7 @@ static struct clk *pcf8563_clkout_register_clk(struct pcf8563 *pcf8563)
+ 	struct device_node *node = client->dev.of_node;
+ 	struct clk *clk;
+ 	struct clk_init_data init;
++#if !IMPLEMENT_FIXED_RATE_OSCILLATOR
+ 	int ret;
+ 	unsigned char buf;
+ 
+@@ -515,9 +519,13 @@ static struct clk *pcf8563_clkout_register_clk(struct pcf8563 *pcf8563)
+ 	if (ret < 0)
+ 		return ERR_PTR(ret);
+ 
++	init.flags = 0;
++#else
++	/* the clock output is already enabled and should not be disabled */
++	init.flags = CLK_IS_CRITICAL;
++#endif
+ 	init.name = "pcf8563-clkout";
+ 	init.ops = &pcf8563_clkout_ops;
+-	init.flags = 0;
+ 	init.parent_names = NULL;
+ 	init.num_parents = 0;
+ 	pcf8563->clkout_hw.init = &init;
+-- 
+2.17.1
+

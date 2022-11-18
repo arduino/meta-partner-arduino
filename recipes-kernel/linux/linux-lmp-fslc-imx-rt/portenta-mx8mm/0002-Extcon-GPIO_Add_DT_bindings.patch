@@ -1,0 +1,372 @@
+Index: kernel-source/drivers/extcon/extcon-gpio.c
+===================================================================
+--- kernel-source.orig/drivers/extcon/extcon-gpio.c
++++ kernel-source/drivers/extcon/extcon-gpio.c
+@@ -15,29 +15,57 @@
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_gpio.h>
+ #include <linux/platform_device.h>
++#include <linux/property.h>
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ 
++#define DEBUG
++#ifdef DEBUG
++  #define DRIVER_NAME           "extcon-gpio"
++
++  #define DBG_PRINT(fmt, ...)   printk("%s:%s:"fmt, \
++                                        DRIVER_NAME, __func__, \
++                                        ##__VA_ARGS__);
++  #define DBG_ERROR(fmt, ...)   printk("%s:%s:ERROR:"fmt, DRIVER_NAME, __func__, ##__VA_ARGS__);
++  //#define DBG_IRQ_PRINT(x...) DBG_PRINT(x)
++  #define DBG_IRQ_PRINT(x...)
++#else
++  #define DBG_PRINT(fmt, ...)
++  #define DBG_ERROR(fmt, ...)
++  #define DBG_IRQ_PRINT(x...)
++#endif
++
+ /**
+  * struct gpio_extcon_data - A simple GPIO-controlled extcon device state container.
+  * @edev:		Extcon device.
++ * @irq:		Interrupt line for the external connector.
+  * @work:		Work fired by the interrupt.
+  * @debounce_jiffies:	Number of jiffies to wait for the GPIO to stabilize, from the debounce
+  *			value.
+  * @gpiod:		GPIO descriptor for this external connector.
+  * @extcon_id:		The unique id of specific external connector.
+  * @debounce:		Debounce time for GPIO IRQ in ms.
++ * @irq_flags:		IRQ Flags (e.g., IRQF_TRIGGER_LOW).
+  * @check_on_resume:	Boolean describing whether to check the state of gpio
+  *			while resuming from sleep.
+  */
+ struct gpio_extcon_data {
+ 	struct extcon_dev *edev;
++	int irq;
++	bool irq_wakeup;
+ 	struct delayed_work work;
+ 	unsigned long debounce_jiffies;
+-	struct gpio_desc *gpiod;
++	
++	int gpio;
++	//struct gpio_desc *gpiod;
++	
++	bool gpio_active_low;
+ 	unsigned int extcon_id;
+-	unsigned long debounce;
++	u32 debounce;
++	unsigned long irq_flags;
+ 	bool check_on_resume;
+ };
+ 
+@@ -48,7 +76,7 @@ static void gpio_extcon_work(struct work
+ 		container_of(to_delayed_work(work), struct gpio_extcon_data,
+ 			     work);
+ 
+-	state = gpiod_get_value_cansleep(data->gpiod);
++	state = gpio_get_value(data->gpio);
+ 	extcon_set_state_sync(data->edev, data->extcon_id, state);
+ }
+ 
+@@ -61,47 +89,90 @@ static irqreturn_t gpio_irq_handler(int
+ 	return IRQ_HANDLED;
+ }
+ 
++static int gpio_extcon_parse_of(struct platform_device *pdev,
++                               struct gpio_extcon_data *data)
++{
++	struct device_node *np = pdev->dev.of_node;
++	enum of_gpio_flags flags;
++	int ret;
++
++	ret = device_property_read_u32(&pdev->dev, "extcon-id", &data->extcon_id);
++	if (ret < 0) {
++		DBG_ERROR("extcon-id not found\n");
++		return -EINVAL;
++	}
++
++	data->gpio = of_get_named_gpio_flags(np, "gpios", 0, &flags);
++	if (data->gpio < 0) {
++		if (data->gpio == -EPROBE_DEFER) {
++			DBG_ERROR("EPROBE_DEFER\n");
++			return -EPROBE_DEFER;
++		}
++		DBG_ERROR("Fail to get gpios ret %d\n", data->gpio);
++		return -EINVAL;
++	}
++/*
++	data->gpiod = of_get_named_gpiod_flags(np, "gpios", 0, &flags);
++	if (data->gpio < 0) {
++		DBG_ERROR("Fail to get gpios\n");
++		return -EINVAL;
++	}
++*/
++	if (flags & OF_GPIO_ACTIVE_LOW) {
++		data->gpio_active_low = true;
++	}
++
++	data->irq_wakeup = device_property_read_bool(&pdev->dev, "wakeup-source");
++
++	device_property_read_u32(&pdev->dev, "debounce-ms", &data->debounce);
++
++	data->irq_flags = (IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_ONESHOT);
++
++	DBG_PRINT("extcon-id: %d, gpio: %d active: %s, wakeup-source: %d, debounce-ms: %d\n",
++			data->extcon_id,
++			data->gpio,
++			data->gpio_active_low? "LOW": "HIGH",
++			data->irq_wakeup,
++			data->debounce);
++
++  return 0;
++}
++
+ static int gpio_extcon_probe(struct platform_device *pdev)
+ {
+ 	struct gpio_extcon_data *data;
+ 	struct device *dev = &pdev->dev;
+-	unsigned long irq_flags;
+-	int irq;
+ 	int ret;
+ 
+ 	data = devm_kzalloc(dev, sizeof(struct gpio_extcon_data), GFP_KERNEL);
+-	if (!data)
++	if (!data) {
++		DBG_ERROR("FAIL to alloc device data\n");
+ 		return -ENOMEM;
+-
+-	/*
+-	 * FIXME: extcon_id represents the unique identifier of external
+-	 * connectors such as EXTCON_USB, EXTCON_DISP_HDMI and so on. extcon_id
+-	 * is necessary to register the extcon device. But, it's not yet
+-	 * developed to get the extcon id from device-tree or others.
+-	 * On later, it have to be solved.
+-	 */
+-	if (data->extcon_id > EXTCON_NONE)
++	}
++/*
++	if (!data->irq_flags || data->extcon_id > EXTCON_NONE)
+ 		return -EINVAL;
+ 
+ 	data->gpiod = devm_gpiod_get(dev, "extcon", GPIOD_IN);
+ 	if (IS_ERR(data->gpiod))
+ 		return PTR_ERR(data->gpiod);
+-	irq = gpiod_to_irq(data->gpiod);
+-	if (irq <= 0)
+-		return irq;
++*/
++	ret = gpio_extcon_parse_of(pdev, data);
++	if (ret < 0) {
++		dev_err(dev, "failed to parse device tree\n");
++		return ret;
++	}
+ 
+-	/*
+-	 * It is unlikely that this is an acknowledged interrupt that goes
+-	 * away after handling, what we are looking for are falling edges
+-	 * if the signal is active low, and rising edges if the signal is
+-	 * active high.
+-	 */
+-	if (gpiod_is_active_low(data->gpiod))
+-		irq_flags = IRQF_TRIGGER_FALLING;
+-	else
+-		irq_flags = IRQF_TRIGGER_RISING;
++//	data->irq = gpiod_to_irq(data->gpiod);
++	data->irq = gpio_to_irq(data->gpio);
++	if (data->irq <= 0) {
++		dev_err(dev, "failed to convert gpio to interrupt %d %d\n", data->gpio, data->irq);
++		return data->irq;
++	}
++
++	data->debounce_jiffies = msecs_to_jiffies(data->debounce);
+ 
+-	/* Allocate the memory of extcon devie and register extcon device */
++	/* Allocate the memory of extcon device and register extcon device */
+ 	data->edev = devm_extcon_dev_allocate(dev, &data->extcon_id);
+ 	if (IS_ERR(data->edev)) {
+ 		dev_err(dev, "failed to allocate extcon device\n");
+@@ -109,8 +180,10 @@ static int gpio_extcon_probe(struct plat
+ 	}
+ 
+ 	ret = devm_extcon_dev_register(dev, data->edev);
+-	if (ret < 0)
++	if (ret < 0) {
++		DBG_ERROR("FAIL to register device\n");
+ 		return ret;
++	}
+ 
+ 	INIT_DELAYED_WORK(&data->work, gpio_extcon_work);
+ 
+@@ -118,16 +191,19 @@ static int gpio_extcon_probe(struct plat
+ 	 * Request the interrupt of gpio to detect whether external connector
+ 	 * is attached or detached.
+ 	 */
+-	ret = devm_request_any_context_irq(dev, irq,
+-					gpio_irq_handler, irq_flags,
++	ret = devm_request_any_context_irq(dev, data->irq,
++					gpio_irq_handler, data->irq_flags,
+ 					pdev->name, data);
+-	if (ret < 0)
++	if (ret < 0) {
++		DBG_ERROR("FAIL to request interrupt %d\n", data->irq);
+ 		return ret;
+-
++	}
+ 	platform_set_drvdata(pdev, data);
+ 	/* Perform initial detection */
+ 	gpio_extcon_work(&data->work.work);
+ 
++	//device_init_wakeup(&pdev->dev, data->irq_wakeup);
++
+ 	return 0;
+ }
+ 
+@@ -141,11 +217,23 @@ static int gpio_extcon_remove(struct pla
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
++static int gpio_extcon_suspend(struct device *dev)
++{
++	struct gpio_extcon_data *data = dev_get_drvdata(dev);
++
++	if (data->irq_wakeup)
++		enable_irq_wake(data->irq);
++
++	return 0;
++}
++
+ static int gpio_extcon_resume(struct device *dev)
+ {
+ 	struct gpio_extcon_data *data;
+ 
+ 	data = dev_get_drvdata(dev);
++	if (data->irq_wakeup)
++		disable_irq_wake(data->irq);
+ 	if (data->check_on_resume)
+ 		queue_delayed_work(system_power_efficient_wq,
+ 			&data->work, data->debounce_jiffies);
+@@ -154,7 +242,18 @@ static int gpio_extcon_resume(struct dev
+ }
+ #endif
+ 
+-static SIMPLE_DEV_PM_OPS(gpio_extcon_pm_ops, NULL, gpio_extcon_resume);
++#if defined(CONFIG_OF)
++static const struct of_device_id gpio_extcon_of_match[] = {
++	{ .compatible = "extcon-gpio", },
++	{ /* sentinel */ },
++};
++MODULE_DEVICE_TABLE(of, gpio_extcon_of_match);
++#else
++#define gpio_extcon_of_match	NULL
++#endif
++
++static SIMPLE_DEV_PM_OPS(gpio_extcon_pm_ops,
++                         gpio_extcon_suspend, gpio_extcon_resume);
+ 
+ static struct platform_driver gpio_extcon_driver = {
+ 	.probe		= gpio_extcon_probe,
+@@ -162,6 +261,7 @@ static struct platform_driver gpio_extco
+ 	.driver		= {
+ 		.name	= "extcon-gpio",
+ 		.pm	= &gpio_extcon_pm_ops,
++		.of_match_table = gpio_extcon_of_match,
+ 	},
+ };
+ 
+Index: kernel-source/Documentation/devicetree/bindings/extcon/extcon-gpio.txt
+===================================================================
+--- /dev/null
++++ kernel-source/Documentation/devicetree/bindings/extcon/extcon-gpio.txt
+@@ -0,0 +1,38 @@
++GPIO Extcon device
++
++This is a virtual device used to generate specific external connector
++from the GPIO pin connected to a GPIO pin.
++
++Required properties:
++- compatible: Must be "extcon-gpio".
++- extcon-id: unique id for specific external connector.
++	     See include/dt-bindings/extcon/extcon.h.
++- extcon-gpio: GPIO pin to detect the external connector. See gpio binding.
++
++Optional properties:
++- debounce-ms: the debounce dealy for GPIO pin in millisecond.
++- wakeup-source: Boolean, extcon can wake-up the system.
++
++Example: Examples of extcon-gpio node as listed below:
++
++	usb_cable: extcon-gpio-0 {
++		compatible = "extcon-gpio";
++		extcon-id = <EXTCON_USB>;
++		extcon-gpio = <&gpio6 1 GPIO_ACTIVE_HIGH>;
++	}
++
++	ta_cable: extcon-gpio-1 {
++		compatible = "extcon-gpio";
++		extcon-id = <EXTCON_CHG_USB_DCP>;
++		extcon-gpio = <&gpio3 2 GPIO_ACTIVE_LOW>;
++		debounce-ms = <50>;	/* 50 millisecond */
++		wakeup-source;
++	}
++
++	&dwc3_usb {
++		extcon = <&usb_cable>;
++	};
++
++	&charger {
++		extcon = <&ta_cable>;
++	};
+Index: kernel-source/include/dt-bindings/extcon/extcon.h
+===================================================================
+--- /dev/null
++++ kernel-source/include/dt-bindings/extcon/extcon.h
+@@ -0,0 +1,46 @@
++/*
++ * This header provides constants for most extcon bindings.
++ *
++ * Most extcon bindings include the unique identification format.
++ * In most cases, the unique id format uses the standard values/macro
++ * defined in this header.
++ */
++
++#ifndef _DT_BINDINGS_EXTCON_EXTCON_H
++#define _DT_BINDINGS_EXTCON_EXTCON_H
++
++/* USB external connector */
++#define EXTCON_USB		1
++#define EXTCON_USB_HOST		2
++
++/* Charging external connector */
++#define EXTCON_CHG_USB		5
++#define EXTCON_CHG_USB_FAST	6
++#define EXTCON_CHG_USB_SLOW	7
++#define EXTCON_CHG_USB_DCP	8
++#define EXTCON_CHG_USB_CDP	9
++
++/* Jack external connector */
++#define EXTCON_JACK_MICROPHONE	20
++#define EXTCON_JACK_HEADPHONE	21
++#define EXTCON_JACK_LINE_IN	22
++#define EXTCON_JACK_LINE_OUT	23
++#define EXTCON_JACK_VIDEO_IN	24
++#define EXTCON_JACK_VIDEO_OUT	25
++#define EXTCON_JACK_SPDIF_IN	26
++#define EXTCON_JACK_SPDIF_OUT	27
++
++/* Display external connector */
++#define EXTCON_DISP_HDMI	40
++#define EXTCON_DISP_MHL		41
++#define EXTCON_DISP_DVI		42
++#define EXTCON_DISP_VGA		43
++#define EXTCON_DISP_DP		44
++#define EXTCON_DISP_HMD		45
++
++/* Miscellaneous external connector */
++#define EXTCON_DOCK		60
++#define EXTCON_JIG		61
++#define EXTCON_MECHANICAL	62
++
++#endif /* _DT_BINDINGS_EXTCON_EXTCON_H */
