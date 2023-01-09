@@ -1,0 +1,52 @@
+diff --git a/drivers/media/i2c/imx219.c b/drivers/media/i2c/imx219.c
+index 4771d0ef2c46..35a534829edb 100644
+--- a/drivers/media/i2c/imx219.c
++++ b/drivers/media/i2c/imx219.c
+@@ -28,6 +28,30 @@
+ #include <media/v4l2-mediabus.h>
+ #include <asm/unaligned.h>
+ 
++#undef dev_err
++#define dev_err(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef dev_dbg
++#define dev_dbg(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef dev_warn
++#define dev_warn(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef dev_info
++#define dev_info(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef pr_err
++#define pr_err(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef pr_warning
++#define pr_warning(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef pr_info
++#define pr_info(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
++#undef pr_debug
++#define pr_debug(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
++
+ #define IMX219_REG_VALUE_08BIT		1
+ #define IMX219_REG_VALUE_16BIT		2
+ 
+@@ -1129,6 +1153,8 @@ static int imx219_power_on(struct device *dev)
+ 	struct imx219 *imx219 = to_imx219(sd);
+ 	int ret;
+ 
++	pr_info("%s\n", __func__);
++
+ 	ret = regulator_bulk_enable(IMX219_NUM_SUPPLIES,
+ 				    imx219->supplies);
+ 	if (ret) {
+@@ -1151,6 +1177,7 @@ static int imx219_power_on(struct device *dev)
+ 	return 0;
+ 
+ reg_off:
++	pr_info("%s\n", __func__);
+ 	regulator_bulk_disable(IMX219_NUM_SUPPLIES, imx219->supplies);
+ 
+ 	return ret;

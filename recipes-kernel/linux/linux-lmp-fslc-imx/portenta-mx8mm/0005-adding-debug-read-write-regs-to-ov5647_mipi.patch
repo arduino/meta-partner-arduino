@@ -1,0 +1,35 @@
+diff --git a/drivers/media/platform/mxc/capture/ov5647_mipi.c b/drivers/media/platform/mxc/capture/ov5647_mipi.c
+index 9d0b0b269c9b..ef1889564e48 100644
+--- a/drivers/media/platform/mxc/capture/ov5647_mipi.c
++++ b/drivers/media/platform/mxc/capture/ov5647_mipi.c
+@@ -1550,6 +1550,30 @@ static const struct v4l2_subdev_pad_ops ov5647_subdev_pad_ops = {
+ 	.get_fmt               = ov5647_get_fmt,
+ };
+ 
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++static int ov5647_get_register(struct v4l2_subdev *sd,
++				struct v4l2_dbg_register *reg)
++{
++	u8 val;
++	int ret;
++
++	ret = ov5647_read_reg(reg->reg & 0xff, &val);
++	if (ret < 0)
++		return ret;
++
++	reg->val = val;
++	reg->size = 1;
++
++	return 0;
++}
++
++static int ov5647_set_register(struct v4l2_subdev *sd,
++				const struct v4l2_dbg_register *reg)
++{
++	return ov5647_write_reg(reg->reg & 0xff, reg->val & 0xff);
++}
++#endif
++
+ static struct v4l2_subdev_core_ops ov5647_subdev_core_ops = {
+ 	.s_power	= ov5647_s_power,
+ #ifdef CONFIG_VIDEO_ADV_DEBUG

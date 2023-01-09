@@ -1,0 +1,116 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2022
+ * This overlay is adding the RPi V1.3 camera
+ * with cmos sensor ov5647 to Max carrier board
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include "imx8mm-pinfunc.h"
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_en_cam: encamgrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20		0x16 /* ENABLE (active high) */
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			ov5647_dovdd_1v8: 1p8v {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_dovdd";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+			};
+
+			ov5647_avdd_2v8: 2p8v {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_avdd";
+				regulator-min-microvolt = <2800000>;
+				regulator-max-microvolt = <2800000>;
+			};
+
+			ov5647_dvdd_1v5: 1p5v {
+				compatible = "regulator-fixed";
+				regulator-name = "camera_dvdd";
+				regulator-min-microvolt = <1500000>;
+				regulator-max-microvolt = <1500000>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&i2c3>;
+		__overlay__ {
+			ov5647_mipi@36 {
+				compatible = "ovti,ov5647_mipi";
+				reg = <0x36>;
+				status = "okay";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pinctrl_en_cam>;
+				DOVDD-supply = <&ov5647_dovdd_1v8>;
+				DVDD-supply = <&ov5647_dvdd_1v5>;
+				AVDD-supply = <&ov5647_avdd_2v8>;
+				clocks = <&clk IMX8MM_CLK_CLKO1>;
+				clock-names = "csi_mclk";
+				assigned-clocks = <&clk IMX8MM_CLK_CLKO1>;
+				assigned-clock-parents = <&clk IMX8MM_CLK_24M>;
+				assigned-clock-rates = <24000000>;
+				csi_id = <0>;
+				pwn-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
+				mclk = <24000000>;
+				mclk_source = <0>;
+				port {
+					ov5640_mipi1_ep: endpoint {
+						remote-endpoint = <&mipi1_sensor_ep>;
+						data-lanes = <2>;
+						link-frequencies = /bits/ 64 <297000000>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&csi1_bridge>;
+		__overlay__ {
+			port {
+				csi1_ep: endpoint {
+					remote-endpoint = <&csi1_mipi_ep>;
+				};
+			};
+		};
+	};
+
+	fragment@4 {
+		target = <&mipi_csi_1>;
+		__overlay__ {
+			port {
+				csi1_mipi_ep: endpoint@2 {
+					remote-endpoint = <&csi1_ep>;
+				};
+
+				mipi1_sensor_ep: endpoint@1 {
+					remote-endpoint = <&ov5640_mipi1_ep>;
+					data-lanes = <2>;
+				};
+			};
+		};
+	};
+};

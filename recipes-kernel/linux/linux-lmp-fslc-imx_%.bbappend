@@ -10,6 +10,11 @@ SRC_URI:append:portenta-mx8mm = " \
   file://mfd-bd718x7-wait-for-clock.patch \
   file://uart-imx-0001-Bug-rx-uart1-doesn-t-work-with-DMA-channels.patch \
   file://change-trip0-to-75.patch \
+  file://0002-fix-ov5647_mipi-build.patch \
+  file://0003-add-debug-prints-to-imx219.patch \
+  file://0004-porting-from-linux-rpi-5.10.patch \
+  file://0005-adding-debug-read-write-regs-to-ov5647_mipi.patch \
+  file://0006-pwdn-polarity-is-wrong.patch \
 "
 
 SRC_URI:append:portenta-m8 = " \

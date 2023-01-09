@@ -1,0 +1,38 @@
+diff --git a/drivers/media/i2c/ov5647.c b/drivers/media/i2c/ov5647.c
+index 3b7a15852c5d..dbf79563e439 100644
+--- a/drivers/media/i2c/ov5647.c
++++ b/drivers/media/i2c/ov5647.c
+@@ -968,7 +968,7 @@ static int ov5647_sensor_power(struct v4l2_subdev *sd, int on)
+ 		}
+ 
+ 		if (ov5647->pwdn) {
+-			gpiod_set_value_cansleep(ov5647->pwdn, 0);
++			gpiod_set_value_cansleep(ov5647->pwdn, 1);
+ 			msleep(PWDN_ACTIVE_DELAY_MS);
+ 		}
+ 
+@@ -1022,7 +1022,7 @@ static int ov5647_sensor_power(struct v4l2_subdev *sd, int on)
+ 
+ 		clk_disable_unprepare(ov5647->xclk);
+ 
+-		gpiod_set_value_cansleep(ov5647->pwdn, 1);
++		gpiod_set_value_cansleep(ov5647->pwdn, 0);
+ 
+ 		regulator_bulk_disable(OV5647_NUM_SUPPLIES, ov5647->supplies);
+ 	}
+@@ -1752,13 +1752,13 @@ static int ov5647_probe(struct i2c_client *client)
+ 	}
+ 
+ 	if (sensor->pwdn) {
+-		gpiod_set_value_cansleep(sensor->pwdn, 0);
++		gpiod_set_value_cansleep(sensor->pwdn, 1);
+ 		msleep(PWDN_ACTIVE_DELAY_MS);
+ 	}
+ 
+ 	ret = ov5647_detect(sd);
+ 
+-	gpiod_set_value_cansleep(sensor->pwdn, 1);
++	gpiod_set_value_cansleep(sensor->pwdn, 0);
+ 
+ 	if (ret < 0)
+ 		goto power_down;
