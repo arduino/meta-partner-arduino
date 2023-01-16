@@ -7,6 +7,8 @@ RDEPENDS:${PN} += "systemd"
 SRC_URI = " \
     file://connection-status-led.timer \
     file://connection-status-led.service \
+    file://ecm-network.service \
+    file://rndis-network.service \
     file://secure-device.service \
     file://create-docker-envfile.service \
     file://connection_status_led \
@@ -14,12 +16,14 @@ SRC_URI = " \
 
 inherit systemd
 
-SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service"
+SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service rndis-network.service ecm-network.service secure-device.service create-docker-envfile.service"
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/connection-status-led.timer ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/connection-status-led.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/rndis-network.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/ecm-network.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/secure-device.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/create-docker-envfile.service ${D}${systemd_system_unitdir}/
 

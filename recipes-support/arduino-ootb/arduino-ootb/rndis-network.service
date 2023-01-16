@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure dhcp server on usb rndis interface
+BindsTo=sys-subsystem-net-devices-usb0.device
+After=android-tools-adbd.service sys-subsystem-net-devices-usb0.device
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/bin/nmcli c delete usbrndis; /usr/bin/nmcli c add type ethernet ifname usb0 ipv4.method shared con-name usbrndis && /usr/bin/nmcli c modify usbrndis ipv4.addresses 192.168.7.1/24 && /usr/bin/nmcli c up usbrndis'
+ExecStop=/bin/sh -c '/usr/bin/nmcli c down usbrndis && /usr/bin/nmcli c delete usbrndis'
+
+[Install]
+WantedBy=usb-gadget.target
