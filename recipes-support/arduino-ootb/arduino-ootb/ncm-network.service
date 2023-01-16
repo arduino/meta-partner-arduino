@@ -1,0 +1,13 @@
+[Unit]
+Description=Configure link-local connection on usb ncm interface
+BindsTo=sys-subsystem-net-devices-usb0.device
+After=android-tools-adbd.service sys-subsystem-net-devices-usb0.device
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/bin/nmcli c delete usbncm; /usr/bin/nmcli c add type ethernet ifname usb0 ipv4.method link-local con-name usbncm && /usr/bin/nmcli c up usbncm'
+ExecStop=/bin/sh -c '/usr/bin/nmcli c down usbncm && /usr/bin/nmcli c delete usbncm'
+
+[Install]
+WantedBy=usb-gadget.target

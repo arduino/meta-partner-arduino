@@ -1,5 +1,5 @@
 [Unit]
-Description=Android Debug Bridge & Usb ECM/RNDIS
+Description=Android Debug Bridge & Usb NCM
 ConditionPathExists=/sys/class/typec/port0/data_role
 After=network-pre.target dbus.service
 Before=android-system.service
