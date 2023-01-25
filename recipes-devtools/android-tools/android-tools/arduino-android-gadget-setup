@@ -32,21 +32,19 @@ start()
 
         # populate config, optional
         mkdir configs/c.1/strings/0x409
-        echo \"adb+cdc\" > configs/c.1/strings/0x409/configuration
+        echo \"adb+ncm\" > configs/c.1/strings/0x409/configuration
         echo 900 > configs/c.1/MaxPower
 
-        # create the adb necessary functions
-        mkdir functions/acm.GS0
+        # create a generic ffs for adb
         mkdir functions/ffs.adb
 
         # create the ncm function
         mkdir functions/ncm.usb0
 
-        # assign rndis function to configuration
+        # assign ncm function to configuration
         ln -s functions/ncm.usb0/ configs/c.1
 
-        # assign adb functions to configuration
-        ln -s functions/acm.GS0 configs/c.1
+        # assign generic ffs to configuration
         ln -s functions/ffs.adb/ configs/c.1
 
         # create adb ffs device dir and mount it
