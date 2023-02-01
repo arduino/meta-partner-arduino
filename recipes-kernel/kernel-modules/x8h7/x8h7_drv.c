@@ -405,6 +405,8 @@ static int x8h7_probe(struct spi_device *spi)
 
   spidev->speed_hz = spi->max_speed_hz;
 
+  status = 0;
+
   /* interrupt request */
   if (spi->irq > 0) {
     int ret;
