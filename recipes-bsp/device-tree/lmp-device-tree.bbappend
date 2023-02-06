@@ -47,6 +47,7 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_rasptenta_imx219_camera_mipi.dts \
     file://ov_carrier_rasptenta_imx708_camera_mipi.dts \
     file://ov_rasptenta_iqaudio_codec.dts \
+    file://ov_pika_spark_rs485.dts \
 "
 
 SRC_URI:append:portenta-mx8mm = " \
