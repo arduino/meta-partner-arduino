@@ -55,6 +55,11 @@ setenv max_ovl ' \
   ov_carrier_max_ov5647_camera_mipi \
   ov_carrier_enuc_lora'
 
+# Rasp-Tenta carrier ov list
+setenv rasp_base_ovl ' \
+  ov_carrier_rasptenta_base \
+  ov_carrier_rasptenta_ov5647_camera_mipi'
+
 # Following variables can be used to disable
 # auto carrier detection mechanism
 # setenv carrier_custom 1
@@ -81,6 +86,9 @@ setenv bootcmd_ovl_auto_detect ' \
       fi \
       if test "${carrier_name}" = "max"; then \
         setenv overlays $som_ovl $max_ovl \
+      fi \
+      if test "${carrier_name}" = "rasptenta"; then \
+        setenv overlays $som_ovl $rasp_base_ovl \
       fi \
       run ovl_set_envsave \
     fi \

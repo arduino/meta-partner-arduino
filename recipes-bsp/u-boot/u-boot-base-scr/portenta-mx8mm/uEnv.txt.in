@@ -25,6 +25,9 @@ bootcmd_ovl_auto_detect=if env exist carrier_custom; then true; \
                             if test "${carrier_name}" = "max"; then \
                               setenv overlays $som_ovl $max_ovl \
                             fi \
+                            if test "${carrier_name}" = "rasptenta"; then \
+                              setenv overlays $som_ovl $rasp_base_ovl \
+                            fi \
                             run set_envsave \
                           fi \
                         fi
