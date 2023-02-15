@@ -13,6 +13,9 @@
 /dts-v1/;
 /plugin/;
 
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
