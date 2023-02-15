@@ -1,0 +1,103 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Rasp-Tenta base board
+ * Enable:
+ * - USB (USB_FS)
+ * - SDCARD (SDC)
+ * Unconfigured:
+ * - CAN_STB active low GPIO4 (GPIO_PF12 STM32H7) has pulldown 10k
+ * - ORANGE_LED GPIO3 (GPIO_PF4_STM32H7)
+ */
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_usdhc2_gpio: usdhc2grpgpio {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12       0x1c4
+					>;
+				};
+
+				pinctrl_usdhc2: usdhc2grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x190
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d0
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d0
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d0
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d0
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d0
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+
+				pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x194
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d4
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d4
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d4
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d4
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d4
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+
+				pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x196
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d6
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d6
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d6
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d6
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d6
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			reg_usdhc2_vmmc: regulator-usdhc2 {
+				compatible = "regulator-fixed";
+				regulator-name = "VSD_3V3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+		};
+	};
+
+	/* Enable SDCARD */
+	fragment@2 {
+		target = <&usdhc2>;
+		__overlay__ {
+			pinctrl-names = "default", "state_100mhz", "state_200mhz";
+			pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+			pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
+			pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+			cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
+			bus-width = <4>;
+			vmmc-supply = <&reg_usdhc2_vmmc>;
+			status = "okay";
+		};
+	};
+
+	/* Enable USB port as host only */
+	fragment@3 {
+		target = <&usbotg2>;
+		__overlay__ {
+			dr_mode = "host";
+			status = "okay";
+		};
+	};
+};

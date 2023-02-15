@@ -1,7 +1,7 @@
 /**
  * Portenta-X8 dtb overlay file
  * Arduino 2022
- * Rasp-tenta support for
+ * Rasp-Tenta support for
  * IQ Audio Codec Zero
  * Notes:
  * - CONFIG_SND_SOC_DA7213=m

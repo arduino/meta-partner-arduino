@@ -42,6 +42,8 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_max_ov5647_camera_mipi.dts \
     file://ov_carrier_max_ov5647.dts \
     file://ov_carrier_max_imx219.dts \
+    file://ov_rasptenta_carrier_base.dts \
+    file://ov_carrier_rasptenta_ov5647_camera_mipi \
     file://ov_rasptenta_iqaudio_codec.dts \
 "
 
