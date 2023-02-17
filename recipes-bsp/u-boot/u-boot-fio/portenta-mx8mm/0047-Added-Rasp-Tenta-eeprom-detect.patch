@@ -1,0 +1,196 @@
+From cff77629b9045a5f8ee36073c3b6892ee5df8194 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Fri, 17 Feb 2023 09:45:50 +0100
+Subject: [PATCH] Added Rasp-Tenta eeprom detect
+
+---
+ board/arduino/portenta-x8/portenta-x8.c | 101 ++++++++++++++++++++++--
+ 1 file changed, 95 insertions(+), 6 deletions(-)
+
+diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
+index d0bcb47597..cde20616a0 100644
+--- a/board/arduino/portenta-x8/portenta-x8.c
++++ b/board/arduino/portenta-x8/portenta-x8.c
+@@ -37,6 +37,8 @@ struct portenta_model {
+ 	const char *rtmcu_name;
+ 	bool is_on_carrier;
+ 	const char *carrier_name;
++	bool has_hat;
++	const char *hat_name;
+ };
+ 
+ static const struct portenta_model carrier_unknown = {
+@@ -47,6 +49,8 @@ static const struct portenta_model carrier_unknown = {
+ 	"STM32H7",
+ 	false,
+ 	"unknown",
++	false,
++	"unknown",
+ };
+ 
+ static const struct portenta_model carrier_breakout = {
+@@ -57,6 +61,8 @@ static const struct portenta_model carrier_breakout = {
+ 	"STM32H7",
+ 	true,
+ 	"breakout",
++	false,
++	"unknown",
+ };
+ 
+ static const struct portenta_model carrier_max = {
+@@ -67,9 +73,23 @@ static const struct portenta_model carrier_max = {
+ 	"STM32H7",
+ 	true,
+ 	"max",
++	false,
++	"unknown",
++};
++
++static const struct portenta_model carrier_rasptenta = {
++	"portenta-x8",
++	"iMX8MM",
++	true,
++	true,
++	"STM32H7",
++	true,
++	"rasptenta",
++	false,
++	"unknown",
+ };
+ 
+-static const struct portenta_model *model;
++static struct portenta_model *model;
+ 
+ static void set_breakout_carrier_model()
+ {
+@@ -81,12 +101,49 @@ static void set_max_carrier_model()
+ 	model = &carrier_max;
+ }
+ 
++static void set_rasptenta_carrier_model()
++{
++	model = &carrier_rasptenta;
++}
++
++/**
++ * Carrier and Hat boards EEPROMs
++ */
++#define EEPROM_CARRIER_I2C_BUS 1
++#define EEPROM_CARRIER_I2C_ADR 0x50
++#define EEPROM_HAT_I2C_BUS 2
++#define EEPROM_HAT_I2C_ADR 0x50
++
++uint8_t probe_eeprom(uint8_t i2c_bus, uint8_t addr)
++{
++	struct udevice *bus;
++	struct udevice *dev;
++	int ret;
++
++	printf("eeprom probe\n");
++	ret = uclass_get_device_by_seq(UCLASS_I2C, i2c_bus, &bus);
++	if (ret) {
++		printf("%s: No bus %d\n", __func__, i2c_bus);
++		return 0;
++	}
++
++	ret = dm_i2c_probe(bus, addr, 0, &dev);
++	if (ret) {
++		printf("%s: Can't find device id=0x%x, on bus %d\n",
++			   __func__, addr, i2c_bus);
++		return 0;
++	}
++
++	return 1;
++}
++
+ /**
+  * External USB Hub configuration
+  */
+ #define EXT_USB_HUB
+ #define EXT_USB_HUB_I2C_BUS  2
+ #define EXT_USB_HUB_I2C_ADR  0x2C
++
+ /**
+  * USB2514B/M2 configuration data
+  */
+@@ -110,10 +167,14 @@ static unsigned char ext_usb_hub_cfg_1[] = {
+ 	0x32,	//HCMB
+ 	0x32	//PWRT
+ };
++
+ static unsigned char ext_usb_hub_cfg_2[] = {
+ 	0x01,
+ 	0x01
+ };
++
++static unsigned char ext_usb_hub_presence = 0;
++
+ /**
+  * 4 port External USB HUB initialization
+  */
+@@ -136,12 +197,11 @@ void ext_usb_hub_init(void)
+ 	if (ret) {
+ 		printf("%s: Can't find device id=0x%x, on bus %d\n",
+ 			   __func__, EXT_USB_HUB_I2C_ADR, EXT_USB_HUB_I2C_BUS);
+-		set_breakout_carrier_model();
++		ext_usb_hub_presence = 0;
+ 		return;
+ 	}
+-	else {
+-		set_max_carrier_model();
+-	}
++
++	ext_usb_hub_presence = 1;
+ 
+ 	ret = dm_i2c_write(dev, 0x00, ext_usb_hub_cfg_1, sizeof(ext_usb_hub_cfg_1));
+ 	if (ret) {
+@@ -490,6 +550,31 @@ int board_init(void)
+ 	ext_usb_hub_init();
+ #endif
+ 
++	if (ext_usb_hub_presence) {
++		printf("Max carrier detected!\n");
++		set_max_carrier_model();
++		return 0;
++	}
++
++	if (probe_eeprom(EEPROM_CARRIER_I2C_BUS, EEPROM_CARRIER_I2C_ADR)) {
++		printf("Carrier detected!\n");
++		/* @TODO: carrier model detection */
++		printf("Rasp-Tenta carrier detected!\n");
++		set_rasptenta_carrier_model();
++		if (probe_eeprom(EEPROM_HAT_I2C_BUS, EEPROM_HAT_I2C_ADR)) {
++			printf("Hat detected!\n");
++			model->has_hat = true;
++			/* @TODO: hat model detection */
++		}
++		return 0;
++	}
++
++/* Breakout carrier is not detectable */
++#ifdef CONFIG_BREAKOUT_IS_DEFAULT
++	printf("Breakout carrier detected!\n");
++	set_breakout_carrier_model();
++#endif
++
+ 	return 0;
+ }
+ 
+@@ -502,9 +587,13 @@ int board_late_init(void)
+ #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+ 	env_set("board_name", model->board_name);
+ 	env_set("board_rev", model->board_rev);
+-	if(model->is_on_carrier) {
++	if (model->is_on_carrier) {
+ 		env_set("is_on_carrier", "yes");
+ 		env_set("carrier_name", model->carrier_name);
++		if (model->has_hat) {
++			env_set("has_hat", "yes");
++			env_set("hat_name", model->hat_name);
++		}
+ 	}
+ #endif
+ 	return 0;
+-- 
+2.25.1
+

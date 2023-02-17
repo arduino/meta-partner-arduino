@@ -7,8 +7,10 @@ Before=docker.service
 Type=simple
 ExecStart=/bin/sh -c '\
 echo "BOARD=$(fw_printenv board | cut -d '=' -f 2)" > /var/run/arduino_hw_info.env &&\
-echo "IS_ON_CARRIER=$(fw_printenv is_on_carrier | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env && \
-echo "CARRIER_NAME=$(fw_printenv carrier_name | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env'
+echo "IS_ON_CARRIER=$(fw_printenv is_on_carrier | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env &&\
+echo "CARRIER_NAME=$(fw_printenv carrier_name | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env &&\
+echo "HAS_HAT=$(fw_printenv has_hat | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env &&\
+echo "HAT_NAME=$(fw_printenv hat_name | cut -d '=' -f 2)" >> /var/run/arduino_hw_info.env'
 
 [Install]
 WantedBy=basic.target
