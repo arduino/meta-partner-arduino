@@ -20,6 +20,9 @@ start()
         # USB ids
         echo 0x$VID > idVendor
         echo 0x$PID > idProduct
+        echo 0xEF > bDeviceClass
+        echo 0x02 > bDeviceSubClass
+        echo 0x01 > bDeviceProtocol
 
         # USB strings, optional
         mkdir strings/0x409
@@ -32,17 +35,23 @@ start()
 
         # populate config, optional
         mkdir configs/c.1/strings/0x409
-        echo \"adb+ncm\" > configs/c.1/strings/0x409/configuration
+        echo \"adb+acm+ncm\" > configs/c.1/strings/0x409/configuration
         echo 900 > configs/c.1/MaxPower
 
         # create a generic ffs for adb
         mkdir functions/ffs.adb
+
+        # create the acm (serial) function
+        mkdir functions/acm.GS0
 
         # create the ncm function
         mkdir functions/ncm.usb0
 
         # assign ncm function to configuration
         ln -s functions/ncm.usb0/ configs/c.1
+
+        # assign acm function to configuration
+        ln -s functions/acm.GS0 configs/c.1
 
         # assign generic ffs to configuration
         ln -s functions/ffs.adb/ configs/c.1
