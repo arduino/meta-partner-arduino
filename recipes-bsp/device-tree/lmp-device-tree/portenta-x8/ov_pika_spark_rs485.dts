@@ -1,7 +1,7 @@
 /**
  * Portenta-X8 dtb overlay file
  * Arduino 2023
- * Enable Rs-485 on Pika-Spark carrier board
+ * Enable Rs-485 on Pika-Spark carrier board and more
  */
 
 /dts-v1/;
@@ -20,7 +20,26 @@
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
+	/* Pins connected to hw managed in user space configured as input pull down */
 	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			pinctrl-0 = <&pinctrl_hog>;
+			imx8mm {
+				pinctrl_hog: hoggrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SPDIF_TX_GPIO5_IO3			0x110 /* J1 74 nBNO085_IRQ */
+						MX8MM_IOMUXC_SAI5_RXD2_GPIO3_IO23		0x110 /* J1 56 BNO085_BOOTN */
+						MX8MM_IOMUXC_SAI5_RXD1_GPIO3_IO22		0x110 /* J1 58 BNO085_nRST */
+						MX8MM_IOMUXC_SPDIF_RX_GPIO5_IO4			0x110 /* J1 76 NCN26010_nIRQ */
+						MX8MM_IOMUXC_SAI5_RXD0_GPIO3_IO21		0x110 /* J1 60 NCN26010_nRST */
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
 		target = <&iomuxc>;
 		__overlay__ {
 			imx8mm {
@@ -36,7 +55,7 @@
 		};
 	};
 
-	fragment@1 {
+	fragment@2 {
 		target = <&uart2>;
 		__overlay__ {
 			pinctrl-names = "default";
