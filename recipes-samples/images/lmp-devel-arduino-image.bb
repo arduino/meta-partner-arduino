@@ -54,6 +54,7 @@ CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     modemmanager \
     usb-modeswitch \
+    u-boot-fw-utils \
     ${LMP_EXTRA} \
     ${ADB} \
     ${ARDUINO} \
