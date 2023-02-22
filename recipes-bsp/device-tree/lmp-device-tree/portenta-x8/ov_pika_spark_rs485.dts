@@ -35,14 +35,7 @@
 						MX8MM_IOMUXC_SAI5_RXD0_GPIO3_IO21		0x110 /* J1 60 NCN26010_nRST */
 					>;
 				};
-			};
-		};
-	};
 
-	fragment@1 {
-		target = <&iomuxc>;
-		__overlay__ {
-			imx8mm {
 				pinctrl_uart2: uart2grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
@@ -55,7 +48,7 @@
 		};
 	};
 
-	fragment@2 {
+	fragment@1 {
 		target = <&uart2>;
 		__overlay__ {
 			pinctrl-names = "default";
