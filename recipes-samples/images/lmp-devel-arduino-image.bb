@@ -50,6 +50,15 @@ ARDUINO = " \
     m4-proxy \
 "
 
+VIDEOTOOLS = " \
+    gstreamer1.0 \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    imx-gst1.0-plugin \
+    v4l-utils \
+"
+
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     modemmanager \
