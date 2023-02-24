@@ -59,7 +59,6 @@ ARDUINO = " \
 
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
-    modemmanager \
     usb-modeswitch \
     ${LMP_EXTRA} \
     ${ADB} \
