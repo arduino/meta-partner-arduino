@@ -1,7 +1,7 @@
 /**
  * Portenta-X8 dtb overlay file
  * Arduino 2023
- * Enable Rs-485 on Pika-Spark carrier board and more
+ * Enable RS-485 on Pika-Spark carrier board and more
  */
 
 /dts-v1/;
@@ -20,12 +20,13 @@
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
-	/* Pins connected to hw managed in user space configured as input pull down */
+	/* Pins mux and pad configuration */
 	fragment@0 {
 		target = <&iomuxc>;
 		__overlay__ {
 			pinctrl-0 = <&pinctrl_hog>;
 			imx8mm {
+				/* Pins connected to hw managed in user space configured as input pull down */
 				pinctrl_hog: hoggrp {
 					fsl,pins = <
 						MX8MM_IOMUXC_SPDIF_TX_GPIO5_IO3			0x110 /* J1 74 nBNO085_IRQ */
@@ -36,6 +37,7 @@
 					>;
 				};
 
+				/* Pins RS-485 */
 				pinctrl_uart2: uart2grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
@@ -48,6 +50,7 @@
 		};
 	};
 
+	/* RS-485 */
 	fragment@1 {
 		target = <&uart2>;
 		__overlay__ {
@@ -60,6 +63,30 @@
 			rs485-rts-active-low;
 			fsl,uart-has-rtscts;
 			status = "okay";
+		};
+	};
+
+	/* SPI0 */
+	fragment@2 {
+		target = <&ecspi2>;
+		__overlay__ {
+			spidev_cb: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+
+	/* SPI1 */
+	fragment@3 {
+		target = <&ecspi1>;
+		__overlay__ {
+			spidev_cb: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
 		};
 	};
 };
