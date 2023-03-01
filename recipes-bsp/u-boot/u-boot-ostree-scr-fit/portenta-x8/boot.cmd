@@ -67,15 +67,17 @@ setenv rasp_base_ovl ' \
 
 setenv bootcmd_dtb 'imxtract ${fit_addr}#conf@@FIT_NODE_SEPARATOR@@${fdt_file_final} fdt@@FIT_NODE_SEPARATOR@@${fdt_file_final} ${fdt_addr}; fdt addr ${fdt_addr}'
 setenv ovl_set_envsave ' \
-  if env exist old_carrier_name; then \
-    if test "${carrier_name}" = "${old_carrier_name}"; then \
-      setenv envsave 0 \
+  if test "${is_on_carrier}" = "yes"; then \
+    if env exist old_carrier_name; then \
+      if test "${carrier_name}" = "${old_carrier_name}"; then \
+        setenv envsave 0 \
+      fi \
     else \
       setenv envsave 1 \
       setenv old_carrier_name $carrier_name \
     fi \
   else \
-    setenv envsave 1 \
+    setenv envsave 0 \
   fi'
 setenv bootcmd_ovl_auto_detect ' \
   if env exist carrier_custom; then true; \
@@ -91,6 +93,8 @@ setenv bootcmd_ovl_auto_detect ' \
         setenv overlays $som_ovl $rasp_base_ovl \
       fi \
       run ovl_set_envsave \
+    else \
+      setenv overlays $som_ovl \
     fi \
   fi'
 setenv bootcmd_saveenv 'if test "${envsave}" = "1"; then run saveenv_mmc; fi'

@@ -6,15 +6,17 @@ ovldev=2
 ovlpart=2
 ovlpath=/boot/devicetree
 fdtovaddr=0x43600000
-set_envsave=if env exist old_carrier_name; then \
-              if test "${carrier_name}" = "${old_carrier_name}"; then \
-                setenv envsave 0 \
+set_envsave=if test "${is_on_carrier}" = "yes"; then \
+              if env exist old_carrier_name; then \
+                if test "${carrier_name}" = "${old_carrier_name}"; then \
+                  setenv envsave 0 \
+                fi \
               else \
-                setenv envsave 1 \
                 setenv old_carrier_name $carrier_name \
+                setenv envsave 1 \
               fi \
             else \
-              setenv envsave 1 \
+              setenv envsave 0 \
             fi
 bootcmd_ovl_auto_detect=if env exist carrier_custom; then true; \
                         else \
@@ -29,6 +31,8 @@ bootcmd_ovl_auto_detect=if env exist carrier_custom; then true; \
                               setenv overlays $som_ovl $rasp_base_ovl \
                             fi \
                             run set_envsave \
+                          else \
+                            setenv overlays $som_ovl \
                           fi \
                         fi
 bootcmd_saveenv=if test "${envsave}" = "1"; then saveenv; fi
