@@ -70,7 +70,7 @@
 	fragment@2 {
 		target = <&ecspi2>;
 		__overlay__ {
-			spidev_cb: spidev@0 {
+			spidev0: spidev@0 {
 				compatible = "rohm,dh2228fv";
 				spi-max-frequency = <1000000>;
 				reg = <0>;
@@ -82,7 +82,7 @@
 	fragment@3 {
 		target = <&ecspi1>;
 		__overlay__ {
-			spidev_cb: spidev@0 {
+			spidev1: spidev@0 {
 				compatible = "rohm,dh2228fv";
 				spi-max-frequency = <1000000>;
 				reg = <0>;
