@@ -60,7 +60,7 @@
 			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
 			linux,rs485-enabled-at-boot-time;
 			/*rs485-rx-during-tx;*/
-			rs485-rts-active-low;
+			rs485-rts-active-high;
 			fsl,uart-has-rtscts;
 			status = "okay";
 		};
