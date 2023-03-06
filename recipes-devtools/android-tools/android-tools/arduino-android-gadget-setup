@@ -35,7 +35,7 @@ start()
 
         # populate config, optional
         mkdir configs/c.1/strings/0x409
-        echo \"adb+acm+ncm\" > configs/c.1/strings/0x409/configuration
+        echo \"adb+acm\" > configs/c.1/strings/0x409/configuration
         echo 900 > configs/c.1/MaxPower
 
         # create a generic ffs for adb
@@ -43,12 +43,6 @@ start()
 
         # create the acm (serial) function
         mkdir functions/acm.GS0
-
-        # create the ncm function
-        mkdir functions/ncm.usb0
-
-        # assign ncm function to configuration
-        ln -s functions/ncm.usb0/ configs/c.1
 
         # assign acm function to configuration
         ln -s functions/acm.GS0 configs/c.1
