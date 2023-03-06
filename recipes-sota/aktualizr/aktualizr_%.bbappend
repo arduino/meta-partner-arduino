@@ -2,4 +2,4 @@ PACKAGECONFIG:append = " aklite-offline"
 
 # Revert v90 - workaround for offline update issue
 BRANCH:lmp = "master"
-SRCREV:lmp = "c8361a92fea2b5003a0b325cf532c17c73ff0dfa"
+SRCREV:lmp = "8045ff19bedc6a2965a63b69b33c30192bbf99c9"
