@@ -6,4 +6,4 @@ ConditionPathExists=/var/sota/offline-updates
 Type=oneshot
 SuccessExitStatus=0 100 101
 ExecStart=/usr/bin/aklite-offline install --log-level=0 --src-dir /var/sota/offline-updates/
-ExecStartPost=/bin/sh -c 'rm -rf /var/sota/offline-updates; shutdown -r 3'
+ExecStartPost=/bin/sh -c 'rm -rf /var/sota/offline-updates; shutdown -r 1'
