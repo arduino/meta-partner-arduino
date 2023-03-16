@@ -1,4 +1,4 @@
-From a3100ee30840048b3006add17cd6e9035eaa4599 Mon Sep 17 00:00:00 2001
+From 92bdfa6f3be8e4e3d0ca54398413fab5d6424927 Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Thu, 10 Dec 2020 15:40:23 +0100
 Subject: [PATCH] drivers: clk/rtc: enable RTC as clock input for the pmic
@@ -7,15 +7,15 @@ The RTC clockout is use as an oscillator input to the pmic
 
 Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
 ---
- drivers/clk/clk-bd718x7.c                   | 13 ++++++++++++-
- drivers/rtc/rtc-pcf8563.c                   | 10 +++++++++-
- 3 files changed, 25 insertions(+), 5 deletions(-)
+ drivers/clk/clk-bd718x7.c | 12 ++++++++++++
+ drivers/rtc/rtc-pcf8563.c | 10 +++++++++-
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/clk/clk-bd718x7.c b/drivers/clk/clk-bd718x7.c
-index ae6e5baee330..c1afeb7a2c4b 100644
+index ac40b669d60b7..ee3d9f19246d8 100644
 --- a/drivers/clk/clk-bd718x7.c
 +++ b/drivers/clk/clk-bd718x7.c
-@@ -10,6 +10,7 @@
+@@ -9,6 +9,7 @@
  #include <linux/slab.h>
  #include <linux/mfd/rohm-generic.h>
  #include <linux/clk-provider.h>
@@ -23,13 +23,12 @@ index ae6e5baee330..c1afeb7a2c4b 100644
  #include <linux/clkdev.h>
  #include <linux/regmap.h>
  
-@@ -68,11 +69,13 @@ static int bd71837_clk_probe(struct platform_device *pdev)
+@@ -81,10 +82,12 @@ static int bd71837_clk_probe(struct platform_device *pdev)
  	struct bd718xx_clk *c;
  	int rval = -ENOMEM;
  	const char *parent_clk;
 +	struct clk *clk;
  	struct device *parent = pdev->dev.parent;
- 	struct rohm_regmap_dev *mfd = dev_get_drvdata(parent);
  	struct clk_init_data init = {
  		.name = "bd718xx-32k-out",
  		.ops = &bd71837_clk_ops,
@@ -37,7 +36,7 @@ index ae6e5baee330..c1afeb7a2c4b 100644
  	};
  	enum rohm_chip_type chip = platform_get_device_id(pdev)->driver_data;
  
-@@ -81,6 +84,15 @@ static int bd71837_clk_probe(struct platform_device *pdev)
+@@ -104,6 +107,15 @@ static int bd71837_clk_probe(struct platform_device *pdev)
  		dev_err(&pdev->dev, "No parent clk found\n");
  		return -EINVAL;
  	}
@@ -54,7 +53,7 @@ index ae6e5baee330..c1afeb7a2c4b 100644
  	case ROHM_CHIP_TYPE_BD71837:
  	case ROHM_CHIP_TYPE_BD71847:
 diff --git a/drivers/rtc/rtc-pcf8563.c b/drivers/rtc/rtc-pcf8563.c
-index 24baa4767b11..9b1d65f7da9c 100644
+index c8bddfb941290..1caf4dd0d7d3e 100644
 --- a/drivers/rtc/rtc-pcf8563.c
 +++ b/drivers/rtc/rtc-pcf8563.c
 @@ -59,6 +59,9 @@
@@ -67,7 +66,7 @@ index 24baa4767b11..9b1d65f7da9c 100644
  struct pcf8563 {
  	struct rtc_device *rtc;
  	/*
-@@ -506,6 +509,7 @@ static struct clk *pcf8563_clkout_register_clk(struct pcf8563 *pcf8563)
+@@ -484,6 +487,7 @@ static struct clk *pcf8563_clkout_register_clk(struct pcf8563 *pcf8563)
  	struct device_node *node = client->dev.of_node;
  	struct clk *clk;
  	struct clk_init_data init;
@@ -75,7 +74,7 @@ index 24baa4767b11..9b1d65f7da9c 100644
  	int ret;
  	unsigned char buf;
  
-@@ -515,9 +519,13 @@ static struct clk *pcf8563_clkout_register_clk(struct pcf8563 *pcf8563)
+@@ -493,9 +497,13 @@ static struct clk *pcf8563_clkout_register_clk(struct pcf8563 *pcf8563)
  	if (ret < 0)
  		return ERR_PTR(ret);
  
@@ -91,5 +90,5 @@ index 24baa4767b11..9b1d65f7da9c 100644
  	init.num_parents = 0;
  	pcf8563->clkout_hw.init = &init;
 -- 
-2.17.1
+2.34.1
 
