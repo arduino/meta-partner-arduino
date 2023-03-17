@@ -19,7 +19,6 @@ SRC_URI:append:portenta-mx8mm = " \
     file://0017-portenta-m8-uboot-update-u-boot-additions-to-DTS.patch \
     file://0018-portenta-m8-sync-with-imx-kernel-DTS.patch \
     file://0019-portenta-m8-cleanup-header-config.patch \
-    file://0020-FIO-fromtree-LF-4200-imx8m-soc-drop-phy-reset-gpios-.patch \
     file://0021-portenta-common-establish-common-files-for-Portenta-.patch \
     file://0022-portenta-x8-cleanup-header-config.patch \
     file://0023-portenta-x8-enable-anx7625.patch \
