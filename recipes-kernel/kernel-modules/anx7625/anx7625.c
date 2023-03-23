@@ -45,7 +45,7 @@
 
 #define U_BOOT_EARLY_INIT
 //#define DISABLE_PD
-//#define GPIO_VBUS_CONTROL // @TODO: current hw doesn't support VBUS control
+#define GPIO_VBUS_CONTROL
 #define CABLE_DET_PIN_HAS_GLITCH
 #define TIMER_CABLE_DET_POLL_DELAY (1 * HZ)
 #define TIMEOUT_USB_DATA_ROLE 3
@@ -147,7 +147,7 @@ static int anx7625_get_fw_caps(struct anx7625_data *ctx,
 	return 0;
 }
 
-static int anx7625_typec_connect(struct anx7625_data *ctx)
+static int anx7625_typec_connect(struct anx7625_data *ctx, bool usb_data_role_timeout)
 {
 	struct device *dev = &ctx->client->dev;
 	struct typec_partner_desc desc;
@@ -172,7 +172,7 @@ static int anx7625_typec_connect(struct anx7625_data *ctx)
 	}
 
 	/* Setup the flag to trigger default DEVICE usb data role */
-	ctx->usb_typec->usb_data_role_timeout = true;
+	ctx->usb_typec->usb_data_role_timeout = usb_data_role_timeout;
 
 	return 0;
 
@@ -221,10 +221,8 @@ static unsigned char confirmed_cable_det(struct anx7625_data *ctx)
 
 	if (cable_det_count > 7)
 		return 1;
-	else if (cable_det_count < 2)
-		return 0;
 	else
-		return atomic_read(&ctx->power_status);
+		return 0;
 }
 #endif
 
@@ -1249,14 +1247,7 @@ static void anx7625_power_on(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode!\n");
 		return;
 	}
-#ifdef GPIO_VBUS_CONTROL
-	/* @TODO: we can't simply enable VBUS here, we need to enable it after
-	 * 1) workmode UFP/DFP has been defined
-	 * 2) power role has been negotiated
-	 * VBUS_USBC on (gpio = 0) */
-	gpiod_set_value(ctx->pdata.gpio_vbus_on, 0);
-	usleep_range(10000, 10100);
-#endif
+
 	/* 10ms: as per data sheet */
 	gpiod_set_value(ctx->pdata.gpio_p_on, 1);
 	usleep_range(10000, 10100);
@@ -1280,14 +1271,7 @@ static void anx7625_power_standby(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "not low power mode!\n");
 		return;
 	}
-#ifdef GPIO_VBUS_CONTROL
-	/* @TODO: we can't simply disable VBUS here, we need to disable it after
-	 * 1) workmode UFP/DFP has been defined
-	 * 2) power role has been negotiated
-	 * VBUS_USBC off (gpio = 1) */
-	gpiod_set_value(ctx->pdata.gpio_vbus_on, 1);
-	usleep_range(10000, 10100);
-#endif
+
 	gpiod_set_value(ctx->pdata.gpio_reset, 0);
 	usleep_range(1000, 1100);
 	gpiod_set_value(ctx->pdata.gpio_p_on, 0);
@@ -1532,9 +1516,10 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 
 	DRM_DEV_DEBUG_DRIVER(dev, "init gpio\n");
 
+#ifndef U_BOOT_EARLY_INIT
 #ifdef GPIO_VBUS_CONTROL
-	/* VBUS_USBC off (gpio = 1) */
-	platform->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
+	platform->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH); /* VBUS Off by default */
+#endif
 #endif
 #ifdef U_BOOT_EARLY_INIT
 	/* Gpio for chip power enable */
@@ -1561,6 +1546,7 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 
 	if (platform->pdata.gpio_p_on && platform->pdata.gpio_reset) {
 		platform->pdata.low_power_mode = 1;
+#ifndef U_BOOT_EARLY_INIT
 #ifdef GPIO_VBUS_CONTROL
 		DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled, "
 		                     "VBUS_USBC(%d) = %d, "
@@ -1572,6 +1558,7 @@ static void anx7625_init_gpio(struct anx7625_data *platform)
 		                     gpiod_get_value_cansleep(platform->pdata.gpio_p_on),
 		                     desc_to_gpio(platform->pdata.gpio_reset),
 		                     gpiod_get_value_cansleep(platform->pdata.gpio_reset));
+#endif
 #else
 		DRM_DEV_DEBUG_DRIVER(dev, "LOW POWER MODE enabled, "
 		                     "POWER_EN(%d) = %d, "
@@ -2334,7 +2321,7 @@ static int anx7625_handle_cable_det(struct anx7625_data *ctx)
 		if(atomic_read(&ctx->cable_connected))
 		{
 			DRM_DEV_DEBUG_DRIVER(dev, "anx: %s power on\n", __func__);
-			anx7625_typec_connect(ctx);
+			anx7625_typec_connect(ctx, true);
 			usleep_range(10000, 10100); /* 10ms: as per data sheet */
 			anx7625_chip_control(ctx, 1);
 			return 0;
@@ -2434,15 +2421,20 @@ static void anx7625_work_func(struct work_struct *work)
 	return;
 }
 
+/* 0 = On, 1 = Off */
+static void vbus_control(struct anx7625_data *ctx, int value)
+{
+#ifdef GPIO_VBUS_CONTROL
+	gpiod_set_value(ctx->pdata.gpio_vbus_on, value);
+#endif
+	return;
+}
+
 static irqreturn_t anx7625_comm_isr(int irq, void *data)
 {
 	struct anx7625_data *ctx = (struct anx7625_data *)data;
 	struct device *dev = &ctx->client->dev;
 	int sys_status, ivector, cc_status;
-
-#define STS_HPD_CHANGE \
-	(((sys_status & HPD_STATUS) != \
-	 (sys_sta_bak & HPD_STATUS)) ? HPD_STATUS_CHANGE : 0)
 
 	if (atomic_read(&ctx->power_status)==0) {
 		DRM_DEV_DEBUG_DRIVER(dev, "anx: comm isr NONE - no power, must be spurious\n");
@@ -2487,10 +2479,14 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 
 	/* Inform system of power role changes */
 	if (ivector & BIT(3)) { /* ivector == VBUS CHANGE */
-		if (sys_status & BIT(3))
+		if (sys_status & BIT(3)) {
 			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SOURCE); /* We're power provider */
-		else if (!(sys_status & BIT(3)))
+			vbus_control(ctx, 0);
+		}
+		else if (!(sys_status & BIT(3))) {
 			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SINK); /* We're power consumer */
+			vbus_control(ctx, 1);
+		}
 	}
 
 	/* Inform system of vconn changes */
@@ -2501,7 +2497,7 @@ static irqreturn_t anx7625_comm_isr(int irq, void *data)
 			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SINK); /* VCONN status OFF @TODO: being sink requires Ra to be present, check */
 	}
 
-	if ((ivector & HPD_STATUS_CHANGE) || STS_HPD_CHANGE)
+	if (ivector & HPD_STATUS_CHANGE)
 		dp_hpd_change_handler(ctx, sys_status & HPD_STATUS);
 
 	sys_sta_bak = sys_status;
@@ -2532,59 +2528,64 @@ static int anx7625_apply_pending_early_init_config(struct anx7625_data *ctx)
 
 	DRM_DEV_DEBUG_DRIVER(dev, "%s: Start\n", __func__);
 
-	DRM_DEV_DEBUG_DRIVER(dev, "%s: forcing ctx->power_status=1 and ctx->cable_connected=1\n", __func__);
+	DRM_DEV_DEBUG_DRIVER(dev, "%s: forcing ctx->power_status=1\n", __func__);
 	atomic_set(&ctx->power_status, 1);
-	atomic_set(&ctx->cable_connected, 1);
 
-	DRM_DEV_DEBUG_DRIVER(dev, "%s: forcing typec connect\n", __func__);
-	anx7625_typec_connect(ctx); /* Usually it's done in cable_det */
+	if(confirmed_cable_det(ctx)) {
+		atomic_set(&ctx->cable_connected, 1);
+		DRM_DEV_DEBUG_DRIVER(dev, "anx: %s (%s)\n", __func__, atomic_read(&ctx->cable_connected) ? "PLUGGED" : "UNPLUGGED");
+		anx7625_typec_connect(ctx, false); /* Usually it's done in cable_det */
 
-	ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
-	                           INTERFACE_CHANGE_INT);
-	DRM_DEV_DEBUG_DRIVER(dev, "%s: interrupt vector (0x44) 0x%x:\n", __func__, ivector);
-	print_ivector(ctx, ivector);
+		ivector = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client,
+															 INTERFACE_CHANGE_INT);
+		DRM_DEV_DEBUG_DRIVER(dev, "%s: interrupt vector (0x44) 0x%x:\n", __func__, ivector);
+		print_ivector(ctx, ivector);
 
-	anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
-	                  INTERFACE_CHANGE_INT,
-	                  ivector &(~ivector));
+		anx7625_reg_write(ctx, ctx->i2c.rx_p0_client,
+											INTERFACE_CHANGE_INT,
+											ivector &(~ivector));
 
-	sys_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, SYSTEM_STSTUS);
-	DRM_DEV_DEBUG_DRIVER(dev, "%s: system status (0x45) 0x%x:\n", __func__, sys_status);
-	print_sys_status(ctx, sys_status);
+		sys_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, SYSTEM_STSTUS);
+		DRM_DEV_DEBUG_DRIVER(dev, "%s: system status (0x45) 0x%x:\n", __func__, sys_status);
+		print_sys_status(ctx, sys_status);
 
-	cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
-	DRM_DEV_DEBUG_DRIVER(dev, "%s: CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n", __func__,
-	       cc_status & 0x0F, (cc_status >> 4) & 0x0F);
-	print_cc_status(ctx, cc_status);
+		cc_status = anx7625_reg_read(ctx, ctx->i2c.rx_p0_client, 0x46);
+		DRM_DEV_DEBUG_DRIVER(dev, "%s: CC status (0x46) c1 = 0x%x, c2 = 0x%x:\n", __func__,
+					 cc_status & 0x0F, (cc_status >> 4) & 0x0F);
+		print_cc_status(ctx, cc_status);
 
-	/* Inform system of data role change
-	 * NOTE: if no role has been negotiated in u-boot, then timeout mechanism will
-	 * set a default role see function usb_data_role_timeout */
-	if (ivector & BIT(5)) { /* ivector == DATA ROLE CHANGE */
+		/* Fetch data role config from what happened in u-boot */
 		if (sys_status & BIT(5))
 			anx7625_set_data_role(ctx, TYPEC_HOST); /* DFP */
 		else if (!(sys_status & BIT(5)))
 			anx7625_set_data_role(ctx, TYPEC_DEVICE); /* UFP */
-	}
 
-	/* Inform system of power role changes */
-	if (ivector & BIT(3)) { /* ivector == VBUS CHANGE */
-		if (sys_status & BIT(3))
+		/* Fetch power role config from what happened in u-boot */
+		if (sys_status & BIT(3)) {
 			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SOURCE); /* We're power provider */
-		else if (!(sys_status & BIT(3)))
+			ctx->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_LOW);
+			vbus_control(ctx, 0);
+		}
+		else if (!(sys_status & BIT(3))) {
 			typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SINK); /* We're power consumer */
-	}
+			ctx->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
+			vbus_control(ctx, 1);
+		}
 
-	/* Inform system of vconn changes */
-	if (ivector & BIT(2)) { /* ivector == VCONN CHANGE */
+		/* Fetch vconn config from what happened in u-boot */
 		if (sys_status & BIT(2))
 			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SOURCE); /* VCONN status OFF */
 		else if (!(sys_status & BIT(2)))
 			typec_set_vconn_role(ctx->usb_typec->port, TYPEC_SINK); /* VCONN status OFF @TODO: being sink requires Ra to be present, check */
-	}
 
-	if ((ivector & HPD_STATUS_CHANGE) || STS_HPD_CHANGE)
+		/* Fetch video cable presence from what happened in u-boot */
 		pending_video_work = sys_status & HPD_STATUS;
+	} else {
+		/* Below lines are necessary since without cable anx7625 reports DFP role and power Source */
+		typec_set_pwr_role(ctx->usb_typec->port, TYPEC_SINK); /* We're power consumer */
+		ctx->pdata.gpio_vbus_on = devm_gpiod_get_optional(dev, "usbc_pwr", GPIOD_OUT_HIGH);
+		vbus_control(ctx, 1);
+	}
 
 	DRM_DEV_DEBUG_DRIVER(dev, "%s: End\n", __func__);
 	return 0;
