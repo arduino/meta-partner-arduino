@@ -38,7 +38,7 @@
 				pinctrl_gpio_x8h7: gpiox8h7grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_GPIO1_IO10_GPIO1_IO10		0x19 /* NRST_STM32 */
-						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x19 /* BOOT0_STM32 */
+						MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x151 /* BOOT0_STM32 */
 						/* @TODO: m4 will triggers system red led through this gpio, input pullup? */
 						//MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x151 /* PA0_STM32 */
 					>;
