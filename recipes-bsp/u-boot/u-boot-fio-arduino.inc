@@ -47,4 +47,6 @@ SRC_URI:append:portenta-mx8mm = " \
     file://0045-dts-portenta-x8-fix-console-uart.patch \
     file://0046-Updated-ddr-ram-timings-according-to-manufacturing.patch \
     file://0047-Added-Rasp-Tenta-eeprom-detect.patch \
+    file://0048-Added-VBUS-switch-management.patch \
+    file://0049-Review-pinctrl_hog-groups.patch \
 "

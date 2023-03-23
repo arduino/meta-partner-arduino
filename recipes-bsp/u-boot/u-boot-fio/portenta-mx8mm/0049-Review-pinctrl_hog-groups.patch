@@ -1,0 +1,62 @@
+From d2b8e38fcdfaf2619037786a606068156afdc562 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.com>
+Date: Thu, 23 Mar 2023 16:54:03 +0000
+Subject: [PATCH 49/49] Review pinctrl_hog groups
+
+---
+ arch/arm/dts/portenta-mx8mm.dtsi |  3 ---
+ arch/arm/dts/portenta-x8.dts     | 17 ++++++++++++++++-
+ 2 files changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/dts/portenta-mx8mm.dtsi b/arch/arm/dts/portenta-mx8mm.dtsi
+index c48d2c2977..20fffb0f5c 100644
+--- a/arch/arm/dts/portenta-mx8mm.dtsi
++++ b/arch/arm/dts/portenta-mx8mm.dtsi
+@@ -206,9 +206,6 @@
+ };
+ 
+ &iomuxc {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_hog_1>;
+-
+ 	pinctrl_fec1: fec1grp {
+ 		fsl,pins = <
+ 			MX8MM_IOMUXC_ENET_MDC_ENET1_MDC			0x3
+diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
+index c1c8f00a19..43039c38e2 100644
+--- a/arch/arm/dts/portenta-x8.dts
++++ b/arch/arm/dts/portenta-x8.dts
+@@ -190,6 +190,9 @@
+ };
+ 
+ &iomuxc {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_hog_1>, <&pinctrl_hog_2>;
++
+ 	pinctrl_ecspi3: ecspi3grp {
+ 		fsl,pins = <
+ 			MX8MM_IOMUXC_UART1_RXD_ECSPI3_SCLK              0x82
+@@ -229,7 +232,19 @@
+ 	/* Some of these pins are leaved configured by internal ROM code */
+ 	pinctrl_hog_1: hoggrp-1 {
+ 		fsl,pins = <
+-			MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x110 /* BOOT0_STM */
++			MX8MM_IOMUXC_GPIO1_IO11_GPIO1_IO11		0x151 /* BOOT0_STM */
++		>;
++	};
++
++	/* Anx7625 pins */
++	pinctrl_hog_2: hoggrp-2 {
++		fsl,pins = <
++			MX8MM_IOMUXC_SAI2_TXC_GPIO4_IO25			0x19 /* POWER_EN */
++			MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27			0x51 /* CABLE_DET */
++			MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20			0x151 /* ALERT_N */
++			MX8MM_IOMUXC_SAI2_TXD0_GPIO4_IO26			0x19 /* RESET_N */
++			MX8MM_IOMUXC_SAI1_TXD1_GPIO4_IO13			0x19 /* VBUS_CTL */
++			MX8MM_IOMUXC_SAI1_RXFS_GPIO4_IO0			0x19 /* EN_I2S */
+ 		>;
+ 	};
+ };
+-- 
+2.25.1
+
