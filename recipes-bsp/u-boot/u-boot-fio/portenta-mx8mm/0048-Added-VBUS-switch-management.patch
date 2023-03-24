@@ -164,7 +164,7 @@ index 208065b228..cde30533d5 100644
 +{
 +	unsigned int count = 10;
 +	unsigned int cable_det_count = 0;
-+	uint8_t val = 0;
++	int val = 0;
 +
 +	imx_iomux_v3_setup_pad(sai2_cable_det_pad);
 +	gpio_direction_input(ANX7625_CABLE_DET_PAD);
@@ -172,7 +172,7 @@ index 208065b228..cde30533d5 100644
 +	do
 +	{
 +		val = gpio_get_value(ANX7625_CABLE_DET_PAD);
-+		if (val)
++		if (val > 0)
 +			cable_det_count++;
 +		udelay(1000); /* 1ms */
 +	}
