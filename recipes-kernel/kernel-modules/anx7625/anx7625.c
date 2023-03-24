@@ -207,13 +207,13 @@ static unsigned char confirmed_cable_det(struct anx7625_data *ctx)
 {
 	unsigned int count = 10;
 	unsigned int cable_det_count = 0;
-	uint8_t val = 0;
+	int val = 0;
 
 	do
 	{
 		val = gpiod_get_value_cansleep(ctx->pdata.gpio_cbl_det);
 
-		if (val == 1)
+		if (val > 0)
 			cable_det_count++;
 		usleep_range(1000, 1100);
 	}
