@@ -1,7 +1,7 @@
-From 9782ab409570bbab188d7ee47271919f3948fa9b Mon Sep 17 00:00:00 2001
+From 60ae6e589f298cf8acb15c285e0b9f65371540e9 Mon Sep 17 00:00:00 2001
 From: Michael Scott <mike@foundries.io>
 Date: Fri, 10 Sep 2021 11:32:26 -0700
-Subject: [PATCH 01/45] portenta-m8: add initial board support
+Subject: [PATCH] portenta-m8: add initial board support
 
 Based on patch from 2020.04 by: Massimo Pennazio <maxipenna@libero.it>
 
@@ -32,17 +32,17 @@ Signed-off-by: Michael Scott <mike@foundries.io>
  create mode 100644 include/configs/portenta-m8.h
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index aa0c6a75c3..dfb95c9c73 100644
+index 95f2a49df4..c3a52ac793 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
-@@ -863,6 +863,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
- 	imx8mm-venice-gw73xx-0x.dtb \
+@@ -979,6 +979,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
+ 	imx8mm-venice-gw7902.dtb \
  	imx8mm-verdin.dtb \
  	phycore-imx8mm.dtb \
 +	portenta-m8.dtb \
  	imx8mn-ddr3l-evk.dtb \
  	imx8mn-ddr4-evk.dtb \
- 	imx8mn-evk.dtb \
+ 	imx8mq-cm.dtb \
 diff --git a/arch/arm/dts/portenta-m8-u-boot.dtsi b/arch/arm/dts/portenta-m8-u-boot.dtsi
 new file mode 100644
 index 0000000000..386ad60208
@@ -624,12 +624,12 @@ index 0000000000..b7c81833b5
 +	};
 +};
 diff --git a/arch/arm/mach-imx/imx8m/Kconfig b/arch/arm/mach-imx/imx8m/Kconfig
-index 4503334175..29f2e75a5c 100644
+index c32fabde4e..82f2fe2b59 100644
 --- a/arch/arm/mach-imx/imx8m/Kconfig
 +++ b/arch/arm/mach-imx/imx8m/Kconfig
-@@ -108,6 +108,11 @@ config TARGET_IMX8MM_DDR4_EVK
- 	select MISC
- 	select SPL_CRYPTO_SUPPORT if SPL
+@@ -143,6 +143,11 @@ config TARGET_KONTRON_MX8MM
+ 	select SUPPORT_SPL
+ 	select IMX8M_LPDDR4
  
 +config TARGET_PORTENTA_M8
 +	bool "imx8mm portenta m8 board"
@@ -639,10 +639,10 @@ index 4503334175..29f2e75a5c 100644
  config TARGET_IMX8MN_EVK
  	bool "imx8mn LPDDR4 EVK board"
  	select IMX8MN
-@@ -194,6 +199,7 @@ config TARGET_PHYCORE_IMX8MP
- 	select IMX8M_LPDDR4
- endchoice
- 
+@@ -294,6 +299,7 @@ source "board/beacon/imx8mm/Kconfig"
+ source "board/beacon/imx8mn/Kconfig"
+ source "board/compulab/imx8mm-cl-iot-gate/Kconfig"
+ source "board/engicam/imx8mm/Kconfig"
 +source "board/arduino/portenta-m8/Kconfig"
  source "board/freescale/imx8mq_evk/Kconfig"
  source "board/freescale/imx8mq_val/Kconfig"
@@ -3807,5 +3807,5 @@ index 0000000000..670dbc4d28
 +
 +#endif
 -- 
-2.35.1
+2.34.1
 
