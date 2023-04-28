@@ -5,13 +5,13 @@ Subject: [PATCH] Fixed STM32H7 pins in u-boot
 
 ---
  arch/arm/dts/portenta-x8.dts | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
 index 43039c38e2..1cc8911beb 100644
 --- a/arch/arm/dts/portenta-x8.dts
 +++ b/arch/arm/dts/portenta-x8.dts
-@@ -232,7 +232,11 @@
+@@ -232,7 +232,12 @@
  	/* Some of these pins are leaved configured by internal ROM code */
  	pinctrl_hog_1: hoggrp-1 {
  		fsl,pins = <
@@ -21,6 +21,7 @@ index 43039c38e2..1cc8911beb 100644
 +			MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x110 /* SWDIO_STM32 Pull Down */
 +			MX8MM_IOMUXC_GPIO1_IO15_GPIO1_IO15		0x110 /* SWCLK_STM32 Pull Down */
 +			MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x110 /* PA0_STM32 Pull Down M4 led red */
++			MX8MM_IOMUXC_GPIO1_IO09_GPIO1_IO9		0x151 /* PC1_STM32 Pull Up IRQ */
  		>;
  	};
  
