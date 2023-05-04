@@ -110,8 +110,8 @@ index 4105df74f2b06..4162f6c332340 100644
 -	struct gpio_desc *gpiod;
 +
 +	int gpio;
-+	//struct gpio_desc *gpiod;
-+	
++	struct gpio_desc *gpiod;
++
 +	bool gpio_active_low;
  	unsigned int extcon_id;
 -	unsigned long debounce;
