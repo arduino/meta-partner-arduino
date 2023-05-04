@@ -24,7 +24,7 @@ index bfd81f78beaee..cd1ebe730215b 100644
  	button.irq = ret;
  
 +	unsigned int keycode;
-+	ret = of_property_read_u32(&i2c->dev.of_node, "rohm,button-keycode",
++	ret = of_property_read_u32(i2c->dev.of_node, "rohm,button-keycode",
 +				   &keycode);
 +	if (!ret) {
 +		button.code = keycode;
