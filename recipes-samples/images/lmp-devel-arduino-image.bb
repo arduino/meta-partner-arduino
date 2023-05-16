@@ -59,6 +59,10 @@ VIDEOTOOLS = " \
     v4l-utils \
 "
 
+OPENCV = " \
+    opencv \
+"
+
 CORE_IMAGE_BASE_INSTALL += " \
     libdrm \
     usb-modeswitch \
