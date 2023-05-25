@@ -1,0 +1,45 @@
+From 85254ff588891ed55f409c85636a2879ca4395f6 Mon Sep 17 00:00:00 2001
+From: Alice Yuan <alice.yuan@nxp.com>
+Date: Fri, 16 Sep 2022 10:57:43 +0800
+Subject: [PATCH 2/2] LF-7107-1: media: capture: csi: Fix intermittent camera
+ failures
+
+When do stress test of capture, taking pictures and rebooting.
+it will find that about 5% of them are black, the pictures shouldn't be black.
+
+Root cause:
+The few frames of ov5640 AE/AG is not stable, and at the begin of the few frames,
+the ov5640 sensor 3A is under adjustment. And the picture data is dirty, so
+it should be skipped at the start of the frame.
+
+Signed-off-by: Alice Yuan <alice.yuan@nxp.com>
+Reviewed-by: Robby Cai <robby.cai@nxp.com>
+---
+ drivers/media/platform/mxc/capture/mx6s_capture.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/platform/mxc/capture/mx6s_capture.c b/drivers/media/platform/mxc/capture/mx6s_capture.c
+index 39bef1e160b9..84f0e40e49e0 100644
+--- a/drivers/media/platform/mxc/capture/mx6s_capture.c
++++ b/drivers/media/platform/mxc/capture/mx6s_capture.c
+@@ -745,7 +745,7 @@ static int mx6s_csi_enable(struct mx6s_csi_dev *csi_dev)
+ 	unsigned long val;
+ 	int timeout, timeout2;
+ 
+-	csi_dev->skipframe = 0;
++	csi_dev->skipframe = 3;
+ 	csisw_reset(csi_dev);
+ 
+ 	if (pix->field == V4L2_FIELD_INTERLACED)
+@@ -1131,7 +1131,7 @@ static irqreturn_t mx6s_csi_irq_handler(int irq, void *data)
+ 		cr18 |= BIT_CSI_ENABLE;
+ 		csi_write(csi_dev, cr18, CSI_CSICR18);
+ 
+-		csi_dev->skipframe = 1;
++		csi_dev->skipframe++;
+ 		pr_debug("base address switching Change Err.\n");
+ 	}
+ 
+-- 
+2.25.1
+

@@ -1,0 +1,74 @@
+diff --git a/drivers/media/i2c/imx219.c b/drivers/media/i2c/imx219.c
+index 35a534829edb..38333435e159 100644
+--- a/drivers/media/i2c/imx219.c
++++ b/drivers/media/i2c/imx219.c
+@@ -12,6 +12,8 @@
+  * Flip handling taken from the Sony IMX319 driver.
+  * Copyright (C) 2018 Intel Corporation
+  *
++ * i.MX8M Mini changes
++ * Copyright (C) 2023 Arduino Massimo Pennazio maxipenna@libero.it
+  */
+ 
+ #include <linux/clk.h>
+@@ -452,14 +454,9 @@ static const char * const imx219_supply_name[] = {
+  * - h&v flips
+  */
+ static const u32 codes[] = {
+-	MEDIA_BUS_FMT_SRGGB10_1X10,
+-	MEDIA_BUS_FMT_SGRBG10_1X10,
+-	MEDIA_BUS_FMT_SGBRG10_1X10,
+-	MEDIA_BUS_FMT_SBGGR10_1X10,
+-
+-	MEDIA_BUS_FMT_SRGGB8_1X8,
+-	MEDIA_BUS_FMT_SGRBG8_1X8,
+-	MEDIA_BUS_FMT_SGBRG8_1X8,
++	MEDIA_BUS_FMT_SBGGR8_1X8,
++	MEDIA_BUS_FMT_SBGGR8_1X8,
++	MEDIA_BUS_FMT_SBGGR8_1X8,
+ 	MEDIA_BUS_FMT_SBGGR8_1X8,
+ };
+ 
+@@ -781,9 +778,15 @@ static int imx219_set_ctrl(struct v4l2_ctrl *ctrl)
+ 		break;
+ 	case V4L2_CID_HFLIP:
+ 	case V4L2_CID_VFLIP:
+-		ret = imx219_write_reg(imx219, IMX219_REG_ORIENTATION, 1,
++#if 0
++		ret = imx219_write_reg(imx219, IMX219_REG_ORIENTATION, IMX219_REG_VALUE_08BIT,
+ 				       imx219->hflip->val |
+ 				       imx219->vflip->val << 1);
++#else
++		ret = imx219_write_reg(imx219, IMX219_REG_ORIENTATION, IMX219_REG_VALUE_08BIT,
++				       0x01 |
++				       0x01 << 1);
++#endif
+ 		break;
+ 	case V4L2_CID_VBLANK:
+ 		ret = imx219_write_reg(imx219, IMX219_REG_VTS,
+@@ -1430,10 +1433,10 @@ static int imx219_check_hwcfg(struct device *dev)
+ 	}
+ 
+ 	/* Check the number of MIPI CSI2 data lanes */
+-	if (ep_cfg.bus.mipi_csi2.num_data_lanes != 2) {
++	/*if (ep_cfg.bus.mipi_csi2.num_data_lanes != 2) {
+ 		dev_err(dev, "only 2 data lanes are currently supported\n");
+ 		goto error_out;
+-	}
++	}*/
+ 
+ 	/* Check the link frequency set in device tree */
+ 	if (!ep_cfg.nr_of_link_frequencies) {
+@@ -1495,7 +1498,11 @@ static int imx219_probe(struct i2c_client *client)
+ 
+ 	/* Request optional enable pin */
+ 	imx219->reset_gpio = devm_gpiod_get_optional(dev, "reset",
+-						     GPIOD_OUT_HIGH);
++						     GPIOD_OUT_LOW);
++	if ((int)imx219->reset_gpio < 0) {
++		dev_err(dev, "cannot obtain reset-gpio\n");
++		return (int)imx219->reset_gpio;
++	}
+ 
+ 	/*
+ 	 * The sensor must be powered for imx219_identify_module()
