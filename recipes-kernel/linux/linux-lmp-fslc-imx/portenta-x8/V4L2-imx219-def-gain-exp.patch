@@ -1,0 +1,29 @@
+diff --git a/drivers/media/i2c/imx219.c b/drivers/media/i2c/imx219.c
+index 38333435e159..7e4d1c92b00a 100644
+--- a/drivers/media/i2c/imx219.c
++++ b/drivers/media/i2c/imx219.c
+@@ -96,7 +96,7 @@
+ #define IMX219_REG_EXPOSURE		0x015a
+ #define IMX219_EXPOSURE_MIN		4
+ #define IMX219_EXPOSURE_STEP		1
+-#define IMX219_EXPOSURE_DEFAULT		0x640
++#define IMX219_EXPOSURE_DEFAULT		0x7FFF
+ #define IMX219_EXPOSURE_MAX		65535
+ 
+ /* Analog gain control */
+@@ -104,13 +104,13 @@
+ #define IMX219_ANA_GAIN_MIN		0
+ #define IMX219_ANA_GAIN_MAX		232
+ #define IMX219_ANA_GAIN_STEP		1
+-#define IMX219_ANA_GAIN_DEFAULT		0x0
++#define IMX219_ANA_GAIN_DEFAULT		0x74
+ 
+ /* Digital gain control */
+ #define IMX219_REG_DIGITAL_GAIN		0x0158
+ #define IMX219_DGTL_GAIN_MIN		0x0100
+ #define IMX219_DGTL_GAIN_MAX		0x0fff
+-#define IMX219_DGTL_GAIN_DEFAULT	0x0100
++#define IMX219_DGTL_GAIN_DEFAULT	0x0800
+ #define IMX219_DGTL_GAIN_STEP		1
+ 
+ #define IMX219_REG_ORIENTATION		0x0172
