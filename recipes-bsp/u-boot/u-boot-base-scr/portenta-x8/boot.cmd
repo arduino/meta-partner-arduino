@@ -30,13 +30,11 @@ setenv max_ovl ' \
   ov_carrier_max_sdc \
   ov_carrier_max_cs42l52 \
   ov_carrier_max_sara-r4 \
-  ov_carrier_max_ov5647_camera_mipi \
   ov_carrier_enuc_lora'
 
 # Rasp-Tenta carrier ov list
 setenv rasp_base_ovl ' \
-  ov_carrier_rasptenta_base \
-  ov_carrier_rasptenta_ov5647_camera_mipi'
+  ov_carrier_rasptenta_base'
 
 # Following variables can be used to disable
 # auto carrier detection mechanism
