@@ -2,7 +2,7 @@
  * Portenta-X8 dtb overlay file
  * Arduino 2022
  * This overlay is adding the RPi V2.1 camera
- * with cmos sensor sony-imx219 to Max carrier board
+ * with cmos sensor Sony imx219 to Max carrier board
  */
 
 /dts-v1/;
@@ -85,7 +85,7 @@
 				port {
 					imx219_ep: endpoint {
 						remote-endpoint = <&mipi1_sensor_ep>;
-						data-lanes = <1 2>;
+						data-lanes = <2>;
 						link-frequencies = /bits/ 64 <456000000>;
 					};
 				};

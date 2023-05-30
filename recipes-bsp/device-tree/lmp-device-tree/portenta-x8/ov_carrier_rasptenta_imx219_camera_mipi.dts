@@ -2,7 +2,7 @@
  * Portenta-X8 dtb overlay file
  * Arduino 2022
  * This overlay is adding the RPi V2.1 camera
- * with cmos sensor sony-imx219 to Rasp-Tenta carrier board
+ * with cmos sensor Sony imx219 to Rasp-Tenta carrier board
  */
 
 /dts-v1/;
@@ -52,7 +52,6 @@
 		target = <&i2c2>;
 		__overlay__ {
 			imx219@10 {
-				//compatible = "sony,imx219_mipi";
 				compatible = "sony,imx219";
 				reg = <0x10>;
 				status = "okay";
