@@ -26,7 +26,7 @@ SRC_URI:append:portenta-x8 = " \
   file://portenta-x8-standard.scc \
   file://portenta-x8.cfg \
   file://0001-rohm-bd718xx-add-dt-configurable-button-keycode.patch \
-  file://VRL2-0001-LF-3760-media-csi-fill-in-colorspace.patch \
+  file://V4L2-0001-LF-3760-media-csi-fill-in-colorspace.patch \
   file://V4L2-0002-LF-7107-1-media-capture-csi-Fix-intermittent-camera-.patch \
   file://V4L2-imx219.patch \
   file://V4L2-imx219-def-gain-exp.patch \
