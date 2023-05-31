@@ -69,6 +69,8 @@ setenv ovl_set_envsave ' \
     if env exist old_carrier_name; then \
       if test "${carrier_name}" = "${old_carrier_name}"; then \
         setenv envsave 0 \
+      else \
+        setenv envsave 1 \
       fi \
     else \
       setenv envsave 1 \
