@@ -1,0 +1,79 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2021
+ * Enable pcie mini connector on Arduino Max carrier board
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_pcie0: pcie0grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI5_MCLK_GPIO3_IO25		0x41  /* PCIE_nRST */
+						/* PCIE_CLKREQ open drain, pull up, PWM9 stm32h7 gpio 32 */
+						/* PCIE_W_DISABLE, A1 stm32h7 gpio 8 */
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			pcie0_refclk: pcie0-refclk {
+				compatible = "fixed-clock";
+				#clock-cells = <0>;
+				clock-frequency = <100000000>;
+			};
+
+			reg_pcie0: pcie0_pmic {
+				compatible = "regulator-fixed";
+				regulator-name = "pcie0_regulators";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				gpio = <&x8h7_gpio 29 GPIO_ACTIVE_HIGH>; /* stm32h7 PWM6 */
+				enable-active-high;
+				regulator-always-on;
+				startup-delay-us = <500000>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&pcie0>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_pcie0>;
+			/*disable-gpio = <&x8h7_gpio 8 GPIO_ACTIVE_LOW>;*/
+			fsl,max-link-speed = <1>;
+			vpcie-supply = <&reg_pcie0>;
+			reset-gpio = <&gpio3 25 GPIO_ACTIVE_LOW>;
+			clocks = <&clk IMX8MM_CLK_PCIE1_ROOT>,
+				 <&clk IMX8MM_CLK_PCIE1_AUX>,
+				 <&clk IMX8MM_CLK_PCIE1_PHY>,
+				 <&pcie0_refclk>;
+			clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
+			assigned-clocks = <&clk IMX8MM_CLK_PCIE1_AUX>,
+					  <&clk IMX8MM_CLK_PCIE1_PHY>,
+					  <&clk IMX8MM_CLK_PCIE1_CTRL>;
+			assigned-clock-rates = <10000000>, <100000000>, <250000000>;
+			assigned-clock-parents = <&clk IMX8MM_SYS_PLL2_50M>,
+						 <&clk IMX8MM_SYS_PLL2_100M>,
+						 <&clk IMX8MM_SYS_PLL2_250M>;
+			ext_osc = <0>;
+			status = "okay";
+		};
+	};
+};

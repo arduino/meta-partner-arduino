@@ -41,6 +41,7 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_max_sara-r4.dts \
     file://ov_carrier_max_ov5647_camera_mipi.dts \
     file://ov_carrier_max_imx219_camera_mipi.dts \
+    file://ov_carrier_max_pcie_mini.dts \
     file://ov_carrier_rasptenta_base.dts \
     file://ov_carrier_rasptenta_ov5647_camera_mipi.dts \
     file://ov_carrier_rasptenta_imx219_camera_mipi.dts \
