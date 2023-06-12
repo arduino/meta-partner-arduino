@@ -48,6 +48,7 @@ ADB = " \
 ARDUINO = " \
     arduino-ootb \
     m4-proxy \
+    udev-rules-portenta \
 "
 
 VIDEOTOOLS = " \
@@ -70,6 +71,8 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${LMP_EXTRA} \
     ${ADB} \
     ${ARDUINO} \
+    ${VIDEOTOOLS} \
+    ${OPENCV} \
 "
 
 # Packages to be installed in Portenta-X8 machine only

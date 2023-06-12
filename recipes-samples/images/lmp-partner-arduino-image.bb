@@ -55,6 +55,7 @@ ADB = " \
 ARDUINO = " \
     arduino-ootb \
     m4-proxy \
+    udev-rules-portenta \
 "
 
 CORE_IMAGE_BASE_INSTALL += " \
