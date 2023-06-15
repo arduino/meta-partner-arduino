@@ -14,9 +14,3 @@ do_install () {
     install -d ${D}${sysconfdir}/udev/rules.d
     install -m 0644 ${WORKDIR}/65-apex.rules ${D}${sysconfdir}/udev/rules.d/
 }
-
-# Required group configuration for udev rules
-EXTRA_USERS_PARAMS:append = " \
-groupadd apex; \
-usermod -a -G apex ${LMP_USER}; \
-"
