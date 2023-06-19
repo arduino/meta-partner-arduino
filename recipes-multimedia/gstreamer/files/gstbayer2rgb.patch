@@ -1,0 +1,40 @@
+--- a/gst/bayer/gstbayer2rgb.c	2022-12-01 09:57:20.626293895 +0200
++++ b/gst/bayer/gstbayer2rgb.c	2022-12-01 14:08:18.626676927 +0200
+@@ -461,6 +461,9 @@
+   GstMapInfo map;
+   uint8_t *output;
+   GstVideoFrame frame;
++  uint8_t *tmp;
++  uint32_t value;
++  int i;
+ 
+   GST_DEBUG ("transforming buffer");
+ 
+@@ -472,13 +475,22 @@
+     goto map_failed;
+   }
+ 
++  tmp = g_malloc (1920*1080);
++  
++  for (i=0; i < 1920*1080; i++) {
++    value = ((uint16_t *)map.data)[i];
++    value = (value * 255) / 1023;
++    tmp[i] = (uint8_t)value;
++  }
++
+   output = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+   gst_bayer2rgb_process (filter, output, frame.info.stride[0],
+-      map.data, GST_ROUND_UP_4 (filter->width));
+-
++			 tmp, GST_ROUND_UP_4 (filter->width));
++  
+   gst_video_frame_unmap (&frame);
+   gst_buffer_unmap (inbuf, &map);
+-
++  
++  g_free(tmp);
+   return GST_FLOW_OK;
+ 
+ map_failed:
+-- 
+2.25.1
