@@ -2211,6 +2211,10 @@ static int imx477_probe(struct i2c_client *client)
 	/* Request optional enable pin */
 	imx477->reset_gpio = devm_gpiod_get_optional(dev, "reset",
 						     GPIOD_OUT_HIGH);
+	if ((int)imx477->reset_gpio < 0) {
+		dev_err(dev, "cannot obtain reset-gpio\n");
+		return (int)imx477->reset_gpio;
+	}
 
 	/*
 	 * The sensor must be powered for imx477_identify_module()
