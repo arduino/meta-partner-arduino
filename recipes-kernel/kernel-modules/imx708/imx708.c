@@ -1908,10 +1908,10 @@ static int imx708_check_hwcfg(struct device *dev, struct imx708 *imx708)
 	}
 
 	/* Check the number of MIPI CSI2 data lanes */
-	if (ep_cfg.bus.mipi_csi2.num_data_lanes != 2) {
+	/*if (ep_cfg.bus.mipi_csi2.num_data_lanes != 2) {
 		dev_err(dev, "only 2 data lanes are currently supported\n");
 		goto error_out;
-	}
+	}*/
 
 	/* Check the link frequency set in device tree */
 	if (!ep_cfg.nr_of_link_frequencies) {
