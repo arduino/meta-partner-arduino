@@ -20,6 +20,10 @@
 #include <media/v4l2-fwnode.h>
 #include <media/v4l2-mediabus.h>
 
+/* Sensor ancillary metadata formats - next is 0x7002 */
+#define MEDIA_BUS_FMT_SENSOR_DATA		0x7002
+#define V4L2_CID_NOTIFY_GAINS			(V4L2_CID_IMAGE_SOURCE_CLASS_BASE + 9)
+
 #define IMX708_REG_VALUE_08BIT		1
 #define IMX708_REG_VALUE_16BIT		2
 
