@@ -1044,15 +1044,10 @@ static const struct imx477_mode supported_modes_10bit[] = {
  * - h&v flips
  */
 static const u32 codes[] = {
-	/* 12-bit modes. */
-	MEDIA_BUS_FMT_SRGGB12_1X12,
-	MEDIA_BUS_FMT_SGRBG12_1X12,
-	MEDIA_BUS_FMT_SGBRG12_1X12,
-	MEDIA_BUS_FMT_SBGGR12_1X12,
 	/* 10-bit modes. */
-	MEDIA_BUS_FMT_SRGGB10_1X10,
-	MEDIA_BUS_FMT_SGRBG10_1X10,
-	MEDIA_BUS_FMT_SGBRG10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
 	MEDIA_BUS_FMT_SBGGR10_1X10,
 };
 
@@ -1399,9 +1394,15 @@ static int imx477_set_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 	case V4L2_CID_HFLIP:
 	case V4L2_CID_VFLIP:
+#if 0
 		ret = imx477_write_reg(imx477, IMX477_REG_ORIENTATION, 1,
 				       imx477->hflip->val |
 				       imx477->vflip->val << 1);
+#else
+		ret = imx477_write_reg(imx477, IMX477_REG_ORIENTATION, IMX477_REG_VALUE_08BIT,
+				       0x01 |
+				       0x01 << 1);
+#endif
 		break;
 	case V4L2_CID_VBLANK:
 		ret = imx477_set_frame_length(imx477,

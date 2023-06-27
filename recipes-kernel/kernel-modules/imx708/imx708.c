@@ -765,9 +765,9 @@ static const struct imx708_mode supported_modes_10bit_hdr[] = {
  */
 static const u32 codes[] = {
 	/* 10-bit modes. */
-	MEDIA_BUS_FMT_SRGGB10_1X10,
-	MEDIA_BUS_FMT_SGRBG10_1X10,
-	MEDIA_BUS_FMT_SGBRG10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
 	MEDIA_BUS_FMT_SBGGR10_1X10,
 };
 
@@ -1192,9 +1192,15 @@ static int imx708_set_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 	case V4L2_CID_HFLIP:
 	case V4L2_CID_VFLIP:
+#if 0
 		ret = imx708_write_reg(imx708, IMX708_REG_ORIENTATION, 1,
 				       imx708->hflip->val |
 				       imx708->vflip->val << 1);
+#else
+		ret = imx708_write_reg(imx708, IMX708_REG_ORIENTATION, IMX708_REG_VALUE_08BIT,
+				       0x01 |
+				       0x01 << 1);
+#endif
 		break;
 	case V4L2_CID_VBLANK:
 		ret = imx708_set_frame_length(imx708,
