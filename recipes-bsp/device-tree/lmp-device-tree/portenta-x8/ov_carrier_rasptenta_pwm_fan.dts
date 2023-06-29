@@ -1,0 +1,110 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Rasp-Tenta base board
+ * Enable:
+ * - USB (USB_FS)
+ * - SDCARD (SDC)
+ * Unconfigured:
+ * - CAN_STB active low GPIO4 (GPIO_PF12 STM32H7) has pulldown 10k
+ * - ORANGE_LED GPIO3 (GPIO_PF4_STM32H7)
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/thermal/thermal.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			reg_usdhc2_vmmc: regulator-usdhc2 {
+				compatible = "regulator-fixed";
+				regulator-name = "VSD_3V3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			fan0: pwm-fan {
+				compatible = "pwm-fan";
+				#cooling-cells = <2>;
+				pwms = <&x8h7_pwm 9 100000 0>;
+				cooling-levels = <5 64 128 192 255>; //First element is fan off
+			};									     //0 is equal to 255 due to hw design
+			
+			thermal-zones {
+				cpu-thermal {
+					polling-delay-passive = <250>;
+					polling-delay = <1000>;
+					thermal-sensors = <&tmu>;
+
+					trips {						
+                        // TRHOTTLING RELATED
+                        cpu_alert0: trip0 {
+                            temperature = <75000>;
+                            hysteresis = <2000>;
+                            type = "passive";
+                        };
+						
+                        cpu_crit0: trip1 {
+							temperature = <95000>;
+							hysteresis = <2000>;
+							type = "critical";
+						};
+
+                        // PWM FAN RELATED
+                        // TODO: temperatures and hysteresis should be tested and fine tuned
+						cpu_alert1: cpu-alert1 {
+							temperature = <30000>;
+							hysteresis = <5000>;
+							type = "active";
+						};
+
+						cpu_alert2: cpu-alert2 {
+							temperature = <40000>;
+							hysteresis = <2000>;
+							type = "active";
+						};
+
+						cpu_alert3: cpu-alert3 {
+							temperature = <50000>;
+							hysteresis = <2000>;
+							type = "active";
+						};					
+					};
+
+					cooling-maps {						
+                        map0 {
+                            trip = <&cpu_alert0>;
+                            cooling-device =
+                                <&A53_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+                                <&A53_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+                                <&A53_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+                                <&A53_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+                        };
+
+						map1 {
+							trip = <&cpu_alert1>;
+							cooling-device = <&fan0 0 0>;
+						};
+
+						map2 {
+							trip = <&cpu_alert2>;
+						    cooling-device = <&fan0 1 2>;
+						};
+
+						map3 {
+							trip = <&cpu_alert3>;
+							cooling-device = <&fan0 3 4>;
+						};
+					};
+				};
+			};
+		};
+	};
+};
