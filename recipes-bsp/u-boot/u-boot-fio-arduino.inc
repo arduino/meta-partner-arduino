@@ -50,4 +50,5 @@ SRC_URI:append:portenta-mx8mm = " \
     file://0048-Added-VBUS-switch-management.patch \
     file://0049-Review-pinctrl_hog-groups.patch \
     file://0050-Fixed-STM32H7-pins-in-u-boot.patch \
+    file://0051-Force-Breakout-carrier-as-default.patch \
 "
