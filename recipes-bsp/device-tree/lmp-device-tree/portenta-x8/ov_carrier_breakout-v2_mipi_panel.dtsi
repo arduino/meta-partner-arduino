@@ -4,6 +4,7 @@
 		regulator-name = "mipi_panel_reg";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
 	};
 };
 
