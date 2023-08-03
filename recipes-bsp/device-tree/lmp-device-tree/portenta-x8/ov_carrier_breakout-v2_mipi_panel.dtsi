@@ -1,5 +1,5 @@
 / {
-	reg_dldo2: reg_dldo2{
+	reg_dldo2: reg_dldo2 {
 		compatible = "regulator-fixed";
 		regulator-name = "mipi_panel_reg";
 		regulator-min-microvolt = <3300000>;
@@ -12,45 +12,43 @@
 };
 
 &iomuxc {
-	pinctrl-names = "default";
 	imx8mm {
-		pinctrl_en_cam: encamgrp {
+		pinctrl_rst_display: rstdisplay {
 			fsl,pins = <MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20		0x16 /* ENABLE (active high) */>;
 		};
 	};
 };
 
 &mipi_dsi {
-	#address-cells = <1>;
-	#size-cells = <0>;
 	status = "okay";
-	
+
 	panel@0 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_rst_display>;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		compatible = "techstar,ts8550b","sitronix,st7701";
 		reg = <0>;
-        reset-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
 		//reset-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 		VCC-supply = <&reg_dldo2>;
-        IOVCC-supply = <&reg_dldo2>;			
-		
+		IOVCC-supply = <&reg_dldo2>;
+
 		port {
 			panel0_in: endpoint {
 				remote-endpoint = <&mipi0_panel_out>;
+				data-lanes = <1 2>;
 			};
-		};
-	};	
-	
-	port@1 {
-		reg = <1>;
-		mipi0_panel_out: endpoint {
-			remote-endpoint = <&panel0_in>;
-			attach-bridge;
 		};
 	};
 
+	port@1 {
+		mipi0_panel_out: endpoint {
+			attach-bridge;
+			remote-endpoint = <&panel0_in>;
+		};
+	};
 };
 
 &gpu {
