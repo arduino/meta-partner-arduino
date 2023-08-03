@@ -1,0 +1,74 @@
+/ {
+	reg_dldo2: reg_dldo2{
+		compatible = "regulator-fixed";
+		regulator-name = "mipi_panel_reg";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+};
+
+&lcdif {
+	status = "okay";
+};
+
+&iomuxc {
+	pinctrl-names = "default";
+	imx8mm {
+		pinctrl_en_cam: encamgrp {
+			fsl,pins = <MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20		0x16 /* ENABLE (active high) */>;
+		};
+	};
+};
+
+&mipi_dsi {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+	
+	panel@0 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "techstar,ts8550b","sitronix,st7701";
+		reg = <0>;
+        reset-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
+		//reset-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+		VCC-supply = <&reg_dldo2>;
+        IOVCC-supply = <&reg_dldo2>;			
+		
+		port {
+			panel0_in: endpoint {
+				remote-endpoint = <&mipi0_panel_out>;
+			};
+		};
+	};	
+	
+	port@1 {
+		reg = <1>;
+		mipi0_panel_out: endpoint {
+			remote-endpoint = <&panel0_in>;
+			attach-bridge;
+		};
+	};
+
+};
+
+&gpu {
+	status = "okay";
+};
+
+&vpu_g1 {
+	status = "okay";
+};
+
+&vpu_g2 {
+	status = "okay";
+};
+
+&vpu_h1 {
+	status = "okay";
+};
+
+&vpu_v4l2 {
+	status = "okay";
+};

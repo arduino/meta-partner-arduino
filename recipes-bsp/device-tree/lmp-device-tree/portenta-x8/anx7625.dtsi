@@ -49,13 +49,13 @@
 		ports {
 			#address-cells = <1>;
 			#size-cells = <0>;
-
+			/*
 			port@0 {
 				reg = <0>;
 				lvds_from_dsi: endpoint {
 					remote-endpoint = <&dsi_to_lvds>;
 				};
-			};
+			};*/
 
 			port@3 {
 				reg = <3>;
@@ -120,6 +120,7 @@
 	};
 };
 
+/*
 &mipi_dsi {
 	status = "okay";
 	port@1 {
@@ -129,6 +130,7 @@
 		};
 	};
 };
+*/
 
 &lcdif {
 	status = "okay";
