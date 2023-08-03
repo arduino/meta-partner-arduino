@@ -9,7 +9,7 @@
 };
 
 &lcdif {
-	status = "okay";
+	status = "disabled";
 };
 
 &iomuxc {
@@ -26,29 +26,20 @@
 	panel@0 {
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_rst_display>;
-		#address-cells = <1>;
-		#size-cells = <0>;
 		compatible = "techstar,ts8550b","sitronix,st7701";
 		reg = <0>;
-		reset-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
-		//reset-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>;
-		status = "okay";
 		VCC-supply = <&reg_dldo2>;
 		IOVCC-supply = <&reg_dldo2>;
-
-		port {
-			panel0_in: endpoint {
-				remote-endpoint = <&mipi0_panel_out>;
-				data-lanes = <1 2>;
-			};
-		};
-	};
-
-	port@1 {
-		mipi0_panel_out: endpoint {
-			attach-bridge;
-			remote-endpoint = <&panel0_in>;
-		};
+		reset-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
+		//reset-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>;
+		dsi-lanes = <2>;
+		video-mode = <2>;	/* 0: burst mode
+							 * 1: non-burst mode with sync event
+							 * 2: non-burst mode with sync pulse
+							 */
+		panel-width-mm = <68>;
+		panel-height-mm = <121>;
+		status = "okay";
 	};
 };
 
