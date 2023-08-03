@@ -8,9 +8,11 @@
 	};
 };
 
+/*
 &lcdif {
 	status = "disabled";
 };
+*/
 
 &iomuxc {
 	imx8mm {
