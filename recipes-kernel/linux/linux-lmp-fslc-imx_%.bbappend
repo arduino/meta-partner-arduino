@@ -30,7 +30,9 @@ SRC_URI:append:portenta-x8 = " \
   file://V4L2-0002-LF-7107-1-media-capture-csi-Fix-intermittent-camera-.patch \
   file://V4L2-imx219.patch \
   file://V4L2-imx219-def-gain-exp.patch \
-  file://mxc_mipi_csi__and__csi_driver.patch \
+  file://0001-NXP-V4L2-patch-1-3-courtesy-of-weiping.liu-nxp.com.patch \
+  file://0002-NXP-V4L2-patch-2-3-courtesy-of-weiping.liu-nxp.com.patch \
+  file://0003-NXP-V4L2-patch-3-3-courtesy-of-weiping.liu-nxp.com.patch \
 "
 
 # file://rtc-pcf8563-remove-workaround.patch

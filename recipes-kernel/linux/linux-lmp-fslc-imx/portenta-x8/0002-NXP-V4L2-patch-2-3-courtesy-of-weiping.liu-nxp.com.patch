@@ -1,0 +1,25 @@
+From 7bd95ceafe4446a1ab52f6c00343d708163878f9 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Thu, 10 Aug 2023 15:32:20 +0000
+Subject: [PATCH 2/3] NXP V4L2 patch 2/3 courtesy of weiping.liu@nxp.com
+
+---
+ drivers/media/platform/mxc/capture/mx6s_capture.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/mxc/capture/mx6s_capture.c b/drivers/media/platform/mxc/capture/mx6s_capture.c
+index cd77e6547c39..00d49a63fab4 100644
+--- a/drivers/media/platform/mxc/capture/mx6s_capture.c
++++ b/drivers/media/platform/mxc/capture/mx6s_capture.c
+@@ -900,7 +900,7 @@ static int mx6s_configure_csi(struct mx6s_csi_dev *csi_dev)
+ 			csi_dev->fmt->pixelformat == BIT_MIPI_DATA_FORMAT_RAW10) {
+ 			// 00 GR , 10 BG (19-20bit)
+ 			cr2 &= ~(0x3 << 19);
+-			cr2 |= (0x2 << 19);
++			// cr2 |= (0x2 << 19);
+ 			csi_write(csi_dev, cr2, CSI_CSICR2);
+ 			printk("liutest BTS set cr2 %X\n", cr2);
+ 		}
+-- 
+2.25.1
+
