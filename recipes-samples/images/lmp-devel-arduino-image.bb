@@ -58,6 +58,8 @@ VIDEOTOOLS = " \
     gstreamer1.0-plugins-bad \
     imx-gst1.0-plugin \
     v4l-utils \
+    gstreamer1.0-bayer2rgb-neon \
+    gst-instruments \
 "
 
 OPENCV = " \
