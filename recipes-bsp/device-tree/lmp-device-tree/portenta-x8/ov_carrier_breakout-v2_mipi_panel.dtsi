@@ -8,16 +8,10 @@
 	};
 };
 
-/*
-&lcdif {
-	status = "disabled";
-};
-*/
-
 &iomuxc {
 	imx8mm {
 		pinctrl_rst_display: rstdisplay {
-			fsl,pins = <MX8MM_IOMUXC_SAI5_RXC_GPIO3_IO20		0x16 /* ENABLE (active high) */>;
+			fsl,pins = <MX8MM_IOMUXC_SAI3_RXC_GPIO4_IO29		0x16 /* ENABLE (active high) */>;
 		};
 	};
 };
@@ -32,16 +26,27 @@
 		reg = <0>;
 		VCC-supply = <&reg_dldo2>;
 		IOVCC-supply = <&reg_dldo2>;
-		reset-gpios = <&gpio3 20 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio4 29 GPIO_ACTIVE_HIGH>;
 		//reset-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>;
 		dsi-lanes = <2>;
 		video-mode = <2>;	/* 0: burst mode
 							 * 1: non-burst mode with sync event
 							 * 2: non-burst mode with sync pulse
 							 */
-		panel-width-mm = <68>;
-		panel-height-mm = <121>;
 		status = "okay";
+
+		port {
+			panel0_in: endpoint {
+				remote-endpoint = <&mipi0_panel_out>;
+			};
+		};
+	};
+
+	port@1 {
+		mipi0_panel_out: endpoint {
+			attach-bridge;
+			remote-endpoint = <&panel0_in>;
+		};
 	};
 };
 
