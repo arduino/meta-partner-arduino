@@ -22,7 +22,7 @@
 	panel@0 {
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_rst_display>;
-		compatible = "techstar,ts8550b","sitronix,st7701";
+		compatible = "arduino,giga-display","sitronix,st7701";
 		reg = <0>;
 		VCC-supply = <&reg_dldo2>;
 		IOVCC-supply = <&reg_dldo2>;
