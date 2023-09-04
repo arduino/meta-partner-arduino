@@ -1,5 +1,5 @@
 diff --git a/drivers/gpu/drm/panel/panel-sitronix-st7701.c b/drivers/gpu/drm/panel/panel-sitronix-st7701.c
-index 4d2a149b202c..ec86ed5391cc 100644
+index 4d2a149b202c..3bbfb8311707 100644
 --- a/drivers/gpu/drm/panel/panel-sitronix-st7701.c
 +++ b/drivers/gpu/drm/panel/panel-sitronix-st7701.c
 @@ -8,6 +8,7 @@
@@ -20,7 +20,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  
  /* Command2, BK0 commands */
  #define DSI_CMD2_BK0_PVGAMCTRL		0xB0 /* Positive Voltage Gamma Control */
-@@ -38,62 +42,89 @@
+@@ -38,62 +42,92 @@
  #define DSI_CMD2_BK1_SPD2		0xC2 /* Source EQ2 Setting */
  #define DSI_CMD2_BK1_MIPISET1		0xD0 /* MIPI Setting 1 */
  
@@ -113,6 +113,9 @@ index 4d2a149b202c..ec86ed5391cc 100644
 +#define DSI_CMD2_BK1_MIPISET1_ONES	BIT(7)
 +#define DSI_CMD2_BK1_MIPISET1_EOT_EN	BIT(3)
 +
++
++#define ARDUINO_GIGA_DISPLAY
++
 +#define CFIELD_PREP(_mask, _val)					\
 +	(((typeof(_mask))(_val) << (__builtin_ffsll(_mask) - 1)) & (_mask))
 +
@@ -156,7 +159,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  };
  
  struct st7701 {
-@@ -101,9 +132,10 @@ struct st7701 {
+@@ -101,9 +135,10 @@ struct st7701 {
  	struct mipi_dsi_device *dsi;
  	const struct st7701_panel_desc *desc;
  
@@ -168,7 +171,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  };
  
  static inline struct st7701 *panel_to_st7701(struct drm_panel *panel)
-@@ -123,9 +155,50 @@ static inline int st7701_dsi_write(struct st7701 *st7701, const void *seq,
+@@ -123,9 +158,50 @@ static inline int st7701_dsi_write(struct st7701 *st7701, const void *seq,
  		st7701_dsi_write(st7701, d, ARRAY_SIZE(d));	\
  	}
  
@@ -220,7 +223,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  
  	ST7701_DSI(st7701, MIPI_DCS_SOFT_RESET, 0x00);
  
-@@ -137,36 +210,137 @@ static void st7701_init_sequence(struct st7701 *st7701)
+@@ -137,36 +213,137 @@ static void st7701_init_sequence(struct st7701 *st7701)
  	msleep(st7701->sleep_delay);
  
  	/* Command2, BK0 */
@@ -381,20 +384,20 @@ index 4d2a149b202c..ec86ed5391cc 100644
  	/**
  	 * ST7701_SPEC_V1.2 is unable to provide enough information above this
  	 * specific command sequence, so grab the same from vendor BSP driver.
-@@ -188,20 +362,108 @@ static void st7701_init_sequence(struct st7701 *st7701)
+@@ -188,10 +365,101 @@ static void st7701_init_sequence(struct st7701 *st7701)
  	ST7701_DSI(st7701, 0xEC, 0x00, 0x00);
  	ST7701_DSI(st7701, 0xED, 0xFF, 0xF1, 0x04, 0x56, 0x72, 0x3F, 0xFF,
  		   0xFF, 0xFF, 0xFF, 0xF3, 0x27, 0x65, 0x40, 0x1F, 0xFF);
 +}
- 
--	/* disable Command2 */
--	ST7701_DSI(st7701, DSI_CMD2BKX_SEL,
--		   0x77, 0x01, 0x00, 0x00, DSI_CMD2BKX_SEL_NONE);
++
 +static void dmt028vghmcmi_1a_gip_sequence(struct st7701 *st7701)
 +{
 +	ST7701_DSI(st7701, 0xEE, 0x42);
 +	ST7701_DSI(st7701, 0xE0, 0x00, 0x00, 0x02);
-+
+ 
+-	/* disable Command2 */
+-	ST7701_DSI(st7701, DSI_CMD2BKX_SEL,
+-		   0x77, 0x01, 0x00, 0x00, DSI_CMD2BKX_SEL_NONE);
 +	ST7701_DSI(st7701, 0xE1,
 +		   0x04, 0xA0, 0x06, 0xA0,
 +			   0x05, 0xA0, 0x07, 0xA0,
@@ -479,13 +482,14 @@ index 4d2a149b202c..ec86ed5391cc 100644
 +	ST7701_DSI(st7701, 0xEC, 0x02, 0x01);
 +	ST7701_DSI(st7701, 0xED, 0xAB, 0x89, 0x76, 0x54, 0x01, 0xFF, 0xFF,
 +		   0xFF, 0xFF, 0xFF, 0xFF, 0x10, 0x45, 0x67, 0x98, 0xBA);
++}
++
++static int st7701_prepare_empty(struct drm_panel *panel){
++	return 0;
  }
  
  static int st7701_prepare(struct drm_panel *panel)
- {
-+/*
- 	struct st7701 *st7701 = panel_to_st7701(panel);
- 	int ret;
+@@ -201,7 +469,7 @@ static int st7701_prepare(struct drm_panel *panel)
  
  	gpiod_set_value(st7701->reset, 0);
  
@@ -494,7 +498,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  				    st7701->supplies);
  	if (ret < 0)
  		return ret;
-@@ -212,12 +474,38 @@ static int st7701_prepare(struct drm_panel *panel)
+@@ -212,12 +480,20 @@ static int st7701_prepare(struct drm_panel *panel)
  
  	st7701_init_sequence(st7701);
  
@@ -503,37 +507,20 @@ index 4d2a149b202c..ec86ed5391cc 100644
 +
 +	// Disable Command2 
 +	st7701_switch_cmd_bkx(st7701, false, 0);
-+*/
++
  	return 0;
  }
  
  static int st7701_enable(struct drm_panel *panel)
  {
- 	struct st7701 *st7701 = panel_to_st7701(panel);
-+	int ret;
-+
-+	gpiod_set_value(st7701->reset, 0);
-+
-+	ret = regulator_bulk_enable(ARRAY_SIZE(st7701->supplies),
-+				    st7701->supplies);
-+	if (ret < 0)
-+		return ret;
-+	msleep(20);
-+
-+	gpiod_set_value(st7701->reset, 1);
-+	msleep(150);
-+
-+	st7701_init_sequence(st7701);
-+
-+	if (st7701->desc->gip_sequence)
-+		st7701->desc->gip_sequence(st7701);
-+
-+	/* Disable Command2 */
-+	st7701_switch_cmd_bkx(st7701, false, 0);
+-	struct st7701 *st7701 = panel_to_st7701(panel);
++#ifdef ARDUINO_GIGA_DISPLAY
++	st7701_prepare(panel);
++#endif
  
  	ST7701_DSI(st7701, MIPI_DCS_SET_DISPLAY_ON, 0x00);
  
-@@ -254,7 +542,7 @@ static int st7701_unprepare(struct drm_panel *panel)
+@@ -254,7 +530,7 @@ static int st7701_unprepare(struct drm_panel *panel)
  	 */
  	msleep(st7701->sleep_delay);
  
@@ -542,7 +529,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  
  	return 0;
  }
-@@ -280,15 +568,76 @@ static int st7701_get_modes(struct drm_panel *panel,
+@@ -280,15 +556,80 @@ static int st7701_get_modes(struct drm_panel *panel,
  	connector->display_info.width_mm = desc_mode->width_mm;
  	connector->display_info.height_mm = desc_mode->height_mm;
  
@@ -565,7 +552,11 @@ index 4d2a149b202c..ec86ed5391cc 100644
  static const struct drm_panel_funcs st7701_funcs = {
  	.disable	= st7701_disable,
  	.unprepare	= st7701_unprepare,
++#ifdef ARDUINO_GIGA_DISPLAY
++	.prepare    = st7701_prepare_empty,
++#else
  	.prepare	= st7701_prepare,
++#endif
  	.enable		= st7701_enable,
  	.get_modes	= st7701_get_modes,
 +	//.get_orientation = st7701_get_orientation,
@@ -619,7 +610,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  };
  
  static const struct drm_display_mode ts8550b_mode = {
-@@ -310,46 +659,306 @@ static const struct drm_display_mode ts8550b_mode = {
+@@ -310,46 +651,306 @@ static const struct drm_display_mode ts8550b_mode = {
  	.type = DRM_MODE_TYPE_DRIVER | DRM_MODE_TYPE_PREFERRED,
  };
  
@@ -945,7 +936,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  				      st7701->supplies);
  	if (ret < 0)
  		return ret;
-@@ -360,6 +969,10 @@ static int st7701_dsi_probe(struct mipi_dsi_device *dsi)
+@@ -360,6 +961,10 @@ static int st7701_dsi_probe(struct mipi_dsi_device *dsi)
  		return PTR_ERR(st7701->reset);
  	}
  
@@ -956,7 +947,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  	drm_panel_init(&st7701->panel, &dsi->dev, &st7701_funcs,
  		       DRM_MODE_CONNECTOR_DSI);
  
-@@ -374,17 +987,26 @@ static int st7701_dsi_probe(struct mipi_dsi_device *dsi)
+@@ -374,17 +979,26 @@ static int st7701_dsi_probe(struct mipi_dsi_device *dsi)
  	 */
  	st7701->sleep_delay = 120 + desc->panel_sleep_delay;
  
@@ -985,7 +976,7 @@ index 4d2a149b202c..ec86ed5391cc 100644
  }
  
  static int st7701_dsi_remove(struct mipi_dsi_device *dsi)
-@@ -398,7 +1020,10 @@ static int st7701_dsi_remove(struct mipi_dsi_device *dsi)
+@@ -398,7 +1012,10 @@ static int st7701_dsi_remove(struct mipi_dsi_device *dsi)
  }
  
  static const struct of_device_id st7701_of_match[] = {
