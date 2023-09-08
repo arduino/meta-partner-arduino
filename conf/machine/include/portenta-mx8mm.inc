@@ -49,4 +49,4 @@ CORE_IMAGE_BASE_INSTALL:remove:portenta-mx8mm = " \
     linux-firmware-bcm43430 \
 "
 
-KERNEL_MODULE_AUTOLOAD:portenta-mx8mm:append = "anx7625 i2c-dev"
+KERNEL_MODULE_AUTOLOAD:portenta-mx8mm:append = "anx7625 i2c-dev spidev"
