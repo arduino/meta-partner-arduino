@@ -10,11 +10,6 @@ SRC_URI:append:portenta-mx8mm = " \
   file://mfd-bd718x7-wait-for-clock.patch \
   file://uart-imx-0001-Bug-rx-uart1-doesn-t-work-with-DMA-channels.patch \
   file://change-trip0-to-75.patch \
-  file://0002-fix-ov5647_mipi-build.patch \
-  file://0003-add-debug-prints-to-imx219.patch \
-  file://0004-porting-from-linux-rpi-5.10.patch \
-  file://0005-adding-debug-read-write-regs-to-ov5647_mipi.patch \
-  file://0006-pwdn-polarity-is-wrong.patch \
 "
 
 SRC_URI:append:portenta-m8 = " \
@@ -28,8 +23,6 @@ SRC_URI:append:portenta-x8 = " \
   file://0001-rohm-bd718xx-add-dt-configurable-button-keycode.patch \
   file://V4L2-0001-LF-3760-media-csi-fill-in-colorspace.patch \
   file://V4L2-0002-LF-7107-1-media-capture-csi-Fix-intermittent-camera-.patch \
-  file://V4L2-imx219.patch \
-  file://V4L2-imx219-def-gain-exp.patch \
   file://0001-NXP-V4L2-patch-1-3-courtesy-of-weiping.liu-nxp.com.patch \
   file://0002-NXP-V4L2-patch-2-3-courtesy-of-weiping.liu-nxp.com.patch \
   file://0003-NXP-V4L2-patch-3-3-courtesy-of-weiping.liu-nxp.com.patch \
