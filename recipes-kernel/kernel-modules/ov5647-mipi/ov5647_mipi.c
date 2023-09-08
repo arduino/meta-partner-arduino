@@ -34,6 +34,30 @@
 #define OV5647_CHIP_ID_HIGH_BYTE	0x300A
 #define OV5647_CHIP_ID_LOW_BYTE		0x300B
 
+#undef dev_err
+#define dev_err(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef dev_dbg
+#define dev_dbg(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef dev_warn
+#define dev_warn(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef dev_info
+#define dev_info(dev, fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef pr_err
+#define pr_err(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef pr_warning
+#define pr_warning(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef pr_info
+#define pr_info(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
+#undef pr_debug
+#define pr_debug(fmt, ...) printk("%s:%s:"fmt, __FILE__, __func__, ##__VA_ARGS__)
+
 enum ov5647_mode {
 	ov5647_mode_MIN = 0,
 	ov5647_mode_VGA_640_480 = 0,
