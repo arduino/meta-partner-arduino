@@ -430,14 +430,14 @@ static const char * const imx219_supply_name[] = {
  * - h&v flips
  */
 static const u32 codes[] = {
-	MEDIA_BUS_FMT_SRGGB10_1X10,
-	MEDIA_BUS_FMT_SGRBG10_1X10,
-	MEDIA_BUS_FMT_SGBRG10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
+	MEDIA_BUS_FMT_SBGGR10_1X10,
 	MEDIA_BUS_FMT_SBGGR10_1X10,
 
-	MEDIA_BUS_FMT_SRGGB8_1X8,
-	MEDIA_BUS_FMT_SGRBG8_1X8,
-	MEDIA_BUS_FMT_SGBRG8_1X8,
+	MEDIA_BUS_FMT_SBGGR8_1X8,
+	MEDIA_BUS_FMT_SBGGR8_1X8,
+	MEDIA_BUS_FMT_SBGGR8_1X8,
 	MEDIA_BUS_FMT_SBGGR8_1X8,
 };
 
@@ -759,9 +759,15 @@ static int imx219_set_ctrl(struct v4l2_ctrl *ctrl)
 		break;
 	case V4L2_CID_HFLIP:
 	case V4L2_CID_VFLIP:
-		ret = imx219_write_reg(imx219, IMX219_REG_ORIENTATION, 1,
+#if 0
+		ret = imx219_write_reg(imx219, IMX219_REG_ORIENTATION, IMX219_REG_VALUE_08BIT,
 				       imx219->hflip->val |
 				       imx219->vflip->val << 1);
+#else
+		ret = imx219_write_reg(imx219, IMX219_REG_ORIENTATION, IMX219_REG_VALUE_08BIT,
+				       0x01 |
+				       0x01 << 1);
+#endif
 		break;
 	case V4L2_CID_VBLANK:
 		ret = imx219_write_reg(imx219, IMX219_REG_VTS,
