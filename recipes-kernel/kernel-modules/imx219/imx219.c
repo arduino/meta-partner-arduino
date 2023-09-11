@@ -12,6 +12,8 @@
  * Flip handling taken from the Sony IMX319 driver.
  * Copyright (C) 2018 Intel Corporation
  *
+ * i.MX8M Mini changes
+ * Copyright (C) 2023 Arduino Massimo Pennazio maxipenna@libero.it
  */
 
 #include <linux/clk.h>
@@ -1403,10 +1405,10 @@ static int imx219_check_hwcfg(struct device *dev)
 	}
 
 	/* Check the number of MIPI CSI2 data lanes */
-	if (ep_cfg.bus.mipi_csi2.num_data_lanes != 2) {
+	/*if (ep_cfg.bus.mipi_csi2.num_data_lanes != 2) {
 		dev_err(dev, "only 2 data lanes are currently supported\n");
 		goto error_out;
-	}
+	}*/
 
 	/* Check the link frequency set in device tree */
 	if (!ep_cfg.nr_of_link_frequencies) {
