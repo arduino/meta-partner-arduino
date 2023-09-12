@@ -60,7 +60,7 @@
 	fragment@2 {
 		target = <&i2c3>;
 		__overlay__ {
-			ov5647_mipi@36 {
+			ov5647@36 {
 				compatible = "ovti,ov5647";
 				reg = <0x36>;
 				status = "okay";
