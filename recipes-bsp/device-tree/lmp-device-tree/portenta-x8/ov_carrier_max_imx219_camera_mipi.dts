@@ -85,7 +85,6 @@
 				port {
 					imx219_ep: endpoint {
 						remote-endpoint = <&mipi1_sensor_ep>;
-						data-lanes = <2>;
 						link-frequencies = /bits/ 64 <456000000>;
 					};
 				};
@@ -115,6 +114,9 @@
 				mipi1_sensor_ep: endpoint@1 {
 					remote-endpoint = <&imx219_ep>;
 					data-lanes = <2>;
+					csis-hs-settle = <13>;
+					csis-clk-settle = <2>;
+					csis-wclk;
 				};
 			};
 		};
