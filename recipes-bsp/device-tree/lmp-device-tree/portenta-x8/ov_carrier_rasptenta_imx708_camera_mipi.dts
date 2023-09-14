@@ -68,8 +68,6 @@
 				port {
 					imx708_ep: endpoint {
 						remote-endpoint = <&mipi1_sensor_ep>;
-						/*clock-lanes = <0>;*/
-						data-lanes = <2>;
 						clock-noncontinuous;
 						link-frequencies = /bits/ 64 <450000000>;
 					};
@@ -99,7 +97,12 @@
 
 				mipi1_sensor_ep: endpoint@1 {
 					remote-endpoint = <&imx708_ep>;
+					/*clock-lanes = <0>;*/
+					clock-noncontinuous;
 					data-lanes = <2>;
+					csis-hs-settle = <13>;
+					csis-clk-settle = <2>;
+					csis-wclk;
 				};
 			};
 		};
