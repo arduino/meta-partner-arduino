@@ -685,7 +685,8 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
 
   DBG_PRINT("\n");
 
-  if (priv->tx_skb || priv->tx_len) {
+  //if (priv->tx_skb || priv->tx_len) { // @TODO: original impl.
+  if (priv->tx_skb) {
     DBG_ERROR("hard_xmit called while tx busy\n");
     return NETDEV_TX_BUSY;
   }
