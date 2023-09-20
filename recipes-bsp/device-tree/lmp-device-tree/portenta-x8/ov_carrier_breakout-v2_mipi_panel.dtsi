@@ -8,6 +8,19 @@
 	};
 };
 
+<<<<<<< HEAD
+=======
+//backlight
+
+&iomuxc {
+	imx8mm {
+		pinctrl_rst_display: rstdisplay {
+			fsl,pins = <MX8MM_IOMUXC_SAI3_RXC_GPIO4_IO29		0x16 /* ENABLE (active high) */>;
+		};
+	};
+};
+
+>>>>>>> 1095dd9 ([ARDUINO GIGA DISPLAY] Changes DTS files to separate video component.)
 &mipi_dsi {
 	status = "okay";
 

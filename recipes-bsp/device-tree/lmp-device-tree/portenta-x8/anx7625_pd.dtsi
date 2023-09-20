@@ -1,0 +1,64 @@
+/**
+ */
+
+&iomuxc {
+	imx8mm {
+		pinctrl_anx7625: anx7625grp {
+			fsl,pins = <
+				MX8MM_IOMUXC_SAI2_TXC_GPIO4_IO25			0x19 /* POWER_EN */
+				MX8MM_IOMUXC_SAI2_MCLK_GPIO4_IO27			0x51 /* CABLE_DET */
+				MX8MM_IOMUXC_SAI1_MCLK_GPIO4_IO20			0x151 /* ALERT_N */
+				MX8MM_IOMUXC_SAI2_TXD0_GPIO4_IO26			0x19 /* RESET_N */
+				MX8MM_IOMUXC_SAI1_TXD1_GPIO4_IO13			0x19 /* VBUS_CTL */
+				MX8MM_IOMUXC_SAI1_RXFS_GPIO4_IO0			0x19 /* EN_I2S */
+			>;
+		};
+	};
+};
+
+&i2c2 {
+	analogix: analogix_i2c@58 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_anx7625>;
+		compatible ="analogix,anx7625";
+		status = "okay";
+		reg = <0x58>;
+		vdda-supply = <&ldo5_reg>;
+
+		// 1: internal panel always connected
+		// !=1: usbc dp port is modeled as a panel that can
+		// be present or not depending on the actual usbc cable connection
+		// status see driver
+		//panel_flags = <1>;
+
+		usbc_pwr-gpios = <&gpio4 13 0x0>;    // VBUS EN active low
+		enable-gpios = <&gpio4 25 0x0>;     // VIDEO_EN active high
+		reset-gpios = <&gpio4 26 0x0>;      // VIDEO_RSTN active low
+		cbl_det-gpios = <&gpio4 27 0x0>;    // VIDEO_CABLE cable input active high
+		intr_comm-gpios = <&gpio4 20 IRQ_TYPE_NONE>;  // VIDEO_ALT comm irq input active low
+		#sound-dai-cells = <0>;
+
+		typec1_con: connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			power-role = "dual";
+			data-role = "dual";
+			try-power-role = "sink";
+			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
+			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
+			             PDO_VAR(5000, 20000, 3000)>;
+			op-sink-microwatt = <15000000>;
+			self-powered;
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				port@1 {
+					reg = <1>;
+					typec1_dr_sw: endpoint {
+						remote-endpoint = <&usb1_drd_sw>;
+					};
+				};
+			};
+		};
+	};
+};

@@ -7,8 +7,8 @@
 
 #include <dt-bindings/usb/pd.h>
 #include "imx8mm.dtsi"
-#include "anx7625.dtsi"
-#include "ov_carrier_breakout-v2_mipi_panel.dtsi"
+#include "anx7625_pd.dtsi"
+#include "video.dtsi"
 
 / {
 	model = "Arduino i.MX8MM Portenta board";

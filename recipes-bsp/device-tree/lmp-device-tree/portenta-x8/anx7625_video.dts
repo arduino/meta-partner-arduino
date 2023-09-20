@@ -1,0 +1,188 @@
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/clock/imx8mm-clock.h>
+
+/ {
+    compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			sound-anx7625 {
+				compatible = "simple-audio-card";
+				simple-audio-card,format = "i2s";
+				simple-audio-card,name = "anx7625";
+				simple-audio-card,mclk-fs = <512>;
+				simple-audio-card,cpu {
+					sound-dai = <&sai6>;
+					dai-tdm-slot-num = <2>;
+					dai-tdm-slot-width = <32>;
+				};
+				simple-audio-card,codec {
+					sound-dai = <&analogix>;
+				};
+			};
+
+			reg_anx7625_i2s_en: anx7625_regulator {
+				compatible = "regulator-fixed";
+				regulator-name = "anx7625-i2s-en";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				gpio = <&gpio4 0 GPIO_ACTIVE_HIGH>;
+				off-on-delay-us = <20000>;
+				startup-delay-us = <100>;
+				enable-active-low;
+				regulator-boot-on;
+				regulator-always-on;
+			};		
+		};
+	};
+
+	fragment@1 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_sai6: sai6grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI1_TXD6_SAI6_TX_SYNC			0xd6
+						MX8MM_IOMUXC_SAI1_TXD4_SAI6_TX_BCLK			0xd6
+						MX8MM_IOMUXC_SAI1_TXD5_SAI6_TX_DATA0		0xd6
+					>;
+				};
+			};
+		};
+	};
+
+    fragment@2 {
+        target = <&analogix>;
+        __overlay__ {
+            ports {
+			    #address-cells = <1>;
+			    #size-cells = <0>;
+
+			    port@0 {
+			    	reg = <0>;
+			    	lvds_from_dsi: endpoint {
+			    		remote-endpoint = <&dsi_to_lvds>;
+			    	};
+			    };
+
+                port@3 {
+				    reg = <3>;
+				    codec_endpoint: endpoint {
+				    	remote-endpoint = <&sai6_cpu_endpoint>;
+				    };
+			    };
+            };
+        };
+    };
+
+    fragment@3 {
+        target = <&mipi_dsi>;
+        __overlay__ {
+	        status = "okay";
+	        port@1 {
+	        	dsi_to_lvds: endpoint {
+	        		remote-endpoint = <&lvds_from_dsi>;
+	        		attach-bridge;
+		        };
+	        };
+        };
+    };
+
+	fragment@4 {
+		target = <&lcdif>;
+		__overlay__ {
+			display = <&display0>;
+
+			display0: display {
+				bits-per-pixel = <32>;
+				bus-width = <24>;
+
+				display-timings {
+					native-mode = <&timing_1>;
+
+					timing_wvga: 800x480 {
+						clock-frequency = <33260000>;
+						hactive = <800>;
+						vactive = <480>;
+						hback-porch = <88>;
+						hfront-porch = <40>;
+						vback-porch = <32>;
+						vfront-porch = <13>;
+						hsync-len = <48>;
+						vsync-len = <3>;
+						de-active = <1>;
+						hsync-active = <0>;
+						vsync-active = <0>;
+						pixelclk-active = <0>;
+					};
+
+					timing_1: 1920x1080 {
+						clock-frequency = <74000000>;
+						hactive = <1920>;
+						vactive = <1080>;
+						hback-porch = <148>;
+						hfront-porch = <88>;
+						vback-porch = <36>;
+						vfront-porch = <4>;
+						hsync-len = <44>;
+						vsync-len = <5>;
+						de-active = <1>;
+						hsync-active = <0>;
+						vsync-active = <0>;
+						pixelclk-active = <0>;
+					};
+
+					timing_2: 1024x600 {
+						clock-frequency = <60000000>;
+						hactive = <1024>;
+						vactive = <600>;
+						hback-porch = <60>;
+						hfront-porch = <6>;
+						vback-porch = <0>;
+						vfront-porch = <0>;
+						hsync-len = <0>;
+						vsync-len = <0>;
+						de-active = <0>;
+						hsync-active = <0>;
+						vsync-active = <0>;
+						pixelclk-active = <0>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&sai6>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_sai6>;
+			assigned-clocks = <&clk IMX8MM_CLK_SAI6>;
+			assigned-clock-parents = <&clk IMX8MM_AUDIO_PLL1_OUT>;
+			assigned-clock-rates = <49152000>;
+			clocks = <&clk IMX8MM_CLK_SAI6_IPG>, <&clk IMX8MM_CLK_DUMMY>,
+				<&clk IMX8MM_CLK_SAI6_ROOT>, <&clk IMX8MM_CLK_DUMMY>,
+				<&clk IMX8MM_CLK_DUMMY>, <&clk IMX8MM_AUDIO_PLL1_OUT>,
+				<&clk IMX8MM_AUDIO_PLL2_OUT>;
+			clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
+			fsl,sai-asynchronous;
+			fsl,shared-interrupt;
+			#sound-dai-cells = <0>;
+			status = "okay";
+		
+			ports {
+				sai6_port0: port@0 {
+					sai6_cpu_endpoint: endpoint {
+						remote-endpoint = <&codec_endpoint>;
+						dai-format = "i2s";
+					};
+				};
+			};
+		};
+	};
+};
