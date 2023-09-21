@@ -13,6 +13,8 @@ require recipes-samples/images/lmp-feature-sysctl-hang-crash-helper.inc
 
 EXTRA_IMAGE_FEATURES = "package-management tools-debug"
 
+MACHINE_FEATURES:remove = " se05x"
+
 SRC_URI += "\
     file://sudoers-arduino \
 "
