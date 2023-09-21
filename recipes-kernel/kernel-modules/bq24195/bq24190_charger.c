@@ -2019,6 +2019,7 @@ static const struct i2c_device_id bq24190_i2c_ids[] = {
 	{ "bq24192" },
 	{ "bq24192i" },
 	{ "bq24196" },
+	{ "bq24195" },
 	{ },
 };
 MODULE_DEVICE_TABLE(i2c, bq24190_i2c_ids);
@@ -2028,6 +2029,7 @@ static const struct of_device_id bq24190_of_match[] = {
 	{ .compatible = "ti,bq24192", },
 	{ .compatible = "ti,bq24192i", },
 	{ .compatible = "ti,bq24196", },
+	{ .compatible = "ti,bq24195", },
 	{ },
 };
 MODULE_DEVICE_TABLE(of, bq24190_of_match);
