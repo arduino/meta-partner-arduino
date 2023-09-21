@@ -1,4 +1,4 @@
-obj-m += bq24195.o
+obj-m += bq24190_charger.o
 
 SRC := $(shell pwd)
 
