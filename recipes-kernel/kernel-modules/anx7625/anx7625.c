@@ -2741,7 +2741,7 @@ free_platform:
 	return ret;
 }
 
-static int anx7625_i2c_remove(struct i2c_client *client)
+static void anx7625_i2c_remove(struct i2c_client *client)
 {
 	struct anx7625_data *platform = i2c_get_clientdata(client);
 
@@ -2767,7 +2767,6 @@ static int anx7625_i2c_remove(struct i2c_client *client)
 	anx7625_audio_exit(platform);
 
 	kfree(platform);
-	return 0;
 }
 
 static const struct i2c_device_id anx7625_id[] = {
