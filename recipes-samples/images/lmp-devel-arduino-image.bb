@@ -78,7 +78,6 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${LMP_EXTRA} \
     ${ADB} \
     ${ARDUINO} \
-    ${VIDEOTOOLS} \
     ${OPENCV} \
 "
 
