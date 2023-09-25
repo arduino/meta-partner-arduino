@@ -448,6 +448,10 @@ static void kd50t048a_gip_sequence(struct st7701 *st7701)
 		   0xFF, 0xFF, 0xFF, 0xFF, 0x10, 0x45, 0x67, 0x98, 0xBA);
 }
 
+static int st7701_prepare_empty(struct drm_panel *panel){
+	return 0;
+}
+
 static int st7701_prepare(struct drm_panel *panel)
 {
 	struct st7701 *st7701 = panel_to_st7701(panel);
@@ -478,6 +482,8 @@ static int st7701_prepare(struct drm_panel *panel)
 static int st7701_enable(struct drm_panel *panel)
 {
 	struct st7701 *st7701 = panel_to_st7701(panel);
+
+	st7701_prepare(panel);
 
 	ST7701_DSI(st7701, MIPI_DCS_SET_DISPLAY_ON, 0x00);
 
@@ -559,7 +565,7 @@ static enum drm_panel_orientation st7701_get_orientation(struct drm_panel *panel
 static const struct drm_panel_funcs st7701_funcs = {
 	.disable	= st7701_disable,
 	.unprepare	= st7701_unprepare,
-	.prepare	= st7701_prepare,
+	.prepare	= st7701_prepare_empty,
 	.enable		= st7701_enable,
 	.get_modes	= st7701_get_modes,
 	//.get_orientation = st7701_get_orientation,
@@ -921,8 +927,7 @@ static int st7701_dsi_probe(struct mipi_dsi_device *dsi)
 		return -ENOMEM;
 
 	desc = of_device_get_match_data(&dsi->dev);
-	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
-			  MIPI_DSI_MODE_LPM | MIPI_DSI_CLOCK_NON_CONTINUOUS;
+	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST;
 	dsi->format = desc->format;
 	dsi->lanes = desc->lanes;
 
@@ -934,11 +939,15 @@ static int st7701_dsi_probe(struct mipi_dsi_device *dsi)
 	if (ret < 0)
 		return ret;
 
+	/**
+	 * RESET GPIO handling is removed in order to make it work on Arduino Portenta X8
+	 * 
 	st7701->reset = devm_gpiod_get(&dsi->dev, "reset", GPIOD_OUT_LOW);
 	if (IS_ERR(st7701->reset)) {
 		dev_err(&dsi->dev, "Couldn't get our reset GPIO\n");
 		return PTR_ERR(st7701->reset);
 	}
+	*/
 
 	ret = of_drm_get_panel_orientation(dsi->dev.of_node, &st7701->orientation);
 	if (ret < 0)
