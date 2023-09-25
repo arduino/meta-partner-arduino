@@ -514,17 +514,16 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
   data[4] = frame->can_dlc;
   memcpy(data + 5, frame->data, frame->can_dlc);
 
-if (1) {
-  char  str[1024];
-  int   len;
-  int   i;
+#ifdef DEBUG
+  char  frame_data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
+  int   i = 0, len = 0;
 
-  len = 0;
-  for (i=0; i<5+frame->can_dlc; i++) {
-    len += sprintf(str, " %02X", data[i]);
+  for (i = 0; (i < frame->can_dlc) && (len < sizeof(frame_data_str)); i++)
+  {
+    len += snprintf(frame_data_str + len, sizeof(frame_data_str) - len, " %02X", frame->data[i]);
   }
-  DBG_PRINT("Send %s to H7\n", str);
-}
+  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", frame->can_id, frame->can_dlc, frame_data_str);
+#endif
 
   x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, 5+frame->can_dlc, data);
   x8h7_pkt_send();
