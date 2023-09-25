@@ -113,7 +113,7 @@ struct x8h7_can_priv {
 
   struct x8h7_can_filter    std_flt[X8H7_STD_FLT_MAX];
   struct x8h7_can_filter    ext_flt[X8H7_EXT_FLT_MAX];
-  //struct mutex        lock;
+  struct mutex        lock;
 };
 
 /**
@@ -529,7 +529,7 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
   struct can_frame      *frame;
 
   DBG_PRINT("\n");
-  //mutex_lock(&priv->mcp_lock);
+  mutex_lock(&priv->lock);
   if (priv->tx_skb) {
     if (priv->can.state == CAN_STATE_BUS_OFF) {
       DBG_PRINT("CAN_STATE_BUS_OFF\n");
@@ -549,7 +549,7 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
       priv->tx_skb = NULL;
     }
   }
-  //mutex_unlock(&priv->mcp_lock);
+  mutex_unlock(&priv->lock);
 }
 
 /**
@@ -560,7 +560,7 @@ static void x8h7_can_restart_work_handler(struct work_struct *ws)
   struct net_device    *net = priv->net;
 
   DBG_PRINT("\n");
-  //mutex_lock(&priv->mcp_lock);
+  mutex_lock(&priv->lock);
   if (priv->after_suspend) {
     x8h7_can_hw_reset(priv);
     x8h7_can_setup(priv);
@@ -588,7 +588,7 @@ static void x8h7_can_restart_work_handler(struct work_struct *ws)
     netif_wake_queue(net);
     x8h7_can_error_skb(net, CAN_ERR_RESTARTED, 0);
   }
-  //mutex_unlock(&priv->mcp_lock);
+  mutex_unlock(&priv->lock);
 }
 
 /**
@@ -606,6 +606,8 @@ static int x8h7_can_open(struct net_device *net)
     return ret;
   }
 
+  mutex_lock(&priv->lock);
+
   priv->force_quit = 0;
   priv->tx_skb     = NULL;
   priv->tx_len     = 0;
@@ -617,6 +619,8 @@ static int x8h7_can_open(struct net_device *net)
   }
   INIT_WORK(&priv->tx_work, x8h7_can_tx_work_handler);
   INIT_WORK(&priv->restart_work, x8h7_can_restart_work_handler);
+
+  mutex_init(&priv->lock);
 
   ret = x8h7_can_hw_reset(priv);
   if (ret) {
@@ -634,6 +638,7 @@ static int x8h7_can_open(struct net_device *net)
   can_led_event(net, CAN_LED_EVENT_OPEN);
 
   netif_wake_queue(net);
+  mutex_unlock(&priv->lock);
 
   return 0;
 
@@ -643,6 +648,7 @@ out_clean:
   x8h7_hook_set(priv->periph, NULL, NULL);
 //out_close:
   close_candev(net);
+  mutex_unlock(&priv->lock);
   return ret;
 }
 
@@ -656,11 +662,15 @@ static int x8h7_can_stop(struct net_device *net)
 
   close_candev(net);
   priv->force_quit = 1;
+  mutex_lock(&priv->lock);
   x8h7_hook_set(priv->periph, NULL, NULL);
   destroy_workqueue(priv->wq);
   priv->wq = NULL;
 
   priv->can.state = CAN_STATE_STOPPED;
+
+  mutex_unlock(&priv->lock);
+
   can_led_event(net, CAN_LED_EVENT_STOP);
 
   return 0;
