@@ -70,7 +70,7 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define X8H7_CAN_STS_FLG_EWARN   0x40  // Error Warning
 
 #define CAN_FRAME_MAX_DATA_LEN	8
-#define X8H7_CAN_SIZE   (5+CAN_FRAME_MAX_DATA_LEN)
+#define X8H7_CAN_HEADER_SIZE    5
 
 #define AFTER_SUSPEND_UP      1
 #define AFTER_SUSPEND_DOWN    2
@@ -487,29 +487,36 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
  */
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
-  u8  data[X8H7_CAN_SIZE];
+  union
+  {
+    struct __attribute__((packed))
+    {
+      uint32_t id;                           // 29 bit identifier
+      uint8_t  len;                          // Length of data field in bytes
+      uint8_t  data[CAN_FRAME_MAX_DATA_LEN]; // Data field
+    } field;
+    uint8_t buf[X8H7_CAN_HEADER_SIZE + CAN_FRAME_MAX_DATA_LEN];
+  } can_msg;
 
   DBG_PRINT("\n");
 
-  data[0] = frame->can_id;
-  data[1] = frame->can_id >> 8;
-  data[2] = frame->can_id >> 16;
-  data[3] = frame->can_id >> 24;
-  data[4] = frame->can_dlc;
-  memcpy(data + 5, frame->data, frame->can_dlc);
+  can_msg.field.id  = frame->can_id;
+  can_msg.field.len = (frame->can_dlc <= CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : CAN_FRAME_MAX_DATA_LEN;
+  memcpy(can_msg.field.data, frame->data, can_msg.field.len);
 
 #ifdef DEBUG
-  char  frame_data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
+  char  data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
   int   i = 0, len = 0;
 
-  for (i = 0; (i < frame->can_dlc) && (len < sizeof(frame_data_str)); i++)
+  for (i = 0; (i < frame->can_dlc) && (len < sizeof(data_str)); i++)
   {
-    len += snprintf(frame_data_str + len, sizeof(frame_data_str) - len, " %02X", frame->data[i]);
+    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", can_msg.field.data[i]);
   }
-  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", frame->can_id, frame->can_dlc, frame_data_str);
+  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", can_msg.field.id, can_msg.field.len, data_str);
 #endif
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, 5+frame->can_dlc, data);
+  uint16_t const bytes_to_send = X8H7_CAN_HEADER_SIZE + can_msg.field.len; /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, bytes_to_send, can_msg.buf);
   x8h7_pkt_send();
 }
 
