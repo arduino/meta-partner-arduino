@@ -487,25 +487,9 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
  */
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
-/*
-  u32 exide;      // Extended ID Enable
-  u32 sid;        // Standard ID
-  u32 eid;        // Extended ID
-  u32 rtr;        // Remote transmission
-*/
   u8  data[X8H7_CAN_SIZE];
 
   DBG_PRINT("\n");
-/*
-  exide = (frame->can_id & CAN_EFF_FLAG) ? 1 : 0;
-  if (exide) {
-    sid = (frame->can_id & CAN_EFF_MASK) >> 18;
-  } else {
-    sid = frame->can_id & CAN_SFF_MASK;
-  }
-  eid = frame->can_id & CAN_EFF_MASK;
-  rtr = (frame->can_id & CAN_RTR_FLAG) ? 1 : 0;
-*/
 
   data[0] = frame->can_id;
   data[1] = frame->can_id >> 8;
