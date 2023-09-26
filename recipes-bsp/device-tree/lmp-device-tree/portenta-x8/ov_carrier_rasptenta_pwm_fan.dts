@@ -3,11 +3,7 @@
  * Arduino 2023
  * Rasp-Tenta base board
  * Enable:
- * - USB (USB_FS)
- * - SDCARD (SDC)
- * Unconfigured:
- * - CAN_STB active low GPIO4 (GPIO_PF12 STM32H7) has pulldown 10k
- * - ORANGE_LED GPIO3 (GPIO_PF4_STM32H7)
+ * - FAN, pwm controlled
  */
 
 /dts-v1/;
@@ -36,29 +32,29 @@
 				pwms = <&x8h7_pwm 9 100000 0>;
 				cooling-levels = <5 64 128 192 255>; //First element is fan off
 			};									     //0 is equal to 255 due to hw design
-			
+
 			thermal-zones {
 				cpu-thermal {
 					polling-delay-passive = <250>;
 					polling-delay = <1000>;
 					thermal-sensors = <&tmu>;
 
-					trips {						
-                        // TRHOTTLING RELATED
-                        cpu_alert0: trip0 {
-                            temperature = <75000>;
-                            hysteresis = <2000>;
-                            type = "passive";
-                        };
-						
-                        cpu_crit0: trip1 {
+					trips {
+						/* Passive thermal regulation */
+						cpu_alert0: trip0 {
+							temperature = <75000>;
+							hysteresis = <2000>;
+							type = "passive";
+						};
+
+						cpu_crit0: trip1 {
 							temperature = <95000>;
 							hysteresis = <2000>;
 							type = "critical";
 						};
 
-                        // PWM FAN RELATED
-                        // TODO: temperatures and hysteresis should be tested and fine tuned
+						/* Active thermal regulation */
+						/* @TODO: fine tuning */
 						cpu_alert1: cpu-alert1 {
 							temperature = <30000>;
 							hysteresis = <5000>;
@@ -75,18 +71,18 @@
 							temperature = <50000>;
 							hysteresis = <2000>;
 							type = "active";
-						};					
+						};
 					};
 
-					cooling-maps {						
-                        map0 {
-                            trip = <&cpu_alert0>;
-                            cooling-device =
-                                <&A53_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-                                <&A53_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-                                <&A53_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-                                <&A53_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
-                        };
+					cooling-maps {
+						map0 {
+							trip = <&cpu_alert0>;
+							cooling-device =
+								<&A53_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+								<&A53_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+								<&A53_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+								<&A53_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+						};
 
 						map1 {
 							trip = <&cpu_alert1>;
@@ -95,7 +91,7 @@
 
 						map2 {
 							trip = <&cpu_alert2>;
-						    cooling-device = <&fan0 1 2>;
+							cooling-device = <&fan0 1 2>;
 						};
 
 						map3 {
