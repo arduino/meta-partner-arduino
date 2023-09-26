@@ -202,7 +202,8 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
   priv->can.state = new_state;
   DBG_CAN_STATE(priv->net->name, priv->can.state);
 
-  //if (intf & CANINTF_ERRIF) {
+  if (intf & X8H7_CAN_STS_INT_ERR)
+  {
     /* Handle overflow counters */
     if (eflag & X8H7_CAN_STS_FLG_RX_OVR) {
       net->stats.rx_over_errors++;
@@ -211,7 +212,7 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
       data1 |= CAN_ERR_CRTL_RX_OVERFLOW;
       x8h7_can_error_skb(net, can_id, data1);
     }
-  //}
+  }
 
   if (priv->can.state == CAN_STATE_BUS_OFF) {
     if (priv->can.restart_ms == 0) {
