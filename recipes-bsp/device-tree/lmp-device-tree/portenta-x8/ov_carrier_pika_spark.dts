@@ -1,0 +1,92 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Enable RS-485 on Pika-Spark carrier board and more
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include "imx8mm-pinfunc.h"
+
+/* @TODO they shall be introduced in recent bsps from nxp */
+/* NOTE: DCE mode not inverted */
+#define MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX     0x1D8 0x440 0x4Fc 0x4 0x2
+#define MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX      0x1DC 0x444 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B   0x1D0 0x438 0x000 0x4 0x0
+#define MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B   0x1D4 0x43C 0x4F8 0x4 0x3
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	/* Pins mux and pad configuration */
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			pinctrl-0 = <&pinctrl_hog>;
+			imx8mm {
+				/* Pins connected to hw managed in user space configured as input pull down */
+				pinctrl_hog: hoggrp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SPDIF_TX_GPIO5_IO3			0x110 /* J1 74 nBNO085_IRQ */
+						MX8MM_IOMUXC_SAI5_RXD2_GPIO3_IO23		0x110 /* J1 56 BNO085_BOOTN */
+						MX8MM_IOMUXC_SAI5_RXD1_GPIO3_IO22		0x110 /* J1 58 BNO085_nRST */
+						MX8MM_IOMUXC_SPDIF_RX_GPIO5_IO4			0x110 /* J1 76 NCN26010_nIRQ */
+						MX8MM_IOMUXC_SAI5_RXD0_GPIO3_IO21		0x110 /* J1 60 NCN26010_nRST */
+					>;
+				};
+
+				/* Pins RS-485 */
+				pinctrl_uart2: uart2grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
+						MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX		0x140
+						MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B	0x140
+						MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B	0x140
+					>;
+				};
+			};
+		};
+	};
+
+	/* RS-485 */
+	fragment@1 {
+		target = <&uart2>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_uart2>;
+			assigned-clocks = <&clk IMX8MM_CLK_UART2>;
+			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+			linux,rs485-enabled-at-boot-time;
+			/*rs485-rx-during-tx;*/
+			rs485-rts-active-high;
+			fsl,uart-has-rtscts;
+			status = "okay";
+		};
+	};
+
+	/* SPI0 */
+	fragment@2 {
+		target = <&ecspi2>;
+		__overlay__ {
+			spidev0: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+
+	/* SPI1 */
+	fragment@3 {
+		target = <&ecspi1>;
+		__overlay__ {
+			spidev1: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+};
