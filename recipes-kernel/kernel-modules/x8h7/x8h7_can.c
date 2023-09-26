@@ -68,9 +68,10 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define X8H7_CAN_STS_FLG_TX_WAR  0x10  // Transmit Error Warning
 #define X8H7_CAN_STS_FLG_RX_WAR  0x20  // Receive Error Warning
 #define X8H7_CAN_STS_FLG_EWARN   0x40  // Error Warning
+#define X8H7_CAN_STS_FLG_TX_OVR  0x80  // Transmit Buffer Overflow
 
 #define CAN_FRAME_MAX_DATA_LEN	8
-#define X8H7_CAN_SIZE   (5+CAN_FRAME_MAX_DATA_LEN)
+#define X8H7_CAN_HEADER_SIZE    5
 
 #define AFTER_SUSPEND_UP      1
 #define AFTER_SUSPEND_DOWN    2
@@ -113,7 +114,7 @@ struct x8h7_can_priv {
 
   struct x8h7_can_filter    std_flt[X8H7_STD_FLT_MAX];
   struct x8h7_can_filter    ext_flt[X8H7_EXT_FLT_MAX];
-  //struct mutex        lock;
+  struct mutex        lock;
 };
 
 /**
@@ -202,16 +203,26 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
   priv->can.state = new_state;
   DBG_CAN_STATE(priv->net->name, priv->can.state);
 
-  //if (intf & CANINTF_ERRIF) {
+  if (intf & X8H7_CAN_STS_INT_ERR)
+  {
     /* Handle overflow counters */
-    if (eflag & X8H7_CAN_STS_FLG_RX_OVR) {
+    if (eflag & X8H7_CAN_STS_FLG_RX_OVR)
+    {
       net->stats.rx_over_errors++;
       net->stats.rx_errors++;
       can_id |= CAN_ERR_CRTL;
       data1 |= CAN_ERR_CRTL_RX_OVERFLOW;
       x8h7_can_error_skb(net, can_id, data1);
     }
-  //}
+    if (eflag & X8H7_CAN_STS_FLG_TX_OVR)
+    {
+      net->stats.tx_fifo_errors++;
+      net->stats.tx_errors++;
+      can_id |= CAN_ERR_CRTL;
+      data1 |= CAN_ERR_CRTL_TX_OVERFLOW;
+      x8h7_can_error_skb(net, can_id, data1);
+    }
+  }
 
   if (priv->can.state == CAN_STATE_BUS_OFF) {
     if (priv->can.restart_ms == 0) {
@@ -487,45 +498,36 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
  */
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
-/*
-  u32 exide;      // Extended ID Enable
-  u32 sid;        // Standard ID
-  u32 eid;        // Extended ID
-  u32 rtr;        // Remote transmission
-*/
-  u8  data[X8H7_CAN_SIZE];
+  union
+  {
+    struct __attribute__((packed))
+    {
+      uint32_t id;                           // 29 bit identifier
+      uint8_t  len;                          // Length of data field in bytes
+      uint8_t  data[CAN_FRAME_MAX_DATA_LEN]; // Data field
+    } field;
+    uint8_t buf[X8H7_CAN_HEADER_SIZE + CAN_FRAME_MAX_DATA_LEN];
+  } can_msg;
 
   DBG_PRINT("\n");
-/*
-  exide = (frame->can_id & CAN_EFF_FLAG) ? 1 : 0;
-  if (exide) {
-    sid = (frame->can_id & CAN_EFF_MASK) >> 18;
-  } else {
-    sid = frame->can_id & CAN_SFF_MASK;
-  }
-  eid = frame->can_id & CAN_EFF_MASK;
-  rtr = (frame->can_id & CAN_RTR_FLAG) ? 1 : 0;
-*/
 
-  data[0] = frame->can_id;
-  data[1] = frame->can_id >> 8;
-  data[2] = frame->can_id >> 16;
-  data[3] = frame->can_id >> 24;
-  data[4] = frame->can_dlc;
-  memcpy(data + 5, frame->data, frame->can_dlc);
+  can_msg.field.id  = frame->can_id;
+  can_msg.field.len = (frame->can_dlc <= CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : CAN_FRAME_MAX_DATA_LEN;
+  memcpy(can_msg.field.data, frame->data, can_msg.field.len);
 
 #ifdef DEBUG
-  char  frame_data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
+  char  data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
   int   i = 0, len = 0;
 
-  for (i = 0; (i < frame->can_dlc) && (len < sizeof(frame_data_str)); i++)
+  for (i = 0; (i < frame->can_dlc) && (len < sizeof(data_str)); i++)
   {
-    len += snprintf(frame_data_str + len, sizeof(frame_data_str) - len, " %02X", frame->data[i]);
+    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", can_msg.field.data[i]);
   }
-  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", frame->can_id, frame->can_dlc, frame_data_str);
+  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", can_msg.field.id, can_msg.field.len, data_str);
 #endif
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, 5+frame->can_dlc, data);
+  uint16_t const bytes_to_send = X8H7_CAN_HEADER_SIZE + can_msg.field.len; /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, bytes_to_send, can_msg.buf);
   x8h7_pkt_send();
 }
 
@@ -538,7 +540,7 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
   struct can_frame      *frame;
 
   DBG_PRINT("\n");
-  //mutex_lock(&priv->mcp_lock);
+  mutex_lock(&priv->lock);
   if (priv->tx_skb) {
     if (priv->can.state == CAN_STATE_BUS_OFF) {
       DBG_PRINT("CAN_STATE_BUS_OFF\n");
@@ -558,7 +560,7 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
       priv->tx_skb = NULL;
     }
   }
-  //mutex_unlock(&priv->mcp_lock);
+  mutex_unlock(&priv->lock);
 }
 
 /**
@@ -569,7 +571,7 @@ static void x8h7_can_restart_work_handler(struct work_struct *ws)
   struct net_device    *net = priv->net;
 
   DBG_PRINT("\n");
-  //mutex_lock(&priv->mcp_lock);
+  mutex_lock(&priv->lock);
   if (priv->after_suspend) {
     x8h7_can_hw_reset(priv);
     x8h7_can_setup(priv);
@@ -597,7 +599,7 @@ static void x8h7_can_restart_work_handler(struct work_struct *ws)
     netif_wake_queue(net);
     x8h7_can_error_skb(net, CAN_ERR_RESTARTED, 0);
   }
-  //mutex_unlock(&priv->mcp_lock);
+  mutex_unlock(&priv->lock);
 }
 
 /**
@@ -615,6 +617,8 @@ static int x8h7_can_open(struct net_device *net)
     return ret;
   }
 
+  mutex_lock(&priv->lock);
+
   priv->force_quit = 0;
   priv->tx_skb     = NULL;
   priv->tx_len     = 0;
@@ -626,6 +630,8 @@ static int x8h7_can_open(struct net_device *net)
   }
   INIT_WORK(&priv->tx_work, x8h7_can_tx_work_handler);
   INIT_WORK(&priv->restart_work, x8h7_can_restart_work_handler);
+
+  mutex_init(&priv->lock);
 
   ret = x8h7_can_hw_reset(priv);
   if (ret) {
@@ -643,6 +649,7 @@ static int x8h7_can_open(struct net_device *net)
   can_led_event(net, CAN_LED_EVENT_OPEN);
 
   netif_wake_queue(net);
+  mutex_unlock(&priv->lock);
 
   return 0;
 
@@ -652,6 +659,7 @@ out_clean:
   x8h7_hook_set(priv->periph, NULL, NULL);
 //out_close:
   close_candev(net);
+  mutex_unlock(&priv->lock);
   return ret;
 }
 
@@ -665,11 +673,15 @@ static int x8h7_can_stop(struct net_device *net)
 
   close_candev(net);
   priv->force_quit = 1;
+  mutex_lock(&priv->lock);
   x8h7_hook_set(priv->periph, NULL, NULL);
   destroy_workqueue(priv->wq);
   priv->wq = NULL;
 
   priv->can.state = CAN_STATE_STOPPED;
+
+  mutex_unlock(&priv->lock);
+
   can_led_event(net, CAN_LED_EVENT_STOP);
 
   return 0;

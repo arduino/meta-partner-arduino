@@ -10,6 +10,12 @@ adb shell
 cd /home/fio
 sudo opkg install --force-reinstall --force-depends x8h7_0.1-r1_portenta_x8.ipk
 ```
+or
+```bash
+adb push ./tmp-lmp_xwayland/sysroots-components/portenta_x8/x8h7/usr/lib/modules/5.10.93-lmp-standard/extra/*.ko /home/fio
+adb shell
+sudo mv *.ko /lib/modules/5.10.93-lmp-standard/extra/
+```
 #### Unload/Reload
 ```bash
 lsmod | grep x8h7_
