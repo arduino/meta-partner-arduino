@@ -379,6 +379,8 @@ static int x8h7_can_setup(struct x8h7_can_priv *priv)
   frequency_requested = (priv->can.clock.freq / bt->brp) /
                     (bt->sjw + bt->phase_seg1 + bt->prop_seg + bt->phase_seg2);
 
+  DBG_PRINT("frequency_requested = %d\n", frequency_requested);
+
   x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_CFG, sizeof(frequency_requested), &(frequency_requested));
   x8h7_pkt_send();
 
