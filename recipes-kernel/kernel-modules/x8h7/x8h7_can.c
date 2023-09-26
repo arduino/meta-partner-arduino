@@ -68,6 +68,7 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define X8H7_CAN_STS_FLG_TX_WAR  0x10  // Transmit Error Warning
 #define X8H7_CAN_STS_FLG_RX_WAR  0x20  // Receive Error Warning
 #define X8H7_CAN_STS_FLG_EWARN   0x40  // Error Warning
+#define X8H7_CAN_STS_FLG_TX_OVR  0x80  // Transmit Buffer Overflow
 
 #define CAN_FRAME_MAX_DATA_LEN	8
 #define X8H7_CAN_HEADER_SIZE    5
@@ -205,11 +206,20 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
   if (intf & X8H7_CAN_STS_INT_ERR)
   {
     /* Handle overflow counters */
-    if (eflag & X8H7_CAN_STS_FLG_RX_OVR) {
+    if (eflag & X8H7_CAN_STS_FLG_RX_OVR)
+    {
       net->stats.rx_over_errors++;
       net->stats.rx_errors++;
       can_id |= CAN_ERR_CRTL;
       data1 |= CAN_ERR_CRTL_RX_OVERFLOW;
+      x8h7_can_error_skb(net, can_id, data1);
+    }
+    if (eflag & X8H7_CAN_STS_FLG_TX_OVR)
+    {
+      net->stats.tx_fifo_errors++;
+      net->stats.tx_errors++;
+      can_id |= CAN_ERR_CRTL;
+      data1 |= CAN_ERR_CRTL_TX_OVERFLOW;
       x8h7_can_error_skb(net, can_id, data1);
     }
   }
