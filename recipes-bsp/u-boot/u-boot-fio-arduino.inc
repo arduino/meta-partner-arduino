@@ -52,4 +52,5 @@ SRC_URI:append:portenta-mx8mm = " \
     file://0051-Force-Breakout-carrier-as-default.patch \
     file://0052-Modify-env-in-ram-only-if-carrier_custom-is-not-defi.patch \
     file://0052-Defines-moved-to-defconfig.patch \
+    file://0053-Defines-in-defconfig-changed-names.patch \
 "
