@@ -118,17 +118,19 @@ struct x8h7_can_priv {
 };
 
 /**
+ * Those parameters are valid for the STM32H7 CAN driver using
+ * CAN classic. For CAN FD different values are needed.
  */
 static const struct can_bittiming_const x8h7_can_bittiming_const = {
   .name      = DRIVER_NAME,   /* Name of the CAN controller hardware */
-  .tseg1_min =  3,            /* Time segement 1 = prop_seg + phase_seg1 */
-  .tseg1_max = 16,
-  .tseg2_min =  2,            /* Time segement 2 = phase_seg2 */
-  .tseg2_max =  8,
-  .sjw_max   =  4,            /* Synchronisation jump width */
-  .brp_min   =  1,            /* Bit-rate prescaler */
-  .brp_max   = 64,
-  .brp_inc   =  1,
+  .tseg1_min =   1,
+  .tseg1_max = 256,
+  .tseg2_min =   1,
+  .tseg2_max = 128,
+  .sjw_max   = 128,
+  .brp_min   =   1,
+  .brp_max   = 512,
+  .brp_inc   =   1,
 };
 
 //static void x8h7_can_hw_rx(struct x8h7_can_priv *priv);
@@ -953,6 +955,7 @@ static int x8h7_can_probe(struct platform_device *pdev)
 
   if (pdev->dev.of_node) {
     of_property_read_u32(pdev->dev.of_node, "clock-frequency", &clock_freq);
+    DBG_PRINT("fdcan_clk = %d", clock_freq);
   }
 
 //  init_waitqueue_head(&priv->wait);
@@ -977,7 +980,6 @@ static int x8h7_can_probe(struct platform_device *pdev)
                                   CAN_CTRLMODE_3_SAMPLES     ;/*|
                                   CAN_CTRLMODE_BERR_REPORTING;*/
   priv->net = net;
-  //priv->clk = clk;
 
   platform_set_drvdata(pdev, priv);
 
