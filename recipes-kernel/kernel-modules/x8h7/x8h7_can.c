@@ -515,7 +515,11 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 
   DBG_PRINT("\n");
 
-  can_msg.field.id  = frame->can_id;
+  if (frame->can_id & CAN_EFF_FLAG)
+    can_msg.field.id  = CAN_EFF_FLAG | (frame->can_id & CAN_EFF_MASK);
+  else
+    can_msg.field.id  =                (frame->can_id & CAN_SFF_MASK);
+
   can_msg.field.len = (frame->can_dlc <= CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : CAN_FRAME_MAX_DATA_LEN;
   memcpy(can_msg.field.data, frame->data, can_msg.field.len);
 
