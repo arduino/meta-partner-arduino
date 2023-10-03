@@ -281,10 +281,19 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
         priv->net->stats.rx_dropped++;
         return;
       }
-      frame->can_id = (pkt->data[3] << 24) | (pkt->data[2] << 16) |
-                      (pkt->data[1] <<  8) | pkt->data[0];
-      frame->can_dlc = get_can_dlc(pkt->data[4] & 0x0F);
-      memcpy(frame->data, pkt->data + 5, frame->can_dlc);
+
+      /* Copy header from raw byte-stream onto union. */
+      union x8h7_can_message x8h7_can_msg;
+      memcpy(x8h7_can_msg.buf, pkt->data, X8H7_CAN_HEADER_SIZE);
+
+      /* Extract can_id and can_dlc. Note: x8h7_can_message uses the exact
+       * same flags for signaling extended/standard id mode or remote
+       * retransmit request as struct can_frame.
+       */
+      frame->can_id  = x8h7_can_msg.field.id;
+      frame->can_dlc = x8h7_can_msg.field.len;
+      memcpy(frame->data, pkt->data + X8H7_CAN_HEADER_SIZE, frame->can_dlc);
+
       priv->net->stats.rx_packets++;
       priv->net->stats.rx_bytes += frame->can_dlc;
       can_led_event(priv->net, CAN_LED_EVENT_RX);
