@@ -268,7 +268,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
 
   switch(pkt->opcode) {
   case X8H7_CAN_OC_RECV:
-    if (pkt->size < 5) {
+    if (pkt->size < X8H7_CAN_HEADER_SIZE) {
       DBG_ERROR("received packed is too short (%d)\n", pkt->size);
       return;
     } else {
