@@ -70,8 +70,8 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define X8H7_CAN_STS_FLG_EWARN   0x40  // Error Warning
 #define X8H7_CAN_STS_FLG_TX_OVR  0x80  // Transmit Buffer Overflow
 
-#define CAN_FRAME_MAX_DATA_LEN	8
-#define X8H7_CAN_HEADER_SIZE    5
+#define X8H7_CAN_HEADER_SIZE        5
+#define X8H7_CAN_FRAME_MAX_DATA_LEN	8
 
 #define AFTER_SUSPEND_UP      1
 #define AFTER_SUSPEND_DOWN    2
@@ -93,11 +93,11 @@ union x8h7_can_message
 {
   struct __attribute__((packed))
   {
-    uint32_t id;                           // 29 bit identifier
-    uint8_t  len;                          // Length of data field in bytes
-    uint8_t  data[CAN_FRAME_MAX_DATA_LEN]; // Data field
+    uint32_t id;
+    uint8_t  len;
+    uint8_t  data[X8H7_CAN_FRAME_MAX_DATA_LEN];
   } field;
-  uint8_t buf[X8H7_CAN_HEADER_SIZE + CAN_FRAME_MAX_DATA_LEN];
+  uint8_t buf[X8H7_CAN_HEADER_SIZE + X8H7_CAN_FRAME_MAX_DATA_LEN];
 };
 
 /**
@@ -522,11 +522,11 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
   else
     x8h7_can_msg.field.id  =                (frame->can_id & CAN_SFF_MASK);
 
-  x8h7_can_msg.field.len = (frame->can_dlc <= CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : CAN_FRAME_MAX_DATA_LEN;
+  x8h7_can_msg.field.len = (frame->can_dlc <= X8H7_CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : X8H7_CAN_FRAME_MAX_DATA_LEN;
   memcpy(x8h7_can_msg.field.data, frame->data, x8h7_can_msg.field.len);
 
 #ifdef DEBUG
-  char  data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
+  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4] = {0};
   int   i = 0, len = 0;
 
   for (i = 0; (i < frame->can_dlc) && (len < sizeof(data_str)); i++)
@@ -559,8 +559,8 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
       DBG_PRINT("Send frame\n");
       frame = (struct can_frame *)priv->tx_skb->data;
 
-      if (frame->can_dlc > CAN_FRAME_MAX_DATA_LEN) {
-        frame->can_dlc = CAN_FRAME_MAX_DATA_LEN;
+      if (frame->can_dlc > X8H7_CAN_FRAME_MAX_DATA_LEN) {
+        frame->can_dlc = X8H7_CAN_FRAME_MAX_DATA_LEN;
       }
 
       x8h7_can_hw_tx(priv, frame);
