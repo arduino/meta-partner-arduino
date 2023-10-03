@@ -71,7 +71,7 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define X8H7_CAN_STS_FLG_TX_OVR  0x80  // Transmit Buffer Overflow
 
 #define X8H7_CAN_HEADER_SIZE        5
-#define X8H7_CAN_FRAME_MAX_DATA_LEN	8
+#define X8H7_CAN_FRAME_MAX_DATA_LEN 8
 
 #define AFTER_SUSPEND_UP      1
 #define AFTER_SUSPEND_DOWN    2
