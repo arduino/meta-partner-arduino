@@ -89,6 +89,17 @@ struct x8h7_can_filter {
   u32   mask;
 };
 
+union x8h7_can_message
+{
+  struct __attribute__((packed))
+  {
+    uint32_t id;                           // 29 bit identifier
+    uint8_t  len;                          // Length of data field in bytes
+    uint8_t  data[CAN_FRAME_MAX_DATA_LEN]; // Data field
+  } field;
+  uint8_t buf[X8H7_CAN_HEADER_SIZE + CAN_FRAME_MAX_DATA_LEN];
+};
+
 /**
  */
 struct x8h7_can_priv {
@@ -502,26 +513,17 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
  */
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
-  union
-  {
-    struct __attribute__((packed))
-    {
-      uint32_t id;                           // 29 bit identifier
-      uint8_t  len;                          // Length of data field in bytes
-      uint8_t  data[CAN_FRAME_MAX_DATA_LEN]; // Data field
-    } field;
-    uint8_t buf[X8H7_CAN_HEADER_SIZE + CAN_FRAME_MAX_DATA_LEN];
-  } can_msg;
+  union x8h7_can_message x8h7_can_msg;
 
   DBG_PRINT("\n");
 
   if (frame->can_id & CAN_EFF_FLAG)
-    can_msg.field.id  = CAN_EFF_FLAG | (frame->can_id & CAN_EFF_MASK);
+    x8h7_can_msg.field.id  = CAN_EFF_FLAG | (frame->can_id & CAN_EFF_MASK);
   else
-    can_msg.field.id  =                (frame->can_id & CAN_SFF_MASK);
+    x8h7_can_msg.field.id  =                (frame->can_id & CAN_SFF_MASK);
 
-  can_msg.field.len = (frame->can_dlc <= CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : CAN_FRAME_MAX_DATA_LEN;
-  memcpy(can_msg.field.data, frame->data, can_msg.field.len);
+  x8h7_can_msg.field.len = (frame->can_dlc <= CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : CAN_FRAME_MAX_DATA_LEN;
+  memcpy(x8h7_can_msg.field.data, frame->data, x8h7_can_msg.field.len);
 
 #ifdef DEBUG
   char  data_str[CAN_FRAME_MAX_DATA_LEN * 4] = {0};
@@ -534,8 +536,8 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
   DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", can_msg.field.id, can_msg.field.len, data_str);
 #endif
 
-  uint16_t const bytes_to_send = X8H7_CAN_HEADER_SIZE + can_msg.field.len; /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, bytes_to_send, can_msg.buf);
+  uint16_t const bytes_to_send = X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len; /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, bytes_to_send, x8h7_can_msg.buf);
   x8h7_pkt_send();
 }
 
