@@ -274,6 +274,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
     } else {
       struct sk_buff   *skb;
       struct can_frame *frame;
+      union x8h7_can_message x8h7_can_msg;
 
       skb = alloc_can_skb(priv->net, &frame);
       if (!skb) {
@@ -283,7 +284,6 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
       }
 
       /* Copy header from raw byte-stream onto union. */
-      union x8h7_can_message x8h7_can_msg;
       memcpy(x8h7_can_msg.buf, pkt->data, X8H7_CAN_HEADER_SIZE);
 
       /* Extract can_id and can_dlc. Note: x8h7_can_message uses the exact
@@ -545,8 +545,10 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
   DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", can_msg.field.id, can_msg.field.len, data_str);
 #endif
 
-  uint16_t const bytes_to_send = X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len; /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_SEND, bytes_to_send, x8h7_can_msg.buf);
+  x8h7_pkt_enq(priv->periph,
+               X8H7_CAN_OC_SEND,
+               X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+               x8h7_can_msg.buf);
   x8h7_pkt_send();
 }
 
