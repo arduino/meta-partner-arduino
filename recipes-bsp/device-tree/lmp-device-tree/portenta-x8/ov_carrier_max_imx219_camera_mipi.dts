@@ -114,9 +114,9 @@
 				mipi1_sensor_ep: endpoint@1 {
 					remote-endpoint = <&imx219_ep>;
 					data-lanes = <2>;
-					csis-hs-settle = <13>;
-					csis-clk-settle = <2>;
-					csis-wclk;
+					csis-hs-settle = <20>;
+					csis-clk-settle = <0>;
+					csis-wclk; /* 1=EXTCLK, source from MIPI_CSI_CLK */
 				};
 			};
 		};

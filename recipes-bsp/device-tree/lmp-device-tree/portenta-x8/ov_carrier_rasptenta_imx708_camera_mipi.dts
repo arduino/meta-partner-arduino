@@ -100,9 +100,9 @@
 					/*clock-lanes = <0>;*/
 					clock-noncontinuous;
 					data-lanes = <2>;
-					csis-hs-settle = <13>;
-					csis-clk-settle = <2>;
-					csis-wclk;
+					csis-hs-settle = <33>;
+					csis-clk-settle = <0>;
+					csis-wclk; /* 1=EXTCLK, source from MIPI_CSI_CLK */
 				};
 			};
 		};
