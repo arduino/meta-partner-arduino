@@ -783,8 +783,8 @@ static const struct net_device_ops x8h7_can_netdev_ops = {
 
 /**
  */
-static int x8h7_can_filter(struct x8h7_can_priv *priv,
-                           const char *buf, int type)
+static int x8h7_can_config_filter(struct x8h7_can_priv *priv,
+                                  const char *buf, int type)
 {
   u32   idx;
   u32   id;
@@ -859,7 +859,7 @@ static ssize_t x8h7_can_sf_store(struct device *dev,
   struct x8h7_can_priv *priv = netdev_priv(to_net_dev(dev));
   int                   ret;
 
-  ret = x8h7_can_filter(priv, buf, 0);
+  ret = x8h7_can_config_filter(priv, buf, 0);
   if (ret) {
     DBG_ERROR("set filter\n");
     return -1;
@@ -899,7 +899,7 @@ static ssize_t x8h7_can_ef_store(struct device *dev,
   struct x8h7_can_priv *priv = netdev_priv(to_net_dev(dev));
   int                   ret;
 
-  ret = x8h7_can_filter(priv, buf, 1);
+  ret = x8h7_can_config_filter(priv, buf, 1);
   if (ret) {
     DBG_ERROR("set filter\n");
     return -1;
