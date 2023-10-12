@@ -30,7 +30,7 @@
 #define DRIVER_NAME "x8h7_can"
 
 /* DEBUG HANDLING */
- #define DEBUG
+// #define DEBUG
 #include "debug.h"
 #ifdef DEBUG
   #define DBG_CAN_STATE(d, s) { \
@@ -532,7 +532,7 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
   union x8h7_can_frame_message x8h7_can_msg;
 #ifdef DEBUG
-  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4] = {0};
+  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4];
   int   i;
   int   len;
 #endif
@@ -549,11 +549,11 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 
 #ifdef DEBUG
   i = 0; len = 0;
-  for (i = 0; (i < frame->can_dlc) && (len < sizeof(data_str)); i++)
+  for (i = 0; (i < x8h7_can_msg.field.len) && (len < sizeof(data_str)); i++)
   {
-    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", can_msg.field.data[i]);
+    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", x8h7_can_msg.field.data[i]);
   }
-  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", can_msg.field.id, can_msg.field.len, data_str);
+  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg.field.id, x8h7_can_msg.field.len, data_str);
 #endif
 
   x8h7_pkt_enq(priv->periph,
