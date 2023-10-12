@@ -849,19 +849,19 @@ static ssize_t x8h7_can_sf_store(struct device *dev,
 
   if (ret != 3) {
     DBG_ERROR("invalid num of params\n");
-    return -1;
+    return -EINVAL;
   }
 
   if ((idx >= X8H7_STD_FLT_MAX) ||
       (id & ~0x7FF) || (mask & ~0x7FF)) {
     DBG_ERROR("invalid params\n");
-    return -1;
+    return -EINVAL;
   }
 
   ret = x8h7_can_config_filter(priv, idx, id, mask);
   if (ret) {
     DBG_ERROR("set filter\n");
-    return -1;
+    return -EIO;
   }
 
   priv->std_flt[idx].can_id   = id;
@@ -909,19 +909,19 @@ static ssize_t x8h7_can_ef_store(struct device *dev,
 
   if (ret != 3) {
     DBG_ERROR("invalid num of params\n");
-    return -1;
+    return -EINVAL;
   }
 
   if ((idx >= X8H7_EXT_FLT_MAX) ||
       (id & ~0x1FFFFFFF) || (mask & ~0x1FFFFFFF)) {
     DBG_ERROR("invalid params\n");
-    return -1;
+    return -EINVAL;
   }
 
   ret = x8h7_can_config_filter(priv, idx, id, mask);
   if (ret) {
     DBG_ERROR("set filter\n");
-    return -1;
+    return -EIO;
   }
 
   priv->ext_flt[idx].can_id   = id;
