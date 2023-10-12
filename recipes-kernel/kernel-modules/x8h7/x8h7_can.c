@@ -78,7 +78,6 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define AFTER_SUSPEND_POWER   4
 #define AFTER_SUSPEND_RESTART 8
 
-#define X8H7_FLT_EXT      0x80000000
 #define X8H7_STD_FLT_MAX  128
 #define X8H7_EXT_FLT_MAX   64
 
