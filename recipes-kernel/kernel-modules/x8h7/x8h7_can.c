@@ -793,46 +793,19 @@ static const struct net_device_ops x8h7_can_netdev_ops = {
 /**
  */
 static int x8h7_can_config_filter(struct x8h7_can_priv *priv,
-                                  const char *buf, int type)
+                                  uint32_t const idx,
+                                  uint32_t const id,
+                                  uint32_t const mask)
 {
-  union x8h7_can_filter_message x8h7_can_filter_msg;
-  u32   idx;
-  u32   id;
-  u32   mask;
-  int   ret;
+  union x8h7_can_filter_message x8h7_msg;
 
-  ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
-  if (ret != 3) {
-    DBG_ERROR("invalid num of params\n");
-    return -1;
-  }
-
-  if (type == 0) {
-    if ((idx >= X8H7_STD_FLT_MAX) ||
-        (id & ~0x7FF) || (mask & ~0x7FF)) {
-      DBG_ERROR("invalid params\n");
-      return -1;
-    }
-    priv->std_flt[idx].can_id   = id;
-    priv->std_flt[idx].can_mask = mask;
-  } else {
-    if ((idx >= X8H7_EXT_FLT_MAX) ||
-        (id & ~0x1FFFFFFF) || (mask & ~0x1FFFFFFF)) {
-      DBG_ERROR("invalid params\n");
-      return -1;
-    }
-    priv->ext_flt[idx].can_id   = id;
-    priv->ext_flt[idx].can_mask = mask;
-    idx |= X8H7_FLT_EXT;
-  }
+  x8h7_msg.field.idx  = idx;
+  x8h7_msg.field.id   = id;
+  x8h7_msg.field.mask = mask;
 
   DBG_PRINT("SEND idx %X, id %X, mask %X\n", idx, id, mask);
 
-  x8h7_can_filter_msg.field.idx  = idx;
-  x8h7_can_filter_msg.field.id   = id;
-  x8h7_can_filter_msg.field.mask = mask;
-
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_can_filter_msg.buf), x8h7_can_filter_msg.buf);
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
   x8h7_pkt_send();
 
   return 0;
@@ -867,13 +840,33 @@ static ssize_t x8h7_can_sf_store(struct device *dev,
                                const char *buf, size_t count)
 {
   struct x8h7_can_priv *priv = netdev_priv(to_net_dev(dev));
+  uint32_t              idx;
+  uint32_t              id;
+  uint32_t              mask;
   int                   ret;
 
-  ret = x8h7_can_config_filter(priv, buf, 0);
+  ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
+
+  if (ret != 3) {
+    DBG_ERROR("invalid num of params\n");
+    return -1;
+  }
+
+  if ((idx >= X8H7_STD_FLT_MAX) ||
+      (id & ~0x7FF) || (mask & ~0x7FF)) {
+    DBG_ERROR("invalid params\n");
+    return -1;
+  }
+
+  ret = x8h7_can_config_filter(priv, idx, id, mask);
   if (ret) {
     DBG_ERROR("set filter\n");
     return -1;
   }
+
+  priv->std_flt[idx].can_id   = id;
+  priv->std_flt[idx].can_mask = mask;
+
   return count;
 }
 
@@ -908,12 +901,32 @@ static ssize_t x8h7_can_ef_store(struct device *dev,
 {
   struct x8h7_can_priv *priv = netdev_priv(to_net_dev(dev));
   int                   ret;
+  uint32_t              idx;
+  uint32_t              id;
+  uint32_t              mask;
 
-  ret = x8h7_can_config_filter(priv, buf, 1);
+  ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
+
+  if (ret != 3) {
+    DBG_ERROR("invalid num of params\n");
+    return -1;
+  }
+
+  if ((idx >= X8H7_EXT_FLT_MAX) ||
+      (id & ~0x1FFFFFFF) || (mask & ~0x1FFFFFFF)) {
+    DBG_ERROR("invalid params\n");
+    return -1;
+  }
+
+  ret = x8h7_can_config_filter(priv, idx, id, mask);
   if (ret) {
     DBG_ERROR("set filter\n");
     return -1;
   }
+
+  priv->ext_flt[idx].can_id   = id;
+  priv->ext_flt[idx].can_mask = mask;
+
   return count;
 }
 
