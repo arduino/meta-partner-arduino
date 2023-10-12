@@ -824,7 +824,8 @@ static ssize_t x8h7_can_sf_show(struct device *dev,
   int                   i;
 
   len = 0;
-  for (i=0; i<X8H7_STD_FLT_MAX; i++) {
+  for (i = 0; i < X8H7_STD_FLT_MAX; i++)
+  {
     if (priv->std_flt[i].can_mask) {
       len += snprintf(buf + len, PAGE_SIZE - len,
                       "%02X %08X %08X\n",
