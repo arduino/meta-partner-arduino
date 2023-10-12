@@ -918,7 +918,7 @@ static ssize_t x8h7_can_ef_store(struct device *dev,
     return -EINVAL;
   }
 
-  ret = x8h7_can_config_filter(priv, idx, id, mask);
+  ret = x8h7_can_config_filter(priv, idx, (CAN_EFF_FLAG | id), mask);
   if (ret) {
     DBG_ERROR("set filter\n");
     return -EIO;
