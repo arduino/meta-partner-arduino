@@ -84,7 +84,7 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 
 /**
  */
-union x8h7_can_filter
+union x8h7_can_filter_message
 {
   struct __attribute__((packed))
   {
@@ -795,7 +795,7 @@ static const struct net_device_ops x8h7_can_netdev_ops = {
 static int x8h7_can_config_filter(struct x8h7_can_priv *priv,
                                   const char *buf, int type)
 {
-  union x8h7_can_filter x8h7_can_filter_msg;
+  union x8h7_can_filter_message x8h7_can_filter_msg;
   u32   idx;
   u32   id;
   u32   mask;
