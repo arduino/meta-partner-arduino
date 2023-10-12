@@ -97,7 +97,7 @@ union x8h7_can_filter_message
 
 /**
  */
-union x8h7_can_message
+union x8h7_can_frame_message
 {
   struct __attribute__((packed))
   {
@@ -283,7 +283,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
     } else {
       struct sk_buff   *skb;
       struct can_frame *frame;
-      union x8h7_can_message x8h7_can_msg;
+      union x8h7_can_frame_message x8h7_can_msg;
 
       skb = alloc_can_skb(priv->net, &frame);
       if (!skb) {
@@ -295,7 +295,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
       /* Copy header from raw byte-stream onto union. */
       memcpy(x8h7_can_msg.buf, pkt->data, X8H7_CAN_HEADER_SIZE);
 
-      /* Extract can_id and can_dlc. Note: x8h7_can_message uses the exact
+      /* Extract can_id and can_dlc. Note: x8h7_can_frame_message uses the exact
        * same flags for signaling extended/standard id mode or remote
        * retransmit request as struct can_frame.
        */
@@ -531,7 +531,7 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
  */
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
-  union x8h7_can_message x8h7_can_msg;
+  union x8h7_can_frame_message x8h7_can_msg;
 
   DBG_PRINT("\n");
 
