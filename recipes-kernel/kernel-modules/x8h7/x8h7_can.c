@@ -30,7 +30,7 @@
 #define DRIVER_NAME "x8h7_can"
 
 /* DEBUG HANDLING */
-// #define DEBUG
+ #define DEBUG
 #include "debug.h"
 #ifdef DEBUG
   #define DBG_CAN_STATE(d, s) { \
@@ -531,6 +531,11 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
   union x8h7_can_frame_message x8h7_can_msg;
+#ifdef DEBUG
+  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4] = {0};
+  int   i;
+  int   len;
+#endif
 
   DBG_PRINT("\n");
 
@@ -543,9 +548,7 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
   memcpy(x8h7_can_msg.field.data, frame->data, x8h7_can_msg.field.len);
 
 #ifdef DEBUG
-  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4] = {0};
-  int   i = 0, len = 0;
-
+  i = 0; len = 0;
   for (i = 0; (i < frame->can_dlc) && (len < sizeof(data_str)); i++)
   {
     len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", can_msg.field.data[i]);
