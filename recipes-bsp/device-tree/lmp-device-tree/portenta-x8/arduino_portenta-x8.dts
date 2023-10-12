@@ -251,7 +251,7 @@
 	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
 	num-cs = <1>;
 	cs-gpios = <&gpio5 9 GPIO_ACTIVE_LOW>;
-	status = "okay";
+	status = "disabled";
 };
 
 &ecspi2 {
@@ -259,7 +259,7 @@
 	pinctrl-0 = <&pinctrl_ecspi2 &pinctrl_ecspi2_cs>;
 	num-cs = <1>;
 	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
-	status = "okay";
+	status = "disabled";
 };
 
 &ecspi3 {
@@ -267,7 +267,7 @@
 	pinctrl-0 = <&pinctrl_ecspi3 &pinctrl_ecspi3_cs>;
 	num-cs = <1>;
 	cs-gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
-	status = "okay";
+	status = "disabled";
 };
 
 &csi1_bridge {

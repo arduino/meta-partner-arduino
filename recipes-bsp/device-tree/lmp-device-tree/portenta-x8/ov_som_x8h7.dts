@@ -51,6 +51,7 @@
 	fragment@1 {
 		target = <&ecspi3>;
 		__overlay__ {
+			status = "okay";
 			x8h7: x8h7@0 {
 				#address-cells = <1>;
 				#size-cells = <1>;

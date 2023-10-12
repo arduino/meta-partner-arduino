@@ -12,6 +12,7 @@
 	fragment@0 {
 		target = <&ecspi2>;
 		__overlay__ {
+			status = "okay";
 			spidev_cb: spidev@0 {
 				compatible = "rohm,dh2228fv";
 				spi-max-frequency = <1000000>;
