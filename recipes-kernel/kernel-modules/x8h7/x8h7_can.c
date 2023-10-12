@@ -84,11 +84,19 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 
 /**
  */
-struct x8h7_can_filter {
-  u32   id;
-  u32   mask;
+union x8h7_can_filter
+{
+  struct __attribute__((packed))
+  {
+    uint32_t idx;
+    uint32_t id;
+    uint32_t mask;
+  } field;
+  uint8_t buf[sizeof(uint32_t) /* idx */ + sizeof(uint32_t) /* id */ + sizeof(uint32_t) /* mask */];
 };
 
+/**
+ */
 union x8h7_can_message
 {
   struct __attribute__((packed))
@@ -123,8 +131,9 @@ struct x8h7_can_priv {
   int                       after_suspend;
   int                       restart_tx;
 
-  struct x8h7_can_filter    std_flt[X8H7_STD_FLT_MAX];
-  struct x8h7_can_filter    ext_flt[X8H7_EXT_FLT_MAX];
+  struct can_filter std_flt[X8H7_STD_FLT_MAX];
+  struct can_filter ext_flt[X8H7_EXT_FLT_MAX];
+
   struct mutex        lock;
 };
 
@@ -786,11 +795,11 @@ static const struct net_device_ops x8h7_can_netdev_ops = {
 static int x8h7_can_config_filter(struct x8h7_can_priv *priv,
                                   const char *buf, int type)
 {
+  union x8h7_can_filter x8h7_can_filter_msg;
   u32   idx;
   u32   id;
   u32   mask;
   int   ret;
-  u32   data[3];
 
   ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
   if (ret != 3) {
@@ -804,25 +813,26 @@ static int x8h7_can_config_filter(struct x8h7_can_priv *priv,
       DBG_ERROR("invalid params\n");
       return -1;
     }
-    priv->std_flt[idx].id   = id;
-    priv->std_flt[idx].mask = mask;
+    priv->std_flt[idx].can_id   = id;
+    priv->std_flt[idx].can_mask = mask;
   } else {
     if ((idx >= X8H7_EXT_FLT_MAX) ||
         (id & ~0x1FFFFFFF) || (mask & ~0x1FFFFFFF)) {
       DBG_ERROR("invalid params\n");
       return -1;
     }
-    priv->ext_flt[idx].id   = id;
-    priv->ext_flt[idx].mask = mask;
+    priv->ext_flt[idx].can_id   = id;
+    priv->ext_flt[idx].can_mask = mask;
     idx |= X8H7_FLT_EXT;
   }
 
   DBG_PRINT("SEND idx %X, id %X, mask %X\n", idx, id, mask);
 
-  data[0] = idx;
-  data[1] = id;
-  data[2] = mask;
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(data), data);
+  x8h7_can_filter_msg.field.idx  = idx;
+  x8h7_can_filter_msg.field.id   = id;
+  x8h7_can_filter_msg.field.mask = mask;
+
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_can_filter_msg.buf), x8h7_can_filter_msg.buf);
   x8h7_pkt_send();
 
   return 0;
@@ -840,10 +850,10 @@ static ssize_t x8h7_can_sf_show(struct device *dev,
 
   len = 0;
   for (i=0; i<X8H7_STD_FLT_MAX; i++) {
-    if (priv->std_flt[i].mask) {
+    if (priv->std_flt[i].can_mask) {
       len += snprintf(buf + len, PAGE_SIZE - len,
                       "%02X %08X %08X\n",
-                      i, priv->std_flt[i].id, priv->std_flt[i].mask);
+                      i, priv->std_flt[i].can_id, priv->std_flt[i].can_mask);
     }
   }
   return len;
@@ -880,10 +890,10 @@ static ssize_t x8h7_can_ef_show(struct device *dev,
   len = 0;
   for (i = 0; i < X8H7_EXT_FLT_MAX; i++)
   {
-    if (priv->ext_flt[i].mask) {
+    if (priv->ext_flt[i].can_mask) {
       len += snprintf(buf + len, PAGE_SIZE - len,
                       "%02X %08X %08X\n",
-                      i, priv->ext_flt[i].id, priv->ext_flt[i].mask);
+                      i, priv->ext_flt[i].can_id, priv->ext_flt[i].can_mask);
     }
   }
   return len;
