@@ -78,18 +78,25 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 #define AFTER_SUSPEND_POWER   4
 #define AFTER_SUSPEND_RESTART 8
 
-#define X8H7_FLT_EXT      0x80000000
 #define X8H7_STD_FLT_MAX  128
 #define X8H7_EXT_FLT_MAX   64
 
 /**
  */
-struct x8h7_can_filter {
-  u32   id;
-  u32   mask;
+union x8h7_can_filter_message
+{
+  struct __attribute__((packed))
+  {
+    uint32_t idx;
+    uint32_t id;
+    uint32_t mask;
+  } field;
+  uint8_t buf[sizeof(uint32_t) /* idx */ + sizeof(uint32_t) /* id */ + sizeof(uint32_t) /* mask */];
 };
 
-union x8h7_can_message
+/**
+ */
+union x8h7_can_frame_message
 {
   struct __attribute__((packed))
   {
@@ -123,8 +130,9 @@ struct x8h7_can_priv {
   int                       after_suspend;
   int                       restart_tx;
 
-  struct x8h7_can_filter    std_flt[X8H7_STD_FLT_MAX];
-  struct x8h7_can_filter    ext_flt[X8H7_EXT_FLT_MAX];
+  struct can_filter std_flt[X8H7_STD_FLT_MAX];
+  struct can_filter ext_flt[X8H7_EXT_FLT_MAX];
+
   struct mutex        lock;
 };
 
@@ -274,7 +282,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
     } else {
       struct sk_buff   *skb;
       struct can_frame *frame;
-      union x8h7_can_message x8h7_can_msg;
+      union x8h7_can_frame_message x8h7_can_msg;
 
       skb = alloc_can_skb(priv->net, &frame);
       if (!skb) {
@@ -286,7 +294,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
       /* Copy header from raw byte-stream onto union. */
       memcpy(x8h7_can_msg.buf, pkt->data, X8H7_CAN_HEADER_SIZE);
 
-      /* Extract can_id and can_dlc. Note: x8h7_can_message uses the exact
+      /* Extract can_id and can_dlc. Note: x8h7_can_frame_message uses the exact
        * same flags for signaling extended/standard id mode or remote
        * retransmit request as struct can_frame.
        */
@@ -522,7 +530,12 @@ static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
  */
 static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
 {
-  union x8h7_can_message x8h7_can_msg;
+  union x8h7_can_frame_message x8h7_can_msg;
+#ifdef DEBUG
+  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4];
+  int   i;
+  int   len;
+#endif
 
   DBG_PRINT("\n");
 
@@ -535,14 +548,12 @@ static void x8h7_can_hw_tx(struct x8h7_can_priv *priv, struct can_frame *frame)
   memcpy(x8h7_can_msg.field.data, frame->data, x8h7_can_msg.field.len);
 
 #ifdef DEBUG
-  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4] = {0};
-  int   i = 0, len = 0;
-
-  for (i = 0; (i < frame->can_dlc) && (len < sizeof(data_str)); i++)
+  i = 0; len = 0;
+  for (i = 0; (i < x8h7_can_msg.field.len) && (len < sizeof(data_str)); i++)
   {
-    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", can_msg.field.data[i]);
+    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", x8h7_can_msg.field.data[i]);
   }
-  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", can_msg.field.id, can_msg.field.len, data_str);
+  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg.field.id, x8h7_can_msg.field.len, data_str);
 #endif
 
   x8h7_pkt_enq(priv->periph,
@@ -783,46 +794,20 @@ static const struct net_device_ops x8h7_can_netdev_ops = {
 
 /**
  */
-static int x8h7_can_config_filter(struct x8h7_can_priv *priv,
-                                  const char *buf, int type)
+static int x8h7_can_hw_config_filter(struct x8h7_can_priv *priv,
+                                     uint32_t const idx,
+                                     uint32_t const id,
+                                     uint32_t const mask)
 {
-  u32   idx;
-  u32   id;
-  u32   mask;
-  int   ret;
-  u32   data[3];
+  union x8h7_can_filter_message x8h7_msg;
 
-  ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
-  if (ret != 3) {
-    DBG_ERROR("invalid num of params\n");
-    return -1;
-  }
-
-  if (type == 0) {
-    if ((idx >= X8H7_STD_FLT_MAX) ||
-        (id & ~0x7FF) || (mask & ~0x7FF)) {
-      DBG_ERROR("invalid params\n");
-      return -1;
-    }
-    priv->std_flt[idx].id   = id;
-    priv->std_flt[idx].mask = mask;
-  } else {
-    if ((idx >= X8H7_EXT_FLT_MAX) ||
-        (id & ~0x1FFFFFFF) || (mask & ~0x1FFFFFFF)) {
-      DBG_ERROR("invalid params\n");
-      return -1;
-    }
-    priv->ext_flt[idx].id   = id;
-    priv->ext_flt[idx].mask = mask;
-    idx |= X8H7_FLT_EXT;
-  }
+  x8h7_msg.field.idx  = idx;
+  x8h7_msg.field.id   = id;
+  x8h7_msg.field.mask = mask;
 
   DBG_PRINT("SEND idx %X, id %X, mask %X\n", idx, id, mask);
 
-  data[0] = idx;
-  data[1] = id;
-  data[2] = mask;
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(data), data);
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
   x8h7_pkt_send();
 
   return 0;
@@ -839,11 +824,12 @@ static ssize_t x8h7_can_sf_show(struct device *dev,
   int                   i;
 
   len = 0;
-  for (i=0; i<X8H7_STD_FLT_MAX; i++) {
-    if (priv->std_flt[i].mask) {
+  for (i = 0; i < X8H7_STD_FLT_MAX; i++)
+  {
+    if (priv->std_flt[i].can_mask) {
       len += snprintf(buf + len, PAGE_SIZE - len,
                       "%02X %08X %08X\n",
-                      i, priv->std_flt[i].id, priv->std_flt[i].mask);
+                      i, priv->std_flt[i].can_id, priv->std_flt[i].can_mask);
     }
   }
   return len;
@@ -857,13 +843,33 @@ static ssize_t x8h7_can_sf_store(struct device *dev,
                                const char *buf, size_t count)
 {
   struct x8h7_can_priv *priv = netdev_priv(to_net_dev(dev));
+  uint32_t              idx;
+  uint32_t              id;
+  uint32_t              mask;
   int                   ret;
 
-  ret = x8h7_can_config_filter(priv, buf, 0);
+  ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
+
+  if (ret != 3) {
+    DBG_ERROR("invalid num of params\n");
+    return -EINVAL;
+  }
+
+  if ((idx >= X8H7_STD_FLT_MAX) ||
+      (id & ~0x7FF) || (mask & ~0x7FF)) {
+    DBG_ERROR("invalid params\n");
+    return -EINVAL;
+  }
+
+  ret = x8h7_can_hw_config_filter(priv, idx, id, mask);
   if (ret) {
     DBG_ERROR("set filter\n");
-    return -1;
+    return -EIO;
   }
+
+  priv->std_flt[idx].can_id   = id;
+  priv->std_flt[idx].can_mask = mask;
+
   return count;
 }
 
@@ -880,10 +886,10 @@ static ssize_t x8h7_can_ef_show(struct device *dev,
   len = 0;
   for (i = 0; i < X8H7_EXT_FLT_MAX; i++)
   {
-    if (priv->ext_flt[i].mask) {
+    if (priv->ext_flt[i].can_mask) {
       len += snprintf(buf + len, PAGE_SIZE - len,
                       "%02X %08X %08X\n",
-                      i, priv->ext_flt[i].id, priv->ext_flt[i].mask);
+                      i, priv->ext_flt[i].can_id, priv->ext_flt[i].can_mask);
     }
   }
   return len;
@@ -898,12 +904,32 @@ static ssize_t x8h7_can_ef_store(struct device *dev,
 {
   struct x8h7_can_priv *priv = netdev_priv(to_net_dev(dev));
   int                   ret;
+  uint32_t              idx;
+  uint32_t              id;
+  uint32_t              mask;
 
-  ret = x8h7_can_config_filter(priv, buf, 1);
+  ret = sscanf(buf, "%x %x %x", &idx, &id, &mask);
+
+  if (ret != 3) {
+    DBG_ERROR("invalid num of params\n");
+    return -EINVAL;
+  }
+
+  if ((idx >= X8H7_EXT_FLT_MAX) ||
+      (id & ~0x1FFFFFFF) || (mask & ~0x1FFFFFFF)) {
+    DBG_ERROR("invalid params\n");
+    return -EINVAL;
+  }
+
+  ret = x8h7_can_hw_config_filter(priv, idx, (CAN_EFF_FLAG | id), mask);
   if (ret) {
     DBG_ERROR("set filter\n");
-    return -1;
+    return -EIO;
   }
+
+  priv->ext_flt[idx].can_id   = id;
+  priv->ext_flt[idx].can_mask = mask;
+
   return count;
 }
 
