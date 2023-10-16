@@ -1,0 +1,129 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Ditto carrier base board, transforms Portenta-X8 into
+ * a Nano Pi NEO2 drop-in replacement
+ * Enable:
+ * - USB1/USB2 (USB_FS, usbotg2) via USB2514B/M2 hub
+ * - SDCARD (SDC, usdhc2)
+ * - SPI0 (SPI1, ecspi1)
+ * - I2C0 (I2C0, i2c2)
+ * Unconfigured:
+ * - I2S (I2S, sai5) use dedicated dtb overlay
+ * - FAN use dedicated dtb overlay
+ * - PA6 (GPIO0), PG11 (GPIO1), PA17 (GPIO2), PL11 (GPIO3) default input pulldown
+ * Notes:
+ * - Ethernet phy configured in u-boot
+ * - USB2514B/M2 hub configured in u-boot
+ * - UART2 is shell cmd
+ * - EEPROM I2C1 address 0xAE readed in u-boot (auto carrier detection)
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/clock/imx8mm-clock.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	fragment@0 {
+		target = <&iomuxc>;
+		__overlay__ {
+			imx8mm {
+				pinctrl_usdhc2_gpio: usdhc2grpgpio {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CD_B_GPIO2_IO12       0x1c4
+					>;
+				};
+
+				pinctrl_usdhc2: usdhc2grp {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x190
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d0
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d0
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d0
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d0
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d0
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+
+				pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x194
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d4
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d4
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d4
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d4
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d4
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+
+				pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
+					fsl,pins = <
+						MX8MM_IOMUXC_SD2_CLK_USDHC2_CLK        0x196
+						MX8MM_IOMUXC_SD2_CMD_USDHC2_CMD        0x1d6
+						MX8MM_IOMUXC_SD2_DATA0_USDHC2_DATA0    0x1d6
+						MX8MM_IOMUXC_SD2_DATA1_USDHC2_DATA1    0x1d6
+						MX8MM_IOMUXC_SD2_DATA2_USDHC2_DATA2    0x1d6
+						MX8MM_IOMUXC_SD2_DATA3_USDHC2_DATA3    0x1d6
+						MX8MM_IOMUXC_GPIO1_IO04_USDHC2_VSELECT 0x1d0
+					>;
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			reg_usdhc2_vmmc: regulator-usdhc2 {
+				compatible = "regulator-fixed";
+				regulator-name = "VSD_3V3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+		};
+	};
+
+	/* Enable SDC */
+	fragment@2 {
+		target = <&usdhc2>;
+		__overlay__ {
+			pinctrl-names = "default", "state_100mhz", "state_200mhz";
+			pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
+			pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
+			pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+			cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
+			bus-width = <4>;
+			vmmc-supply = <&reg_usdhc2_vmmc>;
+			status = "okay";
+		};
+	};
+
+	/* Enable USB_FS port as host only */
+	fragment@3 {
+		target = <&usbotg2>;
+		__overlay__ {
+			dr_mode = "host";
+			status = "okay";
+		};
+	};
+
+	/* Enable SPI1 */
+	fragment@4 {
+		target = <&ecspi1>;
+		__overlay__ {
+			status = "okay";
+			spidev_cb: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+};
