@@ -275,6 +275,29 @@ int x8h7_spi_trx(struct spi_device *spi,
   if (ret) {
     DBG_ERROR("spi transfer failed: ret = %d\n", ret);
   }
+
+#ifdef DEBUG
+  {
+    char data_str[1024] = {0};
+    uint8_t * data_ptr = 0;
+    int i = 0, l = 0;
+
+    DBG_PRINT("\n");
+
+    l = 0;
+    data_ptr = (uint8_t *)tx_buf;
+    for (i = 0; (i < len) && (l < sizeof(data_str)); i++, data_ptr++)
+      l += snprintf(data_str + l, sizeof(data_str) - l, " %02X", *(data_ptr + i));
+    DBG_PRINT(" TX: len = %d, data = [%s ]\n", len, data_str);
+
+    l = 0;
+    data_ptr = (uint8_t *)rx_buf;
+    for (i = 0; (i < len) && (l < sizeof(data_str)); i++, data_ptr++)
+      l += snprintf(data_str + l, sizeof(data_str) - l, " %02X", *(data_ptr + i));
+    DBG_PRINT(" RX: len = %d, data = [%s ]\n", len, data_str);
+  }
+#endif
+
   return ret;
 }
 
@@ -290,9 +313,11 @@ static inline int x8h7_pkt_send_priv(int arg)
   x8h7_pkthdr_t        *hdr;
   int                   len;
 
-  DBG_PRINT("Send %d bytes\n", spidev->x8h7_txl);
+  DBG_PRINT("\n");
+
   mutex_lock(&spidev->buf_lock);
 
+  /* Exchange of the packet header. */
   x8h7_spi_trx(spidev->spi,
                spidev->x8h7_txb, spidev->x8h7_rxb, sizeof(x8h7_pkthdr_t));
 
