@@ -3,8 +3,10 @@
  * Arduino 2023
  * Rasp-Tenta base board
  * Enable:
- * - USB (USB_FS)
- * - SDCARD (SDC)
+ * - USB (USB_FS, usbotg2)
+ * - SDCARD (SDC, usdhc2)
+ * - I2C (I2C2, i2c4)
+ * - SPI (SPI1, ecspi1)
  * Unconfigured:
  * - CAN_STB active low GPIO4 (GPIO_PF12 STM32H7) has pulldown 10k
  * - ORANGE_LED GPIO3 (GPIO_PF4_STM32H7)
@@ -101,6 +103,28 @@
 		__overlay__ {
 			dr_mode = "host";
 			status = "okay";
+		};
+	};
+
+	/* Enable I2C (I2C2) */
+	fragment@4 {
+		target = <&i2c4>;
+		__overlay__ {
+			clock-frequency = <400000>;
+			status = "okay";
+		};
+	};
+
+	/* Enable SPI (SPI1) */
+	fragment@5 {
+		target = <&ecspi1>;
+		__overlay__ {
+			status = "okay";
+			spidev_cb: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
 		};
 	};
 };
