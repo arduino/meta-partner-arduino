@@ -313,9 +313,9 @@ static inline int x8h7_pkt_send_priv(int arg)
   x8h7_pkthdr_t        *hdr;
   int                   len;
 
-  DBG_PRINT("\n");
-
   mutex_lock(&spidev->buf_lock);
+
+  DBG_PRINT("\n");
 
   /* Exchange of the packet header. */
   x8h7_spi_trx(spidev->spi,
@@ -355,6 +355,7 @@ static inline int x8h7_pkt_send_priv(int arg)
   }
 
   memset(spidev->x8h7_txb, 0, X8H7_BUF_SIZE);
+  memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
   spidev->x8h7_txl = 0;
 
   mutex_unlock(&spidev->buf_lock);
