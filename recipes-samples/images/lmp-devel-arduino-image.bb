@@ -38,6 +38,7 @@ CORE_IMAGE_BASE_INSTALL += " \
 LMP_EXTRA = " \
     lmp-device-tree \
     lmp-auto-hostname \
+    u-boot-fio-env \
 "
 
 ADB = " \
