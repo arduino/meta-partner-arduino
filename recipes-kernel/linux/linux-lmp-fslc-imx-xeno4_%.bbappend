@@ -1,6 +1,6 @@
 DESCRIPTION = "EVL (Xenomai 4) kernel for Arduino Portenta MX8MM platform"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/linux-lmp-fslc-imx:"
 
 SRC_URI:append:portenta-mx8mm = " \
   file://portenta-mx8mm.cfg \
