@@ -24,6 +24,9 @@
 #define X8H7_H7_PERIPH      0x09
 // Op code
 #define X8H7_H7_OC_FW_GET   0x10
+#define X8H7_GET_UID_REQ    0x78
+#define X8H7_GET_UID_RSP    0x78
+
 
 #define X8H7_H7_DATA_MAX    (4096)
 #define X8H7_H7_LIST_SIZE   16
@@ -55,6 +58,17 @@ struct x8h7_h7_priv {
   int                 rxindex;
   struct list_head    rxqueue;
   struct x8h7_h7_buf  buf[X8H7_H7_LIST_SIZE];
+};
+
+union x8h7_h7_uid_message
+{
+  struct __attribute__((packed))
+  {
+    uint32_t word0;
+    uint32_t word1;
+    uint32_t word2;
+  } field;
+  uint8_t buf[sizeof(uint32_t) /* word0 */ + sizeof(uint32_t) /* word1 */ + sizeof(uint32_t) /* word2 */];
 };
 
 struct x8h7_h7_priv *x8h7_h7;
@@ -339,6 +353,52 @@ static ssize_t sysfs_show_version(struct kobject *kobj,
 struct kobject *kobj_ref_x8h7_firmware_version;
 struct kobj_attribute x8h7_firmware_version_attr = __ATTR(version, 0444, sysfs_show_version, NULL);
 
+ssize_t x8h7_read_chip_uid(char * buf, size_t const buf_size)
+{
+  struct x8h7_h7_priv * priv = x8h7_h7;
+
+  x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_GET_UID_REQ, 0, NULL);
+  x8h7_pkt_send();
+  if (x8h7_h7_pkt_get(priv) < 0)
+    return -ETIMEDOUT;
+
+  if ((priv->rx_pkt.peripheral == X8H7_H7_PERIPH) &&
+      (priv->rx_pkt.opcode == X8H7_GET_UID_RSP) &&
+      (priv->rx_pkt.size >= 1)) {
+
+    int i, len;
+    union x8h7_h7_uid_message msg;
+
+    memcpy(msg.buf,
+           &priv->rx_pkt.data,
+           (priv->rx_pkt.size < buf_size) ? priv->rx_pkt.size : sizeof(msg.buf));
+
+    i = 0; len = 0;
+    for (i = 0; (i < sizeof(msg.buf)) && (len < buf_size); i++)
+    {
+      len += snprintf(buf + len, buf_size - len, " %02X", msg.buf[i]);
+    }
+  } else {
+    return -EFAULT;
+  }
+
+  return strlen(buf);
+}
+
+/* This function allows to read the current firmware of
+ * from the H7 and display it by reading from a sysfs node,
+ * i.e.
+ *   $ cat /sys/kernel/x8h7_firmware/chip_uid
+ *   TODO
+ */
+static ssize_t sysfs_show_chip_uid(struct kobject *kobj,
+                                  struct kobj_attribute *attr, char *buf)
+{
+  return x8h7_read_chip_uid(buf, PAGE_SIZE);
+}
+
+struct kobject *kobj_ref_x8h7_chip_uid;
+struct kobj_attribute x8h7_chip_uid_attr = __ATTR(chip_uid, 0444, sysfs_show_chip_uid, NULL);
 
  struct file_operations fops = {
   .open           = x8h7_h7_open,
@@ -416,6 +476,14 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   kobj_ref_x8h7_firmware_version = kobject_create_and_add("x8h7_firmware", kernel_kobj);
   if(sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)){
     DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
+  }
+
+  /* Creating a sysfs entry for reading the
+   * unique chip ID of the STM32H747.
+   */
+  kobj_ref_x8h7_chip_uid = kobject_create_and_add("x8h7_chip_uid", kernel_kobj);
+  if(sysfs_create_file(kobj_ref_x8h7_chip_uid, &x8h7_chip_uid_attr.attr)){
+    DBG_ERROR("Cannot create 'x8h7_chip_uid' sysfs file\n");
   }
 
   return 0;
