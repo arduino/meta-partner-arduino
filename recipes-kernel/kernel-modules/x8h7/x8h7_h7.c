@@ -376,7 +376,7 @@ ssize_t x8h7_read_chip_uid(char * buf, size_t const buf_size)
     i = 0; len = 0;
     for (i = 0; (i < sizeof(msg.buf)) && (len < buf_size); i++)
     {
-      len += snprintf(buf + len, buf_size - len, " %02X", msg.buf[i]);
+      len += snprintf(buf + len, buf_size - len, "%02X", msg.buf[i]);
     }
   } else {
     return -EFAULT;
