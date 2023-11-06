@@ -350,9 +350,6 @@ static ssize_t sysfs_show_version(struct kobject *kobj,
         return x8h7_read_firmware_version(buf, PAGE_SIZE);
 }
 
-struct kobject *kobj_ref_x8h7_firmware_version;
-struct kobj_attribute x8h7_firmware_version_attr = __ATTR(version, 0444, sysfs_show_version, NULL);
-
 ssize_t x8h7_read_chip_uid(char * buf, size_t const buf_size)
 {
   struct x8h7_h7_priv * priv = x8h7_h7;
@@ -385,19 +382,20 @@ ssize_t x8h7_read_chip_uid(char * buf, size_t const buf_size)
   return strlen(buf);
 }
 
-/* This function allows to read the current firmware of
- * from the H7 and display it by reading from a sysfs node,
+/* This function allows to read the unique chip id of the
+ * H7 and display it by reading from a sysfs node,
  * i.e.
  *   $ cat /sys/kernel/x8h7_firmware/chip_uid
- *   TODO
+ *   21002C000A51313032353139
  */
 static ssize_t sysfs_show_chip_uid(struct kobject *kobj,
-                                  struct kobj_attribute *attr, char *buf)
+                                   struct kobj_attribute *attr, char *buf)
 {
   return x8h7_read_chip_uid(buf, PAGE_SIZE);
 }
 
-struct kobject *kobj_ref_x8h7_chip_uid;
+struct kobject *kobj_ref_x8h7_firmware_version;
+struct kobj_attribute x8h7_firmware_version_attr = __ATTR(version, 0444, sysfs_show_version, NULL);
 struct kobj_attribute x8h7_chip_uid_attr = __ATTR(chip_uid, 0444, sysfs_show_chip_uid, NULL);
 
  struct file_operations fops = {
@@ -477,12 +475,10 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   if(sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)){
     DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
   }
-
   /* Creating a sysfs entry for reading the
    * unique chip ID of the STM32H747.
    */
-  kobj_ref_x8h7_chip_uid = kobject_create_and_add("x8h7_chip_uid", kernel_kobj);
-  if(sysfs_create_file(kobj_ref_x8h7_chip_uid, &x8h7_chip_uid_attr.attr)){
+  if(sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_chip_uid_attr.attr)){
     DBG_ERROR("Cannot create 'x8h7_chip_uid' sysfs file\n");
   }
 
