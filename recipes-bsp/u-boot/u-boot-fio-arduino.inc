@@ -1,41 +1,5 @@
 # common Arduino u-boot-fio settings
 SRC_URI:append:portenta-mx8mm = " \
-    file://0009-Added-Portenta-X8-hw-support-need-to-test.patch \
-    file://0010-Fixed-missing-line-in-Kconfig-for-Portenta-X8-platfo.patch \
-    file://0011-Without-this-u-boot-is-stuck-at-lower-eMMC-speed-52M.patch \
-    file://0013-Enhanced-probe-is-not-available-for-our-eMMC-part-ne.patch \
-    file://0015-portenta-m8-add-minimal-anx7625-setup.patch \
-    file://0021-portenta-common-establish-common-files-for-Portenta-.patch \
-    file://0022-portenta-x8-cleanup-header-config.patch \
-    file://0023-portenta-x8-enable-anx7625.patch \
-    file://0024-portenta-x8-uboot-update-u-boot-additions-to-DTS.patch \
-    file://0025-portenta-common-commonize-DTS-for-M8-and-X8-HW.patch \
-    file://0026-portenta-common-anx7625-add-portenta-x8-HW-settings.patch \
-    file://0027-portenta-common-anx7625-additional-changes-to-u-boot.patch \
-    file://0028-bd718xx-pwrkey-fix-IRQ-not-being-reported.patch \
-    file://0029-Bus-num.-i2c-changes-between-machines.patch \
-    file://0030-portenta-add-CMD_USB-to-fix-distro_bootcmd-error.patch \
-    file://0031-Implemented-PD2.0-downgrade-to-solve-issue-of-video-.patch \
-    file://0032-Reviewed-timeout-value-for-GOT_POWER.patch \
-    file://0033-Indentation.patch \
-    file://0034-Fix-compilation-bug.patch \
-    file://0035-A-few-adjs-to-anx-driver-and-doc.patch \
-    file://0036-Switching-console-from-uart2-to-uart3-on-portenta-x8.patch \
-    file://0037-portenta_x8-change-usb-hub-i2c-bus-fox-max-carrier.patch \
-    file://0038-Implemented-carrier-detection-on-portenta-x8.patch \
-    file://0039-Refactored-variable-names-for-board-model-and-carrie.patch \
-    file://0041-Changed-alert-message-when-power-negotiation-fails.patch \
-    file://0042-Added-hw-changes-in-anx-for-x8-hw-v4.1.patch \
-    file://0043-Update-lpddr4-timings-with-DBI-enabled.patch \
+    file://0001-Added-Portenta-X8-hw-support-need-to-test.patch \
     file://0044-Forcefully-restore-FEC-reset-with-gpio.patch \
-    file://0045-dts-portenta-x8-fix-console-uart.patch \
-    file://0046-Updated-ddr-ram-timings-according-to-manufacturing.patch \
-    file://0047-Added-Rasp-Tenta-eeprom-detect.patch \
-    file://0048-Added-VBUS-switch-management.patch \
-    file://0049-Review-pinctrl_hog-groups.patch \
-    file://0050-Fixed-STM32H7-pins-in-u-boot.patch \
-    file://0051-Force-Breakout-carrier-as-default.patch \
-    file://0052-Modify-env-in-ram-only-if-carrier_custom-is-not-defi.patch \
-    file://0052-Defines-moved-to-defconfig.patch \
-    file://0053-Defines-in-defconfig-changed-names.patch \
 "

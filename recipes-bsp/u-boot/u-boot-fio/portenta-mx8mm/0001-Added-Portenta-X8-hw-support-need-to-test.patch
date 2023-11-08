@@ -1,23 +1,23 @@
-From e42f994c362362c17ba7ed747bf5a28dd677822f Mon Sep 17 00:00:00 2001
+From 64b5404b259fe722e24762723d0774872173bf46 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Thu, 14 Oct 2021 17:00:15 +0200
-Subject: [PATCH 09/45] Added Portenta-X8 hw support, need to test
+Subject: [PATCH 1/2] Added Portenta-X8 hw support, need to test
 
 - do we need mmc-hs400-1_8v in usdhc3 in dtsi?
 ---
  arch/arm/dts/Makefile                     |    1 +
- arch/arm/dts/portenta-x8-u-boot.dtsi      |  145 ++
- arch/arm/dts/portenta-x8.dts              |  439 +++++
- arch/arm/mach-imx/imx8m/Kconfig           |    5 +
+ arch/arm/dts/portenta-x8-u-boot.dtsi      |  138 ++
+ arch/arm/dts/portenta-x8.dts              |  437 +++++
+ arch/arm/mach-imx/imx8m/Kconfig           |    6 +
  board/arduino/portenta-x8/Kconfig         |   14 +
  board/arduino/portenta-x8/Makefile        |   16 +
  board/arduino/portenta-x8/lpddr4_timing.c | 1849 +++++++++++++++++++++
  board/arduino/portenta-x8/mmc.c           |   51 +
  board/arduino/portenta-x8/portenta-x8.c   |  426 +++++
  board/arduino/portenta-x8/spl.c           |  284 ++++
- configs/portenta-x8_defconfig             |  147 ++
- include/configs/portenta-x8.h             |  308 ++++
- 12 files changed, 3685 insertions(+)
+ configs/portenta-x8_defconfig             |  202 +++
+ include/configs/portenta-x8.h             |  272 +++
+ 12 files changed, 3696 insertions(+)
  create mode 100644 arch/arm/dts/portenta-x8-u-boot.dtsi
  create mode 100644 arch/arm/dts/portenta-x8.dts
  create mode 100644 board/arduino/portenta-x8/Kconfig
@@ -30,23 +30,23 @@ Subject: [PATCH 09/45] Added Portenta-X8 hw support, need to test
  create mode 100644 include/configs/portenta-x8.h
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index dfb95c9c73..03451f9f65 100644
+index 2e4d10c45a9..38adc58d212 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
-@@ -864,6 +864,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
+@@ -981,6 +981,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
+ 	imx8mm-venice-gw7902.dtb \
  	imx8mm-verdin.dtb \
  	phycore-imx8mm.dtb \
- 	portenta-m8.dtb \
 +	portenta-x8.dtb \
  	imx8mn-ddr3l-evk.dtb \
  	imx8mn-ddr4-evk.dtb \
- 	imx8mn-evk.dtb \
+ 	imx8mn-ddr4-ab2.dtb \
 diff --git a/arch/arm/dts/portenta-x8-u-boot.dtsi b/arch/arm/dts/portenta-x8-u-boot.dtsi
 new file mode 100644
-index 0000000000..5685734aeb
+index 00000000000..90b27823e75
 --- /dev/null
 +++ b/arch/arm/dts/portenta-x8-u-boot.dtsi
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,138 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
 + * Copyright 2019 NXP
@@ -91,6 +91,22 @@ index 0000000000..5685734aeb
 +	u-boot,dm-spl;
 +};
 +
++&A53_0 {
++	/delete-property/ cpu-idle-states;
++};
++
++&A53_1 {
++	/delete-property/ cpu-idle-states;
++};
++
++&A53_2 {
++	/delete-property/ cpu-idle-states;
++};
++
++&A53_3 {
++	/delete-property/ cpu-idle-states;
++};
++
 +&clk {
 +	u-boot,dm-spl;
 +	u-boot,dm-pre-reloc;
@@ -117,39 +133,16 @@ index 0000000000..5685734aeb
 +	u-boot,dm-spl;
 +};
 +
-+&usdhc1 {
-+	u-boot,dm-spl;
-+	assigned-clocks = <&clk IMX8MM_CLK_USDHC1>;
-+	assigned-clock-rates = <400000000>;
-+	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_400M>;
-+};
-+
 +&usdhc2 {
 +	u-boot,dm-spl;
 +	sd-uhs-sdr104;
 +	sd-uhs-ddr50;
-+	assigned-clocks = <&clk IMX8MM_CLK_USDHC2>;
-+	assigned-clock-rates = <400000000>;
-+	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_400M>;
 +	fsl,signal-voltage-switch-extra-delay-ms = <8>;
 +};
 +
 +&usdhc3 {
 +	u-boot,dm-spl;
-+	mmc-hs400-enhanced-strobe;
-+	assigned-clocks = <&clk IMX8MM_CLK_USDHC3>;
-+	assigned-clock-rates = <400000000>;
-+	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_400M>;
-+};
-+
-+&usbotg1 {
-+	dr_mode = "otg";
-+        status = "okay";
-+};
-+
-+&usbotg2 {
-+        dr_mode = "host";
-+        status = "okay";
++	mmc-hs400-1_8v;
 +};
 +
 +&i2c1 {
@@ -194,10 +187,10 @@ index 0000000000..5685734aeb
 +};
 diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
 new file mode 100644
-index 0000000000..696e49361f
+index 00000000000..6126fb7b040
 --- /dev/null
 +++ b/arch/arm/dts/portenta-x8.dts
-@@ -0,0 +1,439 @@
+@@ -0,0 +1,437 @@
 +/**
 + * Copyright 2020
 + *
@@ -286,8 +279,8 @@ index 0000000000..696e49361f
 +		compatible = "rohm,bd71847";
 +		reg = <0x4b>;
 +		pinctrl-0 = <&pinctrl_pmic>;
-+		interrupt-parent = <&gpio1>;
-+		interrupts = <3 GPIO_ACTIVE_LOW>;
++		interrupt-parent = <&gpio3>;
++		interrupts = <8 GPIO_ACTIVE_LOW>;
 +		rohm,reset-snvs-powered;
 +
 +		regulators {
@@ -400,9 +393,9 @@ index 0000000000..696e49361f
 +	status = "okay";
 +};
 +
-+&uart2 { /* console */
++&uart3 { /* console */
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart2>;
++	pinctrl-0 = <&pinctrl_uart3>;
 +	status = "okay";
 +};
 +
@@ -515,16 +508,14 @@ index 0000000000..696e49361f
 +
 +	pinctrl_pmic: pmicirq {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_GPIO1_IO03_GPIO1_IO3		0x41
++			MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8		0x141
 +		>;
 +	};
 +
-+	pinctrl_uart2: uart2grp {
++	pinctrl_uart3: uart3grp {
 +		fsl,pins = <
-+			MX8MM_IOMUXC_SAI3_TXFS_UART2_DCE_RX		0x140
-+			MX8MM_IOMUXC_SAI3_TXC_UART2_DCE_TX		0x140
-+			MX8MM_IOMUXC_SAI3_RXC_UART2_DCE_CTS_B		0x140
-+			MX8MM_IOMUXC_SAI3_RXD_UART2_DCE_RTS_B		0x140
++			MX8MM_IOMUXC_UART3_RXD_UART3_DCE_RX		0x140
++			MX8MM_IOMUXC_UART3_TXD_UART3_DCE_TX		0x140
 +		>;
 +	};
 +
@@ -638,24 +629,32 @@ index 0000000000..696e49361f
 +	};
 +};
 diff --git a/arch/arm/mach-imx/imx8m/Kconfig b/arch/arm/mach-imx/imx8m/Kconfig
-index 29f2e75a5c..886171a45a 100644
+index ff2f80c8a78..4bf4e31e5b3 100644
 --- a/arch/arm/mach-imx/imx8m/Kconfig
 +++ b/arch/arm/mach-imx/imx8m/Kconfig
-@@ -113,6 +113,11 @@ config TARGET_PORTENTA_M8
+@@ -160,6 +160,11 @@ config TARGET_KONTRON_MX8MM
  	select IMX8MM
+ 	select SUPPORT_SPL
  	select IMX8M_LPDDR4
- 
++ 
 +config TARGET_PORTENTA_X8
 +	bool "imx8mm portenta x8 board"
 +	select IMX8MM
 +	select IMX8M_LPDDR4
-+
+ 
  config TARGET_IMX8MN_EVK
  	bool "imx8mn LPDDR4 EVK board"
- 	select IMX8MN
+@@ -339,6 +344,7 @@ source "board/beacon/imx8mm/Kconfig"
+ source "board/beacon/imx8mn/Kconfig"
+ source "board/compulab/imx8mm-cl-iot-gate/Kconfig"
+ source "board/engicam/imx8mm/Kconfig"
++source "board/arduino/portenta-x8/Kconfig"
+ source "board/freescale/imx8mq_evk/Kconfig"
+ source "board/freescale/imx8mq_val/Kconfig"
+ source "board/freescale/imx8mm_ab2/Kconfig"
 diff --git a/board/arduino/portenta-x8/Kconfig b/board/arduino/portenta-x8/Kconfig
 new file mode 100644
-index 0000000000..67d59a1f18
+index 00000000000..67d59a1f18b
 --- /dev/null
 +++ b/board/arduino/portenta-x8/Kconfig
 @@ -0,0 +1,14 @@
@@ -675,7 +674,7 @@ index 0000000000..67d59a1f18
 +endif
 diff --git a/board/arduino/portenta-x8/Makefile b/board/arduino/portenta-x8/Makefile
 new file mode 100644
-index 0000000000..bf94272052
+index 00000000000..bf942720529
 --- /dev/null
 +++ b/board/arduino/portenta-x8/Makefile
 @@ -0,0 +1,16 @@
@@ -697,7 +696,7 @@ index 0000000000..bf94272052
 +obj-$(CONFIG_USB_TCPC) += tcpc.o
 diff --git a/board/arduino/portenta-x8/lpddr4_timing.c b/board/arduino/portenta-x8/lpddr4_timing.c
 new file mode 100644
-index 0000000000..48cc92f359
+index 00000000000..48cc92f3599
 --- /dev/null
 +++ b/board/arduino/portenta-x8/lpddr4_timing.c
 @@ -0,0 +1,1849 @@
@@ -2552,7 +2551,7 @@ index 0000000000..48cc92f359
 +};
 diff --git a/board/arduino/portenta-x8/mmc.c b/board/arduino/portenta-x8/mmc.c
 new file mode 100644
-index 0000000000..ab1652d697
+index 00000000000..ab1652d6972
 --- /dev/null
 +++ b/board/arduino/portenta-x8/mmc.c
 @@ -0,0 +1,51 @@
@@ -2609,7 +2608,7 @@ index 0000000000..ab1652d697
 +}
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
 new file mode 100644
-index 0000000000..467366772f
+index 00000000000..5e953c131fa
 --- /dev/null
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -0,0 +1,426 @@
@@ -2643,7 +2642,7 @@ index 0000000000..467366772f
 + * External USB Hub configuration
 + */
 +#define EXT_USB_HUB
-+#define EXT_USB_HUB_I2C_BUS  0
++#define EXT_USB_HUB_I2C_BUS  2
 +#define EXT_USB_HUB_I2C_ADR  0x2C
 +/**
 + * USB2514B/M2 configuration data
@@ -2713,8 +2712,8 @@ index 0000000000..467366772f
 +#define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
 +
 +static iomux_v3_cfg_t const uart_pads[] = {
-+	IMX8MM_PAD_SAI3_TXFS_UART2_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
-+	IMX8MM_PAD_SAI3_TXC_UART2_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MM_PAD_UART3_RXD_UART3_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MM_PAD_UART3_TXD_UART3_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
 +};
 +
 +static iomux_v3_cfg_t const wdog_pads[] = {
@@ -2765,7 +2764,7 @@ index 0000000000..467366772f
 +
 +	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
 +
-+	init_uart_clk(1);
++	init_uart_clk(2);
 +
 +#ifdef CONFIG_NAND_MXS
 +	setup_gpmi_nand(); /* SPL will call the board_early_init_f */
@@ -3041,7 +3040,7 @@ index 0000000000..467366772f
 +#endif /*CONFIG_FSL_FASTBOOT*/
 diff --git a/board/arduino/portenta-x8/spl.c b/board/arduino/portenta-x8/spl.c
 new file mode 100644
-index 0000000000..a6c5275b93
+index 00000000000..a6c5275b93b
 --- /dev/null
 +++ b/board/arduino/portenta-x8/spl.c
 @@ -0,0 +1,284 @@
@@ -3331,17 +3330,18 @@ index 0000000000..a6c5275b93
 +}
 diff --git a/configs/portenta-x8_defconfig b/configs/portenta-x8_defconfig
 new file mode 100644
-index 0000000000..b9960ac623
+index 00000000000..67ee9f4fc90
 --- /dev/null
 +++ b/configs/portenta-x8_defconfig
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,202 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_IMX8M=y
 +CONFIG_SYS_TEXT_BASE=0x40200000
-+CONFIG_SPL_GPIO_SUPPORT=y
++CONFIG_SYS_MALLOC_LEN=0x8000000
++CONFIG_SYS_MALLOC_F_LEN=0x10000
++CONFIG_SPL_GPIO=y
 +CONFIG_SPL_LIBCOMMON_SUPPORT=y
 +CONFIG_SPL_LIBGENERIC_SUPPORT=y
-+CONFIG_SYS_MALLOC_F_LEN=0x10000
 +CONFIG_ENV_SIZE=0x4000
 +CONFIG_ENV_OFFSET=0x400000
 +CONFIG_SYS_MEMTEST_START=0x40000000
@@ -3353,48 +3353,66 @@ index 0000000000..b9960ac623
 +CONFIG_SPL_TEXT_BASE=0x7E1000
 +CONFIG_TARGET_PORTENTA_X8=y
 +CONFIG_ARCH_MISC_INIT=y
-+CONFIG_SPL_MMC_SUPPORT=y
-+CONFIG_SPL_SERIAL_SUPPORT=y
-+CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
++CONFIG_SPL_MMC=y
++CONFIG_SPL_SERIAL=y
++CONFIG_SPL_DRIVERS_MISC=y
 +CONFIG_SPL=y
 +CONFIG_DEFAULT_DEVICE_TREE="portenta-x8"
 +CONFIG_CSF_SIZE=0x2000
 +CONFIG_DISTRO_DEFAULTS=y
 +CONFIG_BOOTCOMMAND="run distro_bootcmd;run bsp_bootcmd"
++CONFIG_SYS_LOAD_ADDR=0x40400000
 +CONFIG_FIT=y
 +CONFIG_FIT_EXTERNAL_OFFSET=0x3000
 +CONFIG_SPL_LOAD_FIT=y
-+CONFIG_SPL_FIT_GENERATOR="arch/arm/mach-imx/mkimage_fit_atf.sh"
++# CONFIG_USE_SPL_FIT_GENERATOR is not set
 +CONFIG_OF_SYSTEM_SETUP=y
-+CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/imx8m/imximage-8mm-lpddr4.cfg"
 +CONFIG_BOARD_LATE_INIT=y
 +CONFIG_BOARD_EARLY_INIT_F=y
 +CONFIG_SPL_BOARD_INIT=y
 +CONFIG_SPL_SEPARATE_BSS=y
-+CONFIG_SPL_I2C_SUPPORT=y
-+CONFIG_SPL_POWER_SUPPORT=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_USE_SECTOR=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR=0x300
++CONFIG_SPL_I2C=y
++CONFIG_SPL_POWER=y
++CONFIG_SPL_WATCHDOG=y
++CONFIG_IMX_WATCHDOG=y
 +CONFIG_NR_DRAM_BANKS=2
 +CONFIG_SYS_PROMPT="u-boot=> "
 +# CONFIG_CMD_EXPORTENV is not set
-+CONFIG_CMD_IMPORTENV=y
-+# CONFIG_CMD_CRC32 is not set
++# CONFIG_CMD_IMPORTENV is not set
++CONFIG_CMD_CRC32=y
++CONFIG_CRC32_VERIFY=y
 +# CONFIG_BOOTM_NETBSD is not set
 +CONFIG_CMD_CLK=y
++CONFIG_CMD_DFU=y
 +CONFIG_CMD_FUSE=y
 +CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPT=y
 +CONFIG_CMD_I2C=y
 +CONFIG_CMD_MMC=y
++CONFIG_CMD_POWEROFF=y
++CONFIG_CMD_PART=y
 +CONFIG_CMD_DHCP=y
 +CONFIG_CMD_MII=y
 +CONFIG_CMD_PING=y
++CONFIG_CMD_SNTP=y
 +CONFIG_CMD_CACHE=y
++CONFIG_CMD_RTC=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_GETTIME=y
++CONFIG_CMD_TIMER=y
 +CONFIG_CMD_REGULATOR=y
 +CONFIG_CMD_MEMTEST=y
 +CONFIG_CMD_EXT2=y
 +CONFIG_CMD_EXT4=y
++CONFIG_CMD_HASH=y
 +CONFIG_CMD_EXT4_WRITE=y
 +CONFIG_CMD_FAT=y
 +CONFIG_CMD_SF=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
 +CONFIG_OF_CONTROL=y
 +CONFIG_ENV_OVERWRITE=y
 +CONFIG_DEFAULT_FDT_FILE="portenta-x8.dtb"
@@ -3404,8 +3422,13 @@ index 0000000000..b9960ac623
 +CONFIG_SYS_RELOC_GD_ENV_ADDR=y
 +CONFIG_SYS_MMC_ENV_DEV=2
 +CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG=y
++CONFIG_NET_RANDOM_ETHADDR=y
 +CONFIG_CLK_COMPOSITE_CCF=y
 +CONFIG_CLK_IMX8MM=y
++CONFIG_DFU_TFTP=y
++CONFIG_DFU_MMC=y
++CONFIG_DFU_RAM=y
++CONFIG_UDP_FUNCTION_FASTBOOT=y
 +CONFIG_MXC_GPIO=y
 +CONFIG_FASTBOOT=y
 +CONFIG_USB_FUNCTION_FASTBOOT=y
@@ -3417,16 +3440,21 @@ index 0000000000..b9960ac623
 +CONFIG_FASTBOOT_FLASH=y
 +
 +CONFIG_DM_I2C=y
++CONFIG_SPL_SYS_I2C_LEGACY=y
 +CONFIG_SYS_I2C_MXC=y
 +CONFIG_DM_MMC=y
++CONFIG_EFI_PARTITION=y
++CONFIG_SUPPORT_EMMC_RPMB=y
++CONFIG_SUPPORT_EMMC_BOOT=y
 +CONFIG_MMC_IO_VOLTAGE=y
 +CONFIG_MMC_UHS_SUPPORT=y
-+# CONFIG_DM_PMIC=y
-+CONFIG_EFI_PARTITION=y
-+CONFIG_SUPPORT_EMMC_BOOT=y
++CONFIG_MMC_HS400_ES_SUPPORT=y
++CONFIG_MMC_HS400_SUPPORT=y
++CONFIG_FSL_USDHC=y
 +CONFIG_FSL_ESDHC_IMX=y
 +CONFIG_DM_SPI_FLASH=y
 +CONFIG_DM_SPI=y
++CONFIG_NXP_FSPI=y
 +CONFIG_SPI=y
 +CONFIG_SPI_FLASH=y
 +CONFIG_SPI_FLASH_BAR=y
@@ -3437,17 +3465,21 @@ index 0000000000..b9960ac623
 +CONFIG_SF_DEFAULT_MODE=0
 +
 +CONFIG_PHYLIB=y
-+CONFIG_PHY_MICREL=y
-+CONFIG_PHY_MICREL_KSZ90X1=y
++CONFIG_PHY_ATHEROS=y
++CONFIG_PHY_REALTEK=y
 +CONFIG_DM_ETH=y
++CONFIG_PHY_GIGE=y
 +CONFIG_FEC_MXC=y
 +CONFIG_MII=y
-+CONFIG_NET_RANDOM_ETHADDR=y
 +CONFIG_PINCTRL=y
 +CONFIG_PINCTRL_IMX8M=y
++CONFIG_SPL_POWER_LEGACY=y
 +CONFIG_DM_REGULATOR=y
 +CONFIG_DM_REGULATOR_FIXED=y
 +CONFIG_DM_REGULATOR_GPIO=y
++CONFIG_SPL_POWER_I2C=y
++CONFIG_DM_RTC=y
++CONFIG_RTC_EMULATION=y
 +CONFIG_MXC_UART=y
 +CONFIG_SYSRESET=y
 +CONFIG_SYSRESET_PSCI=y
@@ -3456,15 +3488,19 @@ index 0000000000..b9960ac623
 +# CONFIG_USB_TCPC is not set
 +CONFIG_USB=y
 +CONFIG_USB_GADGET=y
++CONFIG_USB_STORAGE=y
 +CONFIG_DM_USB=y
 +CONFIG_CI_UDC=y
 +CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_HOST_ETHER=y
++CONFIG_USB_ETHER_ASIX=y
++CONFIG_USB_ETHER_RTL8152=y
 +
 +CONFIG_USB_GADGET_MANUFACTURER="FSL"
-+CONFIG_USB_GADGET_VENDOR_NUM=0x0525
-+CONFIG_USB_GADGET_PRODUCT_NUM=0xa4a5
++CONFIG_USB_GADGET_VENDOR_NUM=0x1fc9
++CONFIG_USB_GADGET_PRODUCT_NUM=0x0152
 +
-+CONFIG_SPL_USB_HOST_SUPPORT=y
++CONFIG_SPL_USB_HOST=y
 +CONFIG_SPL_USB_GADGET=y
 +CONFIG_SPL_USB_SDP_SUPPORT=y
 +CONFIG_SDP_LOADADDR=0x40400000
@@ -3477,17 +3513,35 @@ index 0000000000..b9960ac623
 +CONFIG_RESET_DISPMIX=y
 +CONFIG_VIDEO_IMX_SEC_DSI=y
 +CONFIG_DM_VIDEO=y
++CONFIG_BMP_16BPP=y
++CONFIG_BMP_24BPP=y
++CONFIG_BMP_32BPP=y
++CONFIG_VIDEO_MXS=y
++CONFIG_VIDEO_LOGO=y
++CONFIG_VIDEO_LCD_RAYDIUM_RM67191=y
++CONFIG_VIDEO_ADV7535=y
++CONFIG_SYS_WHITE_ON_BLACK=y
++CONFIG_SPLASH_SCREEN=y
++CONFIG_SPLASH_SCREEN_ALIGN=y
++CONFIG_CMD_BMP=y
 +
-+CONFIG_MMC_HS400_SUPPORT=y
-+# TODO: Examine why HS400 ES support breaks
-+# CONFIG_MMC_HS400_ES_SUPPORT is not set
-+CONFIG_MMC_HS200_SUPPORT=y
++CONFIG_LEGACY_IMAGE_FORMAT=y
++CONFIG_LZO=y
++CONFIG_BZIP2=y
++CONFIG_SPL_RSA=y
++CONFIG_SHA384=y
++CONFIG_OPTEE=y
++CONFIG_CMD_OPTEE_RPMB=y
++CONFIG_TEE=y
++CONFIG_FIT_SIGNATURE=y
++CONFIG_DM_RNG=y
++CONFIG_KASLR=y
 diff --git a/include/configs/portenta-x8.h b/include/configs/portenta-x8.h
 new file mode 100644
-index 0000000000..7ff4f8a30c
+index 00000000000..6c89405e39a
 --- /dev/null
 +++ b/include/configs/portenta-x8.h
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,272 @@
 +/* SPDX-License-Identifier: GPL-2.0+ */
 +/*
 + * Copyright 2019 NXP
@@ -3503,16 +3557,14 @@ index 0000000000..7ff4f8a30c
 +#define CONFIG_SYS_BOOTM_LEN		SZ_64M
 +#define CONFIG_SPL_MAX_SIZE		(148 * 1024)
 +#define CONFIG_SYS_MONITOR_LEN		SZ_512K
-+#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_USE_SECTOR
 +/*
 + * CONFIG_SECONDARY_BOOT_SECTOR_OFFSET was intended to be used as a compile time setting.
 + * If CONFIG_SECONDARY_BOOT_RUNTIME_DETECTION is defined, then only use the base offset of 0x300 here.
 + * CONFIG_SECONDARY_BOOT_SECTOR_OFFSET will be added dynamically if needed.
 + */
-+#ifdef CONFIG_SECONDARY_BOOT_RUNTIME_DETECTION
-+#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR (0x300)
-+#else
-+#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR (0x300 + CONFIG_SECONDARY_BOOT_SECTOR_OFFSET)
++#ifndef CONFIG_SECONDARY_BOOT_RUNTIME_DETECTION
++#undef CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR
++#define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	(0x300 + CONFIG_SECONDARY_BOOT_SECTOR_OFFSET)
 +#endif /* CONFIG_SECONDARY_BOOT_RUNTIME_DETECTION */
 +#define CONFIG_SYS_MMCSD_FS_BOOT_PARTITION	1
 +#define CONFIG_SYS_UBOOT_BASE	\
@@ -3534,13 +3586,11 @@ index 0000000000..7ff4f8a30c
 +#undef CONFIG_DM_PMIC
 +#undef CONFIG_DM_PMIC_PFUZE100
 +
-+#define CONFIG_POWER
 +#define CONFIG_POWER_I2C
 +#define CONFIG_POWER_BD71837
 +#undef CONFIG_SPL_DM_I2C
 +
 +#define CONFIG_SYS_I2C
-+#define CONFIG_SYS_I2C_SPEED      100000
 +
 +#if defined(CONFIG_NAND_BOOT)
 +#define CONFIG_SPL_NAND_SUPPORT
@@ -3618,8 +3668,8 @@ index 0000000000..7ff4f8a30c
 +	"fdt_addr=0x43000000\0"			\
 +	"fdt_high=0xffffffffffffffff\0" \
 +	"mtdparts=" MFG_NAND_PARTITION "\0" \
-+	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
-+	"bootargs=console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200 ubi.mtd=nandrootfs "  \
++	"console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200\0" \
++	"bootargs=console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200 ubi.mtd=nandrootfs "  \
 +		"root=ubi0:nandrootfs rootfstype=ubifs "		     \
 +		MFG_NAND_PARTITION \
 +		"\0" \
@@ -3632,11 +3682,9 @@ index 0000000000..7ff4f8a30c
 +	CONFIG_MFG_ENV_SETTINGS \
 +	BOOTENV \
 +	JAILHOUSE_ENV \
-+	"scriptaddr=0x43500000\0" \
-+	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
 +	"bsp_script=boot.scr\0" \
 +	"image=Image\0" \
-+	"console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200\0" \
++	"console=ttymxc2,115200 earlycon=ec_imx6q,0x30880000,115200\0" \
 +	"fdt_addr_r=0x43000000\0"			\
 +	"fdt_addr=0x43000000\0"			\
 +	"fdt_high=0xffffffffffffffff\0"		\
@@ -3646,10 +3694,8 @@ index 0000000000..7ff4f8a30c
 +	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
 +	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
 +	"bootm_size=0x10000000\0" \
-+	"initrd_addr=0x43800000\0"		\
-+	"initrd_high=0xffffffffffffffff\0" \
 +	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
-+	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
++	"mmcpart=1\0" \
 +	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 +	"mmcautodetect=yes\0" \
 +	"mmcargs=setenv bootargs ${jh_clk} console=${console} root=${mmcroot}\0 " \
@@ -3703,9 +3749,6 @@ index 0000000000..7ff4f8a30c
 +#endif
 +
 +/* Link Definitions */
-+#define CONFIG_LOADADDR			0x43800000
-+
-+#define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
 +
 +#define CONFIG_SYS_INIT_RAM_ADDR        0x40000000
 +#define CONFIG_SYS_INIT_RAM_SIZE        0x200000
@@ -3723,14 +3766,11 @@ index 0000000000..7ff4f8a30c
 +#define CONFIG_SYS_MMC_ENV_DEV		2   /* USDHC3 */
 +#define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* USDHC3 */
 +
-+/* Size of malloc() pool */
-+#define CONFIG_SYS_MALLOC_LEN		SZ_32M
-+
 +#define CONFIG_SYS_SDRAM_BASE           0x40000000
 +#define PHYS_SDRAM                      0x40000000
 +#define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
 +
-+#define CONFIG_MXC_UART_BASE		UART2_BASE_ADDR
++#define CONFIG_MXC_UART_BASE		UART3_BASE_ADDR
 +
 +/* Monitor Command Prompt */
 +#define CONFIG_SYS_PROMPT_HUSH_PS2	"> "
@@ -3742,17 +3782,8 @@ index 0000000000..7ff4f8a30c
 +
 +#define CONFIG_IMX_BOOTAUX
 +
-+/* USDHC */
-+#define CONFIG_FSL_USDHC
-+
-+#ifdef CONFIG_TARGET_IMX8MM_DDR4_EVK
-+#define CONFIG_SYS_FSL_USDHC_NUM	1
-+#else
 +#define CONFIG_SYS_FSL_USDHC_NUM	2
-+#endif
 +#define CONFIG_SYS_FSL_ESDHC_ADDR       0
-+
-+#define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 +
 +#ifdef CONFIG_FSL_FSPI
 +#define FSL_FSPI_FLASH_SIZE		SZ_32M
@@ -3782,20 +3813,7 @@ index 0000000000..7ff4f8a30c
 +#define CONFIG_MXC_USB_PORTSC  (PORT_PTS_UTMI | PORT_PTS_PTW)
 +#define CONFIG_USB_MAX_CONTROLLER_COUNT         2
 +
-+#ifdef CONFIG_DM_VIDEO
-+#define CONFIG_VIDEO_MXS
-+#define CONFIG_VIDEO_LOGO
-+#define CONFIG_SPLASH_SCREEN
-+#define CONFIG_SPLASH_SCREEN_ALIGN
-+#define CONFIG_CMD_BMP
-+#define CONFIG_BMP_16BPP
-+#define CONFIG_BMP_24BPP
-+#define CONFIG_BMP_32BPP
-+#define CONFIG_VIDEO_BMP_RLE8
-+#define CONFIG_VIDEO_BMP_LOGO
-+#endif
-+
 +#endif
 -- 
-2.35.1
+2.34.1
 
