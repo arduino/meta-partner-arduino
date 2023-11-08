@@ -1,24 +1,10 @@
 # common Arduino u-boot-fio settings
 SRC_URI:append:portenta-mx8mm = " \
-    file://0001-portenta-m8-add-initial-board-support.patch \
-    file://0002-portenta-m8-sync-with-imx8mm_evk.patch \
-    file://0003-portenta-m8-support-high-speed-mmc.patch \
-    file://0004-portenta-m8-support-ethernet-in-u-boot.patch \
-    file://0005-portenta-m8-cleanup-defconfig.patch \
-    file://0006-portenta-m8-disable-HS400-ES.patch \
-    file://0007-portenta-m8-drop-HUSH_PARSER.patch \
-    file://0008-portenta-m8-add-dfu_alt_info-environment-var.patch \
     file://0009-Added-Portenta-X8-hw-support-need-to-test.patch \
     file://0010-Fixed-missing-line-in-Kconfig-for-Portenta-X8-platfo.patch \
     file://0011-Without-this-u-boot-is-stuck-at-lower-eMMC-speed-52M.patch \
-    file://0012-portenta-m8-add-LDO5-to-set-3V0.patch \
     file://0013-Enhanced-probe-is-not-available-for-our-eMMC-part-ne.patch \
-    file://0014-Adding-some-doc-to-pinmux-at-the-end-of-dts-file.patch \
     file://0015-portenta-m8-add-minimal-anx7625-setup.patch \
-    file://0016-portenta-m8-drop-CONFIG_CMD_BMP-define-to-fix-compil.patch \
-    file://0017-portenta-m8-uboot-update-u-boot-additions-to-DTS.patch \
-    file://0018-portenta-m8-sync-with-imx-kernel-DTS.patch \
-    file://0019-portenta-m8-cleanup-header-config.patch \
     file://0021-portenta-common-establish-common-files-for-Portenta-.patch \
     file://0022-portenta-x8-cleanup-header-config.patch \
     file://0023-portenta-x8-enable-anx7625.patch \
@@ -38,7 +24,6 @@ SRC_URI:append:portenta-mx8mm = " \
     file://0037-portenta_x8-change-usb-hub-i2c-bus-fox-max-carrier.patch \
     file://0038-Implemented-carrier-detection-on-portenta-x8.patch \
     file://0039-Refactored-variable-names-for-board-model-and-carrie.patch \
-    file://0040-Added-board-model-and-auto-carrier-detection-to-port.patch \
     file://0041-Changed-alert-message-when-power-negotiation-fails.patch \
     file://0042-Added-hw-changes-in-anx-for-x8-hw-v4.1.patch \
     file://0043-Update-lpddr4-timings-with-DBI-enabled.patch \
