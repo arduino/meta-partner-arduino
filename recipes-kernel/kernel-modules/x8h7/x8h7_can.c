@@ -44,11 +44,12 @@
 #define X8H7_CAN1_PERIPH  0x03
 #define X8H7_CAN2_PERIPH  0x04
 // Op code
-#define X8H7_CAN_OC_CFG   0x10
-#define X8H7_CAN_OC_SEND  0x01
-#define X8H7_CAN_OC_RECV  0x01
-#define X8H7_CAN_OC_STS   0x40
-#define X8H7_CAN_OC_FLT   0x50
+#define X8H7_CAN_OC_CFG     0x10
+#define X8H7_CAN_OC_DEINIT  0x11
+#define X8H7_CAN_OC_SEND    0x01
+#define X8H7_CAN_OC_RECV    0x01
+#define X8H7_CAN_OC_STS     0x40
+#define X8H7_CAN_OC_FLT     0x50
 
 #define X8H7_CAN_STS_INT_TX      0x01
 #define X8H7_CAN_STS_INT_RX      0x02
@@ -702,6 +703,9 @@ static int x8h7_can_stop(struct net_device *net)
   struct x8h7_can_priv *priv = netdev_priv(net);
 
   DBG_PRINT("\n");
+
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
+  x8h7_pkt_send();
 
   close_candev(net);
   priv->force_quit = 1;
