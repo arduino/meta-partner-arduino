@@ -431,6 +431,16 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
 
 /**
  */
+static int x8h7_can_hw_stop(struct x8h7_can_priv *priv)
+{
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
+  x8h7_pkt_send();
+
+  return 0;
+}
+
+/**
+ */
 static int x8h7_can_set_normal_mode(struct x8h7_can_priv *priv)
 {
 //  unsigned long  timeout;
@@ -715,8 +725,7 @@ static int x8h7_can_stop(struct net_device *net)
 
   DBG_PRINT("\n");
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_can_hw_stop(priv);
 
   close_candev(net);
   priv->force_quit = 1;
