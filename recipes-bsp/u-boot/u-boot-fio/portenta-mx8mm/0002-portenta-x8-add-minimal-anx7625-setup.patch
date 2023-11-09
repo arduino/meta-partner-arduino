@@ -1,39 +1,51 @@
-From e3d5b52ffc728f61e0b60f7ff9ba3d52aff36217 Mon Sep 17 00:00:00 2001
-From: Massimo Pennazio <maxipenna@libero.it>
-Date: Thu, 26 Aug 2021 17:50:43 +0200
-Subject: [PATCH 15/45] portenta-m8: add minimal anx7625 setup
+From bc42bcbbf675f2a2120c15c255b273784b7bc2d3 Mon Sep 17 00:00:00 2001
+From: Vanessa Maegima <vanessa.maegima@foundries.io>
+Date: Thu, 9 Nov 2023 11:35:45 -0300
+Subject: [PATCH 2/2] portenta-x8: add minimal anx7625 setup
 
 Signed-off-by: Massimo Pennazio <maxipenna@libero.it>
 Signed-off-by: Michael Scott <mike@foundries.io>
+Signed-off-by: Vanessa Maegima <vanessa.maegima@foundries.io>
 ---
- board/arduino/portenta-m8/Makefile      |   3 +
- board/arduino/portenta-m8/anx7625.c     | 933 ++++++++++++++++++++++++
- board/arduino/portenta-m8/anx7625.h     |   6 +
- board/arduino/portenta-m8/portenta-m8.c |   8 +
- board/arduino/portenta-m8/spl.c         |   3 +
- 5 files changed, 953 insertions(+)
- create mode 100644 board/arduino/portenta-m8/anx7625.c
- create mode 100644 board/arduino/portenta-m8/anx7625.h
+ board/arduino/common/Makefile                 |  15 +
+ board/arduino/common/anx7625.c                | 933 ++++++++++++++++++
+ board/arduino/common/anx7625.h                |   6 +
+ .../{portenta-x8 => common}/lpddr4_timing.c   |   0
+ board/arduino/{portenta-x8 => common}/mmc.c   |   0
+ board/arduino/portenta-x8/Makefile            |   3 -
+ 6 files changed, 954 insertions(+), 3 deletions(-)
+ create mode 100644 board/arduino/common/Makefile
+ create mode 100644 board/arduino/common/anx7625.c
+ create mode 100644 board/arduino/common/anx7625.h
+ rename board/arduino/{portenta-x8 => common}/lpddr4_timing.c (100%)
+ rename board/arduino/{portenta-x8 => common}/mmc.c (100%)
 
-diff --git a/board/arduino/portenta-m8/Makefile b/board/arduino/portenta-m8/Makefile
-index bc502a3984..488e45b121 100644
---- a/board/arduino/portenta-m8/Makefile
-+++ b/board/arduino/portenta-m8/Makefile
-@@ -5,6 +5,9 @@
- #
- 
- obj-y += portenta-m8.o
+diff --git a/board/arduino/common/Makefile b/board/arduino/common/Makefile
+new file mode 100644
+index 00000000000..e0041a6877c
+--- /dev/null
++++ b/board/arduino/common/Makefile
+@@ -0,0 +1,15 @@
++#
++# Copyright 2021 Foundries.io
++#
++# SPDX-License-Identifier:      GPL-2.0+
++#
++
 +ifndef CONFIG_SPL_BUILD
 +obj-y += anx7625.o
 +endif
- 
- obj-y += mmc.o
- 
-diff --git a/board/arduino/portenta-m8/anx7625.c b/board/arduino/portenta-m8/anx7625.c
++
++obj-y += mmc.o
++
++ifdef CONFIG_SPL_BUILD
++obj-y += lpddr4_timing.o
++endif
+diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
 new file mode 100644
-index 0000000000..b00c2f66a2
+index 00000000000..515ed122c02
 --- /dev/null
-+++ b/board/arduino/portenta-m8/anx7625.c
++++ b/board/arduino/common/anx7625.c
 @@ -0,0 +1,933 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
@@ -319,7 +331,7 @@ index 0000000000..b00c2f66a2
 +
 +static void anx7625_msg_dump(const uint8_t *msg_buf, uint8_t msg_size)
 +{
-+        debug("%s:", __func__);
++	debug("%s:", __func__);
 +	for (int i = 0; i < msg_size; i++) {
 +		if (i == 0)
 +	                debug(" (%d)", msg_buf[i]);
@@ -748,24 +760,24 @@ index 0000000000..b00c2f66a2
 +	uint8_t typec_isr_1, p0_isr, last_cc1 = 0, last_cc2 = 0, valb = 0;
 +
 +	printf("Request:\n");
-+        ret = dm_i2c_read(dev_p0, MAX_VOLTAGE_SETTING_REG, &valb, 1);
-+        if (ret) {
-+                printf("%s dm_i2c_read MAX_VOLTAGE_SETTING_REG failed, err %d\n", __func__, ret);
-+                return -EIO;
-+        }
++	ret = dm_i2c_read(dev_p0, MAX_VOLTAGE_SETTING_REG, &valb, 1);
++	if (ret) {
++		printf("%s dm_i2c_read MAX_VOLTAGE_SETTING_REG failed, err %d\n", __func__, ret);
++		return -EIO;
++	}
 +	printf("  Voltage Max %d [V]\n", RDO_VOLTAGE_UNIT_TO_V(valb));
 +
-+        ret = dm_i2c_read(dev_p0, MIN_POWER_SETTING_REG, &valb, 1);
-+        if (ret) {
-+                printf("%s dm_i2c_read MIN_POWER_SETTING_REG failed, err %d\n", __func__, ret);
-+                return -EIO;
++	ret = dm_i2c_read(dev_p0, MIN_POWER_SETTING_REG, &valb, 1);
++	if (ret) {
++		printf("%s dm_i2c_read MIN_POWER_SETTING_REG failed, err %d\n", __func__, ret);
++		return -EIO;
 +        }
 +	min_power_setting_ma = RDO_POWER_UNIT_TO_MA(valb);
 +	printf("  Power Min 5V @ %d [mA]\n", min_power_setting_ma);
 +
-+        ret = dm_i2c_read(dev_p0, MAX_POWER_SETTING_REG, &valb, 1);
-+        if (ret) {
-+                printf("%s dm_i2c_read MAX_POWER_SETTING_REG failed, err %d\n", __func__, ret);
++	ret = dm_i2c_read(dev_p0, MAX_POWER_SETTING_REG, &valb, 1);
++	if (ret) {
++		printf("%s dm_i2c_read MAX_POWER_SETTING_REG failed, err %d\n", __func__, ret);
 +                return -EIO;
 +        }
 +	printf("  Power Max 5V @ %d [mA]\n", RDO_POWER_UNIT_TO_MA(valb));
@@ -968,11 +980,11 @@ index 0000000000..b00c2f66a2
 +	debug("%s: done\n", __func__);
 +	return 0;
 +}
-diff --git a/board/arduino/portenta-m8/anx7625.h b/board/arduino/portenta-m8/anx7625.h
+diff --git a/board/arduino/common/anx7625.h b/board/arduino/common/anx7625.h
 new file mode 100644
-index 0000000000..a6dcd1cce2
+index 00000000000..a6dcd1cce23
 --- /dev/null
-+++ b/board/arduino/portenta-m8/anx7625.h
++++ b/board/arduino/common/anx7625.h
 @@ -0,0 +1,6 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/*
@@ -980,46 +992,30 @@ index 0000000000..a6dcd1cce2
 + */
 +
 +int anx7625_probe(void);
-diff --git a/board/arduino/portenta-m8/portenta-m8.c b/board/arduino/portenta-m8/portenta-m8.c
-index f8427a0046..ea0a571450 100644
---- a/board/arduino/portenta-m8/portenta-m8.c
-+++ b/board/arduino/portenta-m8/portenta-m8.c
-@@ -24,6 +24,8 @@
- #include <imx_sip.h>
- #include <linux/arm-smccc.h>
+diff --git a/board/arduino/portenta-x8/lpddr4_timing.c b/board/arduino/common/lpddr4_timing.c
+similarity index 100%
+rename from board/arduino/portenta-x8/lpddr4_timing.c
+rename to board/arduino/common/lpddr4_timing.c
+diff --git a/board/arduino/portenta-x8/mmc.c b/board/arduino/common/mmc.c
+similarity index 100%
+rename from board/arduino/portenta-x8/mmc.c
+rename to board/arduino/common/mmc.c
+diff --git a/board/arduino/portenta-x8/Makefile b/board/arduino/portenta-x8/Makefile
+index bf942720529..f2630ef657f 100644
+--- a/board/arduino/portenta-x8/Makefile
++++ b/board/arduino/portenta-x8/Makefile
+@@ -6,11 +6,8 @@
  
-+#include "anx7625.h"
-+
- /**
-  * External USB Hub configuration
-  */
-@@ -391,6 +393,12 @@ int board_init(void)
- 	setup_fec();
- #endif
+ obj-y += portenta-x8.o
  
-+	/* ANX7625 usb typec controller and power delivery configuration on portenta-m8 */
-+	/* @TODO: selectable with CONFIG_USB_TCPC? */
-+#ifndef CONFIG_SPL_BUILD
-+	anx7625_probe();
-+#endif
-+
- 	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
- 		      DISPMIX, true, 0, 0, 0, 0, &res);
- 	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
-diff --git a/board/arduino/portenta-m8/spl.c b/board/arduino/portenta-m8/spl.c
-index c0ef10f0dc..46806e20c9 100644
---- a/board/arduino/portenta-m8/spl.c
-+++ b/board/arduino/portenta-m8/spl.c
-@@ -216,6 +216,9 @@ int power_init_board(void)
- 	pmic_reg_write(p, BD718XX_4TH_NODVS_BUCK_VOLT, 0x28);
- #endif
+-obj-y += mmc.o
+-
+ ifdef CONFIG_SPL_BUILD
+ obj-y += spl.o
+-obj-y += lpddr4_timing.o
+ endif
  
-+	/* enable LDO5 and set to 3.0V for ANX7625 */
-+	pmic_reg_write(p, BD718XX_LDO5_VOLT, 0xcc);
-+
- 	/* lock the PMIC regs */
- 	pmic_reg_write(p, BD718XX_REGLOCK, 0x11);
- 
+ obj-$(CONFIG_USB_TCPC) += tcpc.o
 -- 
-2.35.1
+2.34.1
 
