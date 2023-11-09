@@ -44,7 +44,7 @@
 #define X8H7_CAN1_PERIPH  0x03
 #define X8H7_CAN2_PERIPH  0x04
 // Op code
-#define X8H7_CAN_OC_CFG     0x10
+#define X8H7_CAN_OC_INIT    0x10
 #define X8H7_CAN_OC_DEINIT  0x11
 #define X8H7_CAN_OC_SEND    0x01
 #define X8H7_CAN_OC_RECV    0x01
@@ -412,7 +412,7 @@ static int x8h7_can_setup(struct x8h7_can_priv *priv)
 
   DBG_PRINT("frequency_requested = %d\n", frequency_requested);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_CFG, sizeof(frequency_requested), &(frequency_requested));
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(frequency_requested), &(frequency_requested));
   x8h7_pkt_send();
 
   return 0;
