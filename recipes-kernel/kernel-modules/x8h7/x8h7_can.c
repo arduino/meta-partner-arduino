@@ -348,43 +348,6 @@ static int x8h7_can_pkt_get(struct x8h7_can_priv *priv)
 
 /**
  */
-static int x8h7_can_hw_reset(struct x8h7_can_priv *priv)
-{
-  DBG_PRINT("\n");
-/*
-  unsigned long timeout;
-  int ret;
-
-  // Wait for oscillator startup timer after power up
-  mdelay(MCP251X_OST_DELAY_MS);
-
-  priv->spi_tx_buf[0] = INSTRUCTION_RESET;
-  ret = mcp251x_spi_trans(spi, 1);
-  if (ret)
-    return ret;
-
-  // Wait for oscillator startup timer after reset
-  mdelay(MCP251X_OST_DELAY_MS);
-
-  // Wait for reset to finish
-  timeout = jiffies + HZ;
-  while ((mcp251x_read_reg(spi, CANSTAT) & CANCTRL_REQOP_MASK) !=
-        CANCTRL_REQOP_CONF) {
-    usleep_range(MCP251X_OST_DELAY_MS * 1000,
-          MCP251X_OST_DELAY_MS * 1000 * 2);
-
-    if (time_after(jiffies, timeout)) {
-      dev_err(&spi->dev,
-        "MCP251x didn't enter in conf mode after reset\n");
-      return -EBUSY;
-    }
-  }
-*/
-  return 0;
-}
-
-/**
- */
 static void x8h7_can_clean(struct net_device *net)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
@@ -603,7 +566,7 @@ static void x8h7_can_restart_work_handler(struct work_struct *ws)
   DBG_PRINT("\n");
   mutex_lock(&priv->lock);
   if (priv->after_suspend) {
-    x8h7_can_hw_reset(priv);
+    x8h7_can_hw_stop(priv);
     x8h7_can_hw_setup(priv);
     priv->force_quit = 0;
     if (priv->after_suspend & AFTER_SUSPEND_RESTART) {
@@ -663,7 +626,7 @@ static int x8h7_can_open(struct net_device *net)
 
   mutex_init(&priv->lock);
 
-  ret = x8h7_can_hw_reset(priv);
+  ret = x8h7_can_hw_stop(priv);
   if (ret) {
     goto out_free_wq;
   }
