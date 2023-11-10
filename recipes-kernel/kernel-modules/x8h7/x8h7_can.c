@@ -329,25 +329,6 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
 
 /**
  */
-/*
-static int x8h7_can_pkt_get(struct x8h7_can_priv *priv)
-{
-  long ret;
-
-  ret = wait_event_interruptible_timeout(priv->wait,
-                                         priv->rx_cnt != 0,
-                                         X8H7_RX_TIMEOUT);
-  if (!ret) {
-    DBG_ERROR("timeout expired");
-    return -1;
-  }
-  priv->rx_cnt--;
-  return 0;
-}
-*/
-
-/**
- */
 static void x8h7_can_clean(struct net_device *net)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
