@@ -443,35 +443,11 @@ static int x8h7_can_hw_stop(struct x8h7_can_priv *priv)
  */
 static int x8h7_can_set_normal_mode(struct x8h7_can_priv *priv)
 {
-//  unsigned long  timeout;
-
   DBG_PRINT("\n");
+
   /* Enable interrupts */
   x8h7_hook_set(priv->periph, x8h7_can_hook, priv);
 
-  if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK) {
-    /* Put device into loopback mode */
-    DBG_PRINT("Put device into loopback mode\n");
-  } else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
-    /* Put device into listen-only mode */
-    DBG_PRINT("Put device into listen-only mode\n");
-  } else {
-    /* Put device into normal mode */
-    DBG_PRINT("Put device into normal mode. Can wait for the device to enter normal mode\n");
-
-    //mcp251x_write_reg(spi, CANCTRL, CANCTRL_REQOP_NORMAL);
-
-    /* Wait for the device to enter normal mode */
-    /*timeout = jiffies + HZ;
-    while (mcp251x_read_reg(spi, CANSTAT) & CANCTRL_REQOP_MASK) {
-      schedule();
-      if (time_after(jiffies, timeout)) {
-        dev_err(&spi->dev, "MCP251x didn't enter in normal mode\n");
-        return -EBUSY;
-      }
-    }*/
-  }
-  priv->can.state = CAN_STATE_ERROR_ACTIVE;
   return 0;
 }
 
