@@ -26,6 +26,8 @@ SRC_URI:append:portenta-x8 = " \
   file://0001-NXP-V4L2-patch-1-3-courtesy-of-weiping.liu-nxp.com.patch \
   file://0002-NXP-V4L2-patch-2-3-courtesy-of-weiping.liu-nxp.com.patch \
   file://0003-NXP-V4L2-patch-3-3-courtesy-of-weiping.liu-nxp.com.patch \
+  file://0001-test-mctrl_gpio_set-can-sleep.patch \
+  file://0001-imx_spi-don-t-wait-for-completion-if-called-from-ato.patch \
 "
 
 # file://rtc-pcf8563-remove-workaround.patch

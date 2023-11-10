@@ -616,6 +616,7 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->gc.set_config       = x8h7_gpio_set_config;
   inf->gc.to_irq           = x8h7_gpio_to_irq;
   inf->gc.base             = base;
+  inf->gc.can_sleep        = true;
   inf->gc.ngpio            = X8H7_GPIO_NUM;
   inf->gc.parent           = &pdev->dev;
 #ifdef CONFIG_OF_GPIO

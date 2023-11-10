@@ -1,0 +1,25 @@
+From 5b41bbf1a608711ea16405d04c01e0365560f104 Mon Sep 17 00:00:00 2001
+From: Martino Facchin <m.facchin@arduino.cc>
+Date: Thu, 9 Nov 2023 16:55:53 +0100
+Subject: [PATCH] test: mctrl_gpio_set can sleep
+
+---
+ drivers/tty/serial/serial_mctrl_gpio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/serial_mctrl_gpio.c b/drivers/tty/serial/serial_mctrl_gpio.c
+index fb4781292d40..a5727d4e4a5b 100644
+--- a/drivers/tty/serial/serial_mctrl_gpio.c
++++ b/drivers/tty/serial/serial_mctrl_gpio.c
+@@ -59,7 +59,7 @@ void mctrl_gpio_set(struct mctrl_gpios *gpios, unsigned int mctrl)
+ 				     mctrl & mctrl_gpios_desc[i].mctrl);
+ 			count++;
+ 		}
+-	gpiod_set_array_value(count, desc_array, NULL, values);
++	gpiod_set_array_value_cansleep(count, desc_array, NULL, values);
+ }
+ EXPORT_SYMBOL_GPL(mctrl_gpio_set);
+ 
+-- 
+2.42.0
+

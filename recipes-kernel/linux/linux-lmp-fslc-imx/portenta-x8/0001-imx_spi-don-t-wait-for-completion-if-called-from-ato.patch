@@ -1,0 +1,46 @@
+From c9526979b5374cdd46692dbd973d7eee1e1960bb Mon Sep 17 00:00:00 2001
+From: Martino Facchin <m.facchin@arduino.cc>
+Date: Fri, 10 Nov 2023 16:17:35 +0100
+Subject: [PATCH] imx_spi: don't wait for completion if called from atomic
+ context
+
+---
+ drivers/spi/spi-imx.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-imx.c b/drivers/spi/spi-imx.c
+index 8df5e973404f..8a84ad91378d 100644
+--- a/drivers/spi/spi-imx.c
++++ b/drivers/spi/spi-imx.c
+@@ -1443,6 +1443,11 @@ static int spi_imx_pio_transfer(struct spi_device *spi,
+ 
+ 	transfer_timeout = spi_imx_calculate_timeout(spi_imx, transfer->len);
+ 
++	if (in_atomic()) {
++		spi_imx_isr(0, spi_imx);
++		goto done;
++	}
++
+ 	timeout = wait_for_completion_timeout(&spi_imx->xfer_done,
+ 					      transfer_timeout);
+ 	if (!timeout) {
+@@ -1451,6 +1456,7 @@ static int spi_imx_pio_transfer(struct spi_device *spi,
+ 		return -ETIMEDOUT;
+ 	}
+ 
++done:
+ 	return transfer->len;
+ }
+ 
+@@ -1512,7 +1518,7 @@ static int spi_imx_transfer(struct spi_device *spi,
+ 	if (spi_imx->slave_mode)
+ 		return spi_imx_pio_transfer_slave(spi, transfer);
+ 
+-	if (spi_imx->usedma)
++	if (spi_imx->usedma && !in_atomic())
+ 		return spi_imx_dma_transfer(spi_imx, transfer);
+ 
+ 	return spi_imx_pio_transfer(spi, transfer);
+-- 
+2.42.0
+
