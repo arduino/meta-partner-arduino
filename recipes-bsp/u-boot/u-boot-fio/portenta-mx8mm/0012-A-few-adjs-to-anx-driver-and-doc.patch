@@ -1,14 +1,14 @@
-From 9597c3bd4a7d66c0f335a3e8940e50bcfd38b30a Mon Sep 17 00:00:00 2001
+From f44e0e7328e9c19b749c5c9e4490ab24b9e91b15 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Thu, 25 Nov 2021 18:58:34 +0100
-Subject: [PATCH 35/45] A few adjs to anx driver and doc
+Subject: [PATCH 12/24] A few adjs to anx driver and doc
 
 ---
  board/arduino/common/anx7625.c | 14 +++++++-------
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
-index 49f1b3be68..c075eac8f5 100644
+index 244dfc1ae50..a238886a1fb 100644
 --- a/board/arduino/common/anx7625.c
 +++ b/board/arduino/common/anx7625.c
 @@ -127,7 +127,7 @@ enum anx7625_pd_msg_type {
@@ -54,5 +54,5 @@ index 49f1b3be68..c075eac8f5 100644
  
  	return 0;
 -- 
-2.35.1
+2.34.1
 

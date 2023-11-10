@@ -1,14 +1,14 @@
-From 1e2f7df11bc735ced0a940f1ef7e1851802f000b Mon Sep 17 00:00:00 2001
+From e6da7cfd4cbafe525789be7cdb80481dda2ad78a Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Wed, 25 May 2022 12:24:50 +0200
-Subject: [PATCH 46/46] Updated ddr ram timings according to manufacturing
+Subject: [PATCH 19/24] Updated ddr ram timings according to manufacturing
 
 ---
  board/arduino/common/lpddr4_timing.c | 30 +++++++++++++++++-----------
  1 file changed, 18 insertions(+), 12 deletions(-)
 
 diff --git a/board/arduino/common/lpddr4_timing.c b/board/arduino/common/lpddr4_timing.c
-index 42ffbebd22..2dbef3f30d 100644
+index 42ffbebd226..2dbef3f30d9 100644
 --- a/board/arduino/common/lpddr4_timing.c
 +++ b/board/arduino/common/lpddr4_timing.c
 @@ -4,8 +4,11 @@
@@ -125,5 +125,5 @@ index 42ffbebd22..2dbef3f30d 100644
  	{ 0x40081, 0x12 },
  	{ 0x40082, 0xe0 },
 -- 
-2.25.1
+2.34.1
 

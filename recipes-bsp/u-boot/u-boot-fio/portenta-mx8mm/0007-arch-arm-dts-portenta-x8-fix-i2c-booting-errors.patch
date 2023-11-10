@@ -1,7 +1,7 @@
-From fb12ceb885e3a60375c0bdf804dcf6cd528ad402 Mon Sep 17 00:00:00 2001
+From ad7ab3a42ad85adfa74ce6cae8c2c8658c6ece89 Mon Sep 17 00:00:00 2001
 From: Vanessa Maegima <vanessa.maegima@foundries.io>
 Date: Fri, 10 Nov 2023 10:30:16 -0300
-Subject: [PATCH 7/7] arch: arm: dts: portenta-x8: fix i2c booting errors
+Subject: [PATCH 07/24] arch: arm: dts: portenta-x8: fix i2c booting errors
 
 This fixes error:
 

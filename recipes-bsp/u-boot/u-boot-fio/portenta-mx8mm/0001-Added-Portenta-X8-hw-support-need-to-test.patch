@@ -1,7 +1,7 @@
 From 64b5404b259fe722e24762723d0774872173bf46 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Thu, 14 Oct 2021 17:00:15 +0200
-Subject: [PATCH 1/2] Added Portenta-X8 hw support, need to test
+Subject: [PATCH 01/24] Added Portenta-X8 hw support, need to test
 
 - do we need mmc-hs400-1_8v in usdhc3 in dtsi?
 ---

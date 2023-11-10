@@ -1,7 +1,7 @@
-From 42855c47b321511f8694964e0fe554ab486bd887 Mon Sep 17 00:00:00 2001
+From 2edb9c4748a66c5aa6a2191b3642377fc6dbcd65 Mon Sep 17 00:00:00 2001
 From: Michael Scott <mike@foundries.io>
 Date: Sat, 6 Nov 2021 16:06:42 -0700
-Subject: [PATCH 23/45] portenta-x8: enable anx7625
+Subject: [PATCH 03/24] portenta-x8: enable anx7625
 
 Signed-off-by: Michael Scott <mike@foundries.io>
 ---
@@ -10,7 +10,7 @@ Signed-off-by: Michael Scott <mike@foundries.io>
  2 files changed, 11 insertions(+)
 
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index 467366772f..6ed6374629 100644
+index 5e953c131fa..c3bd6d926f1 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -24,6 +24,8 @@
@@ -36,7 +36,7 @@ index 467366772f..6ed6374629 100644
  		      DISPMIX, true, 0, 0, 0, 0, &res);
  	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
 diff --git a/board/arduino/portenta-x8/spl.c b/board/arduino/portenta-x8/spl.c
-index a6c5275b93..c512e0e1fb 100644
+index a6c5275b93b..c512e0e1fbb 100644
 --- a/board/arduino/portenta-x8/spl.c
 +++ b/board/arduino/portenta-x8/spl.c
 @@ -216,6 +216,9 @@ int power_init_board(void)
@@ -50,5 +50,5 @@ index a6c5275b93..c512e0e1fb 100644
  	pmic_reg_write(p, BD718XX_REGLOCK, 0x11);
  
 -- 
-2.35.1
+2.34.1
 

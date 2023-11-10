@@ -1,14 +1,14 @@
-From d7d50f4c72aa68523f27d174215ddd2352829dd7 Mon Sep 17 00:00:00 2001
+From 84cd697d7eea0cac562eb07e91109530154f52ac Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Fri, 10 Dec 2021 11:57:09 +0100
-Subject: [PATCH 39/45] Refactored variable names for board model and carriers
+Subject: [PATCH 14/24] Refactored variable names for board model and carriers
 
 ---
  board/arduino/portenta-x8/portenta-x8.c | 12 ++++++------
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index a29fc930da..cd74f75dab 100644
+index a29fc930dac..cd74f75daba 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -39,7 +39,7 @@ struct portenta_model {
@@ -63,5 +63,5 @@ index a29fc930da..cd74f75dab 100644
  #if defined(CONFIG_USB_TCPC) && !defined(CONFIG_SPL_BUILD)
  	setup_typec();
 -- 
-2.35.1
+2.34.1
 

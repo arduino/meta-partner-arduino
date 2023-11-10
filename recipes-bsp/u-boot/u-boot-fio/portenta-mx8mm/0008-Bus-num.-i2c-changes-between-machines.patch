@@ -1,17 +1,17 @@
-From 3610fbcf2aa1b6711bcf7e7506371dfda148126f Mon Sep 17 00:00:00 2001
+From e77b608c2da10e4af9400e54655ebff8ec4f5e7f Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Mon, 8 Nov 2021 17:41:34 +0100
-Subject: [PATCH 29/45] Bus num. i2c changes between machines
+Subject: [PATCH 08/24] Bus num. i2c changes between machines
 
+Signed-off-by: Vanessa Maegima <vanessa.maegima@foundries.io>
 ---
  board/arduino/common/anx7625.c          | 5 ++---
  board/arduino/common/anx7625.h          | 2 +-
- board/arduino/portenta-m8/portenta-m8.c | 2 +-
  board/arduino/portenta-x8/portenta-x8.c | 2 +-
- 4 files changed, 5 insertions(+), 6 deletions(-)
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
-index 6c0be4ff44..49f005b779 100644
+index e372acbc74b..2535ae2d99c 100644
 --- a/board/arduino/common/anx7625.c
 +++ b/board/arduino/common/anx7625.c
 @@ -17,7 +17,6 @@
@@ -41,7 +41,7 @@ index 6c0be4ff44..49f005b779 100644
  		return -EINVAL;
  	}
 diff --git a/board/arduino/common/anx7625.h b/board/arduino/common/anx7625.h
-index a6dcd1cce2..48c26b3c16 100644
+index a6dcd1cce23..48c26b3c16f 100644
 --- a/board/arduino/common/anx7625.h
 +++ b/board/arduino/common/anx7625.h
 @@ -3,4 +3,4 @@
@@ -50,21 +50,8 @@ index a6dcd1cce2..48c26b3c16 100644
  
 -int anx7625_probe(void);
 +int anx7625_probe(uint8_t i2c_bus_num);
-diff --git a/board/arduino/portenta-m8/portenta-m8.c b/board/arduino/portenta-m8/portenta-m8.c
-index f18f282683..7542b06ae5 100644
---- a/board/arduino/portenta-m8/portenta-m8.c
-+++ b/board/arduino/portenta-m8/portenta-m8.c
-@@ -396,7 +396,7 @@ int board_init(void)
- 	/* ANX7625 usb typec controller and power delivery configuration on portenta-m8 */
- 	/* @TODO: selectable with CONFIG_USB_TCPC? */
- #ifndef CONFIG_SPL_BUILD
--	anx7625_probe();
-+	anx7625_probe(0);
- #endif
- 
- 	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index 6ed6374629..901f98f2bc 100644
+index c3bd6d926f1..2ddab364674 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -396,7 +396,7 @@ int board_init(void)
@@ -77,5 +64,5 @@ index 6ed6374629..901f98f2bc 100644
  
  	arm_smccc_smc(IMX_SIP_GPC, IMX_SIP_GPC_PM_DOMAIN,
 -- 
-2.35.1
+2.34.1
 

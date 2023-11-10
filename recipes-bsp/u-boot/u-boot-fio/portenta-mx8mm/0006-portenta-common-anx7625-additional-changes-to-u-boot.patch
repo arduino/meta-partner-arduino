@@ -1,7 +1,7 @@
 From 96767f172ebd44db4e9216df5aa2cbaaa12e5238 Mon Sep 17 00:00:00 2001
 From: Vanessa Maegima <vanessa.maegima@foundries.io>
 Date: Fri, 10 Nov 2023 11:11:56 -0300
-Subject: [PATCH 6/7] portenta-common: anx7625: additional changes to u-boot 
+Subject: [PATCH 06/24] portenta-common: anx7625: additional changes to u-boot 
  driver
 
 - Removed no longer needed methods like disable safe 5v

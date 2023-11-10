@@ -1,14 +1,14 @@
-From 6e653ae5002fd296578e13862477b32f66489330 Mon Sep 17 00:00:00 2001
+From f2cffe2b78c773ae79b03bca9699bdaca8b5d345 Mon Sep 17 00:00:00 2001
 From: Martino Facchin <m.facchin@arduino.cc>
 Date: Fri, 24 Dec 2021 13:03:12 +0100
-Subject: [PATCH 43/45] Update lpddr4 timings with DBI enabled
+Subject: [PATCH 17/24] Update lpddr4 timings with DBI enabled
 
 ---
  board/arduino/common/lpddr4_timing.c | 90 ++++++++++++++--------------
  1 file changed, 44 insertions(+), 46 deletions(-)
 
 diff --git a/board/arduino/common/lpddr4_timing.c b/board/arduino/common/lpddr4_timing.c
-index 48cc92f359..42ffbebd22 100644
+index 48cc92f3599..42ffbebd226 100644
 --- a/board/arduino/common/lpddr4_timing.c
 +++ b/board/arduino/common/lpddr4_timing.c
 @@ -5,7 +5,7 @@
@@ -278,5 +278,5 @@ index 48cc92f359..42ffbebd22 100644
  };
 +
 -- 
-2.35.1
+2.34.1
 

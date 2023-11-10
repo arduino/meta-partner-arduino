@@ -1,14 +1,14 @@
-From d679687faf2cf12467a6ae1f1698f8ac281d7440 Mon Sep 17 00:00:00 2001
+From 5c4cada407b3062233042457a16ced7e24acaea9 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Wed, 1 Dec 2021 18:06:17 +0100
-Subject: [PATCH 38/45] Implemented carrier detection on portenta-x8
+Subject: [PATCH 13/24] Implemented carrier detection on portenta-x8
 
 ---
  board/arduino/portenta-x8/portenta-x8.c | 72 ++++++++++++++++++++++++-
  1 file changed, 70 insertions(+), 2 deletions(-)
 
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index 2ddab36467..a29fc930da 100644
+index 2ddab364674..a29fc930dac 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -26,6 +26,61 @@
@@ -118,5 +118,5 @@ index 2ddab36467..a29fc930da 100644
  	return 0;
  }
 -- 
-2.35.1
+2.34.1
 

@@ -1,7 +1,7 @@
-From dfbfe2ac8a2abaf1c25d7ca924e4a4bc600bfe6b Mon Sep 17 00:00:00 2001
+From 1fc2606310d57cf20a0066a79486962797ce1461 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.com>
 Date: Thu, 23 Mar 2023 16:53:13 +0000
-Subject: [PATCH 48/49] Added VBUS switch management
+Subject: [PATCH 21/24] Added VBUS switch management
 
 ---
  board/arduino/common/anx7625.c  | 166 ++++++++++++++++++++++++--------
@@ -9,7 +9,7 @@ Subject: [PATCH 48/49] Added VBUS switch management
  2 files changed, 133 insertions(+), 39 deletions(-)
 
 diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
-index 208065b228..cde30533d5 100644
+index 9663b050fe2..6e8795d8695 100644
 --- a/board/arduino/common/anx7625.c
 +++ b/board/arduino/common/anx7625.c
 @@ -6,7 +6,9 @@
@@ -323,7 +323,7 @@ index 208065b228..cde30533d5 100644
  
  	debug("%s: done\n", __func__);
 diff --git a/board/arduino/portenta-x8/spl.c b/board/arduino/portenta-x8/spl.c
-index c512e0e1fb..02345da337 100644
+index c512e0e1fbb..02345da337d 100644
 --- a/board/arduino/portenta-x8/spl.c
 +++ b/board/arduino/portenta-x8/spl.c
 @@ -248,6 +248,8 @@ int board_fit_config_name_match(const char *name)
@@ -347,5 +347,5 @@ index c512e0e1fb..02345da337 100644
  	if (ret) {
  		debug("spl_init() failed: %d\n", ret);
 -- 
-2.25.1
+2.34.1
 

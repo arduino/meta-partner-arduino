@@ -1,14 +1,14 @@
-From a450055b2cde13f935180ff0754937a64d1f810b Mon Sep 17 00:00:00 2001
+From 75ca665a7edac77977d4c11ebc1eaed343e2c699 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Wed, 24 Nov 2021 16:34:55 +0100
-Subject: [PATCH 34/45] Fix compilation bug
+Subject: [PATCH 11/24] Fix compilation bug
 
 ---
  board/arduino/common/anx7625.c | 69 +++++++++++++++++-----------------
  1 file changed, 34 insertions(+), 35 deletions(-)
 
 diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
-index 01b1055ea8..49f1b3be68 100644
+index 98786c28e10..244dfc1ae50 100644
 --- a/board/arduino/common/anx7625.c
 +++ b/board/arduino/common/anx7625.c
 @@ -127,8 +127,7 @@ enum anx7625_pd_msg_type {
@@ -109,5 +109,5 @@ index 01b1055ea8..49f1b3be68 100644
  		/*  Interface and Status INT */
  		ret = dm_i2c_read(dev_p0, INTERFACE_CHANGE_INT, &p0_isr, 1);
 -- 
-2.35.1
+2.34.1
 
