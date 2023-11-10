@@ -8,6 +8,7 @@
 
 #include <dt-bindings/clock/imx8mm-clock.h>
 #include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
@@ -33,6 +34,13 @@
 			pinctrl-0 = <&pinctrl_uart4>;
 			assigned-clocks = <&clk IMX8MM_CLK_UART4>;
 			assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_80M>;
+			//uart-has-rtscts;
+			rts-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>; /* stm32h7 PF8 */
+			rs485-rts-active-high;
+			rs485-rts-delay = <1 1>;
+			fsl,inverted-tx;
+			fsl,inverted-rx;
+			linux,rs485-enabled-at-boot-time;
 			status = "okay";
 		};
 	};
