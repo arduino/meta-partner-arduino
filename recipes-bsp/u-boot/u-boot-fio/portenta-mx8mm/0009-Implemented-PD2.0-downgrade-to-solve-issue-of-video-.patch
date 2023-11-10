@@ -1,7 +1,7 @@
-From 138e36e8c7c98e03f07b53325aaf5c9c288b398d Mon Sep 17 00:00:00 2001
+From 273d024a096345dd3c98034d8e3d681e15a68747 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Wed, 10 Nov 2021 13:22:51 +0100
-Subject: [PATCH 31/45] Implemented PD2.0 downgrade to solve issue of video
+Subject: [PATCH 09/24] Implemented PD2.0 downgrade to solve issue of video
  missing after reset
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 31/45] Implemented PD2.0 downgrade to solve issue of video
  1 file changed, 20 insertions(+), 2 deletions(-)
 
 diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
-index 49f005b779..e74c4231d6 100644
+index 2535ae2d99c..9fbb2ed8654 100644
 --- a/board/arduino/common/anx7625.c
 +++ b/board/arduino/common/anx7625.c
 @@ -16,6 +16,8 @@
@@ -62,5 +62,5 @@ index 49f005b779..e74c4231d6 100644
  		if (anx7625_config(dev_p0)) {
  			return -EIO;
 -- 
-2.35.1
+2.34.1
 

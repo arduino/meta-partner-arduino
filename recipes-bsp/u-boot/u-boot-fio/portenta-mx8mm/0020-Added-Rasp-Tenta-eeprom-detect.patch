@@ -1,14 +1,14 @@
-From cff77629b9045a5f8ee36073c3b6892ee5df8194 Mon Sep 17 00:00:00 2001
+From c69ace63ade6c8c439ae279d023d815895eab424 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Fri, 17 Feb 2023 09:45:50 +0100
-Subject: [PATCH] Added Rasp-Tenta eeprom detect
+Subject: [PATCH 20/24] Added Rasp-Tenta eeprom detect
 
 ---
  board/arduino/portenta-x8/portenta-x8.c | 101 ++++++++++++++++++++++--
  1 file changed, 95 insertions(+), 6 deletions(-)
 
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index d0bcb47597..cde20616a0 100644
+index d0bcb475973..cde20616a06 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -37,6 +37,8 @@ struct portenta_model {
@@ -192,5 +192,5 @@ index d0bcb47597..cde20616a0 100644
  #endif
  	return 0;
 -- 
-2.25.1
+2.34.1
 

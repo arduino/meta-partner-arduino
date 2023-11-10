@@ -1,7 +1,7 @@
 From bc42bcbbf675f2a2120c15c255b273784b7bc2d3 Mon Sep 17 00:00:00 2001
 From: Vanessa Maegima <vanessa.maegima@foundries.io>
 Date: Thu, 9 Nov 2023 11:35:45 -0300
-Subject: [PATCH 2/2] portenta-x8: add minimal anx7625 setup
+Subject: [PATCH 02/24] portenta-x8: add minimal anx7625 setup
 
 Signed-off-by: Massimo Pennazio <maxipenna@libero.it>
 Signed-off-by: Michael Scott <mike@foundries.io>

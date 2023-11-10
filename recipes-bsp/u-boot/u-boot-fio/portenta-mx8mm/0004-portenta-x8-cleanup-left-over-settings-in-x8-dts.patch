@@ -1,7 +1,7 @@
 From 62a2bf94ce04a18e8c0423ca65a186d930666362 Mon Sep 17 00:00:00 2001
 From: Vanessa Maegima <vanessa.maegima@foundries.io>
 Date: Thu, 9 Nov 2023 12:57:41 -0300
-Subject: [PATCH 4/4] portenta-x8: cleanup left over settings in x8 dts
+Subject: [PATCH 04/24] portenta-x8: cleanup left over settings in x8 dts
 
 Signed-off-by: Michael Scott <mike@foundries.io>
 Signed-off-by: Vanessa Maegima <vanessa.maegima@foundries.io>

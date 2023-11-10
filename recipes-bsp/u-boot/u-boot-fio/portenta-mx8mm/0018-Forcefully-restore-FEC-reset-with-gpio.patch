@@ -1,14 +1,14 @@
-From 8a12b91c58e216d6234c9274bccf9f846c4337af Mon Sep 17 00:00:00 2001
+From 5df48e244ba4d07dfa63acc66ea8fb8ce5a7f789 Mon Sep 17 00:00:00 2001
 From: Martino Facchin <m.facchin@arduino.cc>
 Date: Thu, 24 Feb 2022 19:00:54 +0100
-Subject: [PATCH 44/45] Forcefully restore FEC reset() with gpio
+Subject: [PATCH 18/24] Forcefully restore FEC reset() with gpio
 
 ---
  board/arduino/portenta-x8/portenta-x8.c | 18 ++++++++++++++++++
  1 file changed, 18 insertions(+)
 
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index cd74f75dab..d0bcb47597 100644
+index cd74f75daba..d0bcb475973 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -443,6 +443,22 @@ int board_usb_cleanup(int index, enum usb_init_type init)
@@ -44,5 +44,5 @@ index cd74f75dab..d0bcb47597 100644
  	setup_fec();
  #endif
 -- 
-2.35.1
+2.34.1
 

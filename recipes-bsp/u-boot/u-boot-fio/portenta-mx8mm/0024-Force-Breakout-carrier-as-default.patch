@@ -1,7 +1,7 @@
-From a2c5a242cdc8862e72c7accfbd0322005e8cfa0a Mon Sep 17 00:00:00 2001
+From ad89a7ef4711c1ee7b24a94471599b217b5c1f41 Mon Sep 17 00:00:00 2001
 From: Massimo Pennazio <maxipenna@libero.it>
 Date: Tue, 11 Jul 2023 10:46:22 +0000
-Subject: [PATCH] Force Breakout carrier as default
+Subject: [PATCH 24/24] Force Breakout carrier as default
 
 Signed-off-by: Massimo Pennazio <maxipenna@libero.it>
 ---
@@ -9,7 +9,7 @@ Signed-off-by: Massimo Pennazio <maxipenna@libero.it>
  1 file changed, 2 insertions(+)
 
 diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
-index cde20616a0..c5c266d808 100644
+index cde20616a06..c5c266d8081 100644
 --- a/board/arduino/portenta-x8/portenta-x8.c
 +++ b/board/arduino/portenta-x8/portenta-x8.c
 @@ -519,6 +519,8 @@ static void setup_iomux_fec(void)
@@ -22,5 +22,5 @@ index cde20616a0..c5c266d808 100644
  {
  	struct arm_smccc_res res;
 -- 
-2.25.1
+2.34.1
 
