@@ -44,11 +44,12 @@
 #define X8H7_CAN1_PERIPH  0x03
 #define X8H7_CAN2_PERIPH  0x04
 // Op code
-#define X8H7_CAN_OC_CFG   0x10
-#define X8H7_CAN_OC_SEND  0x01
-#define X8H7_CAN_OC_RECV  0x01
-#define X8H7_CAN_OC_STS   0x40
-#define X8H7_CAN_OC_FLT   0x50
+#define X8H7_CAN_OC_INIT    0x10
+#define X8H7_CAN_OC_DEINIT  0x11
+#define X8H7_CAN_OC_SEND    0x01
+#define X8H7_CAN_OC_RECV    0x01
+#define X8H7_CAN_OC_STS     0x40
+#define X8H7_CAN_OC_FLT     0x50
 
 #define X8H7_CAN_STS_INT_TX      0x01
 #define X8H7_CAN_STS_INT_RX      0x02
@@ -80,6 +81,17 @@ RX1IE: Receive Buffer 1 Full I      questo non serve
 
 #define X8H7_STD_FLT_MAX  128
 #define X8H7_EXT_FLT_MAX   64
+
+/**
+ */
+union x8h7_can_init_message
+{
+  struct __attribute__((packed))
+  {
+    uint32_t can_bitrate_Hz;
+  } field;
+  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */];
+};
 
 /**
  */
@@ -317,62 +329,6 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
 
 /**
  */
-/*
-static int x8h7_can_pkt_get(struct x8h7_can_priv *priv)
-{
-  long ret;
-
-  ret = wait_event_interruptible_timeout(priv->wait,
-                                         priv->rx_cnt != 0,
-                                         X8H7_RX_TIMEOUT);
-  if (!ret) {
-    DBG_ERROR("timeout expired");
-    return -1;
-  }
-  priv->rx_cnt--;
-  return 0;
-}
-*/
-
-/**
- */
-static int x8h7_can_hw_reset(struct x8h7_can_priv *priv)
-{
-  DBG_PRINT("\n");
-/*
-  unsigned long timeout;
-  int ret;
-
-  // Wait for oscillator startup timer after power up
-  mdelay(MCP251X_OST_DELAY_MS);
-
-  priv->spi_tx_buf[0] = INSTRUCTION_RESET;
-  ret = mcp251x_spi_trans(spi, 1);
-  if (ret)
-    return ret;
-
-  // Wait for oscillator startup timer after reset
-  mdelay(MCP251X_OST_DELAY_MS);
-
-  // Wait for reset to finish
-  timeout = jiffies + HZ;
-  while ((mcp251x_read_reg(spi, CANSTAT) & CANCTRL_REQOP_MASK) !=
-        CANCTRL_REQOP_CONF) {
-    usleep_range(MCP251X_OST_DELAY_MS * 1000,
-          MCP251X_OST_DELAY_MS * 1000 * 2);
-
-    if (time_after(jiffies, timeout)) {
-      dev_err(&spi->dev,
-        "MCP251x didn't enter in conf mode after reset\n");
-      return -EBUSY;
-    }
-  }
-*/
-  return 0;
-}
-
-/**
- */
 static void x8h7_can_clean(struct net_device *net)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
@@ -391,10 +347,10 @@ static void x8h7_can_clean(struct net_device *net)
 
 /**
  */
-static int x8h7_can_setup(struct x8h7_can_priv *priv)
+static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
 {
   struct can_bittiming *bt = &priv->can.bittiming;
-  uint32_t              frequency_requested;
+  union x8h7_can_init_message x8h7_msg;
 
   DBG_PRINT("sjw: %d, brp: %d, phase_seg1: %d, prop_seg: %d, phase_seg2: %d, freq: %d ctrlmode: %08X\n",
             bt->sjw,
@@ -406,12 +362,22 @@ static int x8h7_can_setup(struct x8h7_can_priv *priv)
             priv->can.ctrlmode);
 
   // Reconstruct frequency since the lower level API accepts the "raw" bitrate
-  frequency_requested = (priv->can.clock.freq / bt->brp) /
-                    (bt->sjw + bt->phase_seg1 + bt->prop_seg + bt->phase_seg2);
+  x8h7_msg.field.can_bitrate_Hz = (priv->can.clock.freq / bt->brp) /
+                                  (bt->sjw + bt->phase_seg1 + bt->prop_seg + bt->phase_seg2);
 
-  DBG_PRINT("frequency_requested = %d\n", frequency_requested);
+  DBG_PRINT("frequency_requested = %d\n", x8h7_msg.field.can_bitrate_Hz);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_CFG, sizeof(frequency_requested), &(frequency_requested));
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
+  x8h7_pkt_send();
+
+  return 0;
+}
+
+/**
+ */
+static int x8h7_can_hw_stop(struct x8h7_can_priv *priv)
+{
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
   x8h7_pkt_send();
 
   return 0;
@@ -421,35 +387,11 @@ static int x8h7_can_setup(struct x8h7_can_priv *priv)
  */
 static int x8h7_can_set_normal_mode(struct x8h7_can_priv *priv)
 {
-//  unsigned long  timeout;
-
   DBG_PRINT("\n");
+
   /* Enable interrupts */
   x8h7_hook_set(priv->periph, x8h7_can_hook, priv);
 
-  if (priv->can.ctrlmode & CAN_CTRLMODE_LOOPBACK) {
-    /* Put device into loopback mode */
-    DBG_PRINT("Put device into loopback mode\n");
-  } else if (priv->can.ctrlmode & CAN_CTRLMODE_LISTENONLY) {
-    /* Put device into listen-only mode */
-    DBG_PRINT("Put device into listen-only mode\n");
-  } else {
-    /* Put device into normal mode */
-    DBG_PRINT("Put device into normal mode. Can wait for the device to enter normal mode\n");
-
-    //mcp251x_write_reg(spi, CANCTRL, CANCTRL_REQOP_NORMAL);
-
-    /* Wait for the device to enter normal mode */
-    /*timeout = jiffies + HZ;
-    while (mcp251x_read_reg(spi, CANSTAT) & CANCTRL_REQOP_MASK) {
-      schedule();
-      if (time_after(jiffies, timeout)) {
-        dev_err(&spi->dev, "MCP251x didn't enter in normal mode\n");
-        return -EBUSY;
-      }
-    }*/
-  }
-  priv->can.state = CAN_STATE_ERROR_ACTIVE;
   return 0;
 }
 
@@ -605,8 +547,8 @@ static void x8h7_can_restart_work_handler(struct work_struct *ws)
   DBG_PRINT("\n");
   mutex_lock(&priv->lock);
   if (priv->after_suspend) {
-    x8h7_can_hw_reset(priv);
-    x8h7_can_setup(priv);
+    x8h7_can_hw_stop(priv);
+    x8h7_can_hw_setup(priv);
     priv->force_quit = 0;
     if (priv->after_suspend & AFTER_SUSPEND_RESTART) {
       DBG_PRINT("AFTER_SUSPEND_RESTART\n");
@@ -665,11 +607,11 @@ static int x8h7_can_open(struct net_device *net)
 
   mutex_init(&priv->lock);
 
-  ret = x8h7_can_hw_reset(priv);
+  ret = x8h7_can_hw_stop(priv);
   if (ret) {
     goto out_free_wq;
   }
-  ret = x8h7_can_setup(priv);
+  ret = x8h7_can_hw_setup(priv);
   if (ret) {
     goto out_free_wq;
   }
@@ -702,6 +644,8 @@ static int x8h7_can_stop(struct net_device *net)
   struct x8h7_can_priv *priv = netdev_priv(net);
 
   DBG_PRINT("\n");
+
+  x8h7_can_hw_stop(priv);
 
   close_candev(net);
   priv->force_quit = 1;
