@@ -286,13 +286,13 @@ int x8h7_spi_trx(struct spi_device *spi,
 
     l = 0;
     data_ptr = (uint8_t *)tx_buf;
-    for (i = 0; (i < len) && (l < sizeof(data_str)); i++, data_ptr++)
+    for (i = 0; (i < len) && (l < sizeof(data_str)); i++)
       l += snprintf(data_str + l, sizeof(data_str) - l, " %02X", *(data_ptr + i));
     DBG_PRINT(" TX: len = %d, data = [%s ]\n", len, data_str);
 
     l = 0;
     data_ptr = (uint8_t *)rx_buf;
-    for (i = 0; (i < len) && (l < sizeof(data_str)); i++, data_ptr++)
+    for (i = 0; (i < len) && (l < sizeof(data_str)); i++)
       l += snprintf(data_str + l, sizeof(data_str) - l, " %02X", *(data_ptr + i));
     DBG_PRINT(" RX: len = %d, data = [%s ]\n", len, data_str);
   }
