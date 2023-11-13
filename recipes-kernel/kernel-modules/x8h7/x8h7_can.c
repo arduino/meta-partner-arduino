@@ -88,9 +88,12 @@ union x8h7_can_init_message
 {
   struct __attribute__((packed))
   {
-    uint32_t can_bitrate_Hz;
+    uint32_t baud_rate_prescaler;
+    uint32_t time_segment_1;
+    uint32_t time_segment_2;
+    uint32_t sync_jump_width;
   } field;
-  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */];
+  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */ + sizeof(uint32_t) /* time_segment_1 */ + sizeof(uint32_t) /* time_segment_2 */ + sizeof(uint32_t) /* sync_jump_width */];
 };
 
 /**
@@ -361,11 +364,10 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
             priv->can.clock.freq,
             priv->can.ctrlmode);
 
-  // Reconstruct frequency since the lower level API accepts the "raw" bitrate
-  x8h7_msg.field.can_bitrate_Hz = (priv->can.clock.freq / bt->brp) /
-                                  (bt->sjw + bt->phase_seg1 + bt->prop_seg + bt->phase_seg2);
-
-  DBG_PRINT("frequency_requested = %d\n", x8h7_msg.field.can_bitrate_Hz);
+  x8h7_msg.field.baud_rate_prescaler = bt->brp;
+  x8h7_msg.field.time_segment_1 = bt->phase_seg1;
+  x8h7_msg.field.time_segment_2 = bt->phase_seg2;
+  x8h7_msg.field.sync_jump_width = bt->sjw;
 
   x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
   x8h7_pkt_send();
