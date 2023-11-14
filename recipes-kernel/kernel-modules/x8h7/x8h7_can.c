@@ -355,15 +355,15 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
   struct can_bittiming *bt = &priv->can.bittiming;
   union x8h7_can_init_message x8h7_msg;
 
-  DBG_PRINT("bitrate: %d, sample_point: %d, tq: %d, sjw: %d, brp: %d, phase_seg1: %d, prop_seg: %d, phase_seg2: %d, freq: %d ctrlmode: %08X\n",
+  DBG_PRINT("bitrate: %d, sample_point: %d, tq: %d, prop_seg: %d, phase_seg1: %d, phase_seg2: %d, sjw: %d, brp: %d, freq: %d ctrlmode: %08X\n",
             bt->bitrate,
             bt->sample_point,
             bt->tq,
+            bt->prop_seg,
+            bt->phase_seg1,
+            bt->phase_seg2,
             bt->sjw,
             bt->brp,
-            bt->phase_seg1,
-            bt->prop_seg,
-            bt->phase_seg2,
             priv->can.clock.freq,
             priv->can.ctrlmode);
 
