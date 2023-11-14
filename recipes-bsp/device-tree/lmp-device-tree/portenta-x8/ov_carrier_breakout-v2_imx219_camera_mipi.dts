@@ -1,8 +1,8 @@
 /**
  * Portenta-X8 dtb overlay file
- * Arduino 2022
+ * Arduino 2023
  * This overlay is adding the RPi V2.1 camera
- * with cmos sensor Sony imx219 to Rasp-Tenta carrier board
+ * with cmos sensor Sony imx219 to Portenta Mid carrier board
  */
 
 /dts-v1/;
@@ -64,13 +64,12 @@
 				assigned-clock-parents = <&clk IMX8MM_CLK_24M>;
 				assigned-clock-rates = <24000000>;
 				csi_id = <0>;
-				reset-gpios = <&x8h7_gpio 29 GPIO_ACTIVE_HIGH>; /* stm32h7 PE10 */
+				pwn-gpios = <&x8h7_gpio 3 GPIO_ACTIVE_HIGH>; /* stm32h7 PF4 */
 				mclk = <24000000>;
 				mclk_source = <0>;
 				port {
 					imx219_ep: endpoint {
 						remote-endpoint = <&mipi1_sensor_ep>;
-						data-lanes = <2>;
 						link-frequencies = /bits/ 64 <456000000>;
 					};
 				};
@@ -100,6 +99,9 @@
 				mipi1_sensor_ep: endpoint@1 {
 					remote-endpoint = <&imx219_ep>;
 					data-lanes = <2>;
+					csis-hs-settle = <20>;
+					csis-clk-settle = <0>;
+					csis-wclk; /* 1=EXTCLK, source from MIPI_CSI_CLK */
 				};
 			};
 		};

@@ -1,8 +1,8 @@
 /**
  * Portenta-X8 dtb overlay file
- * Arduino 2022
+ * Arduino 2023
  * This overlay is adding the RPi V1.3 camera
- * with cmos sensor ov5647 to Max carrier board
+ * with cmos sensor ov5647 to Portenta Mid carrier board
  */
 
 /dts-v1/;
@@ -58,13 +58,12 @@
 				assigned-clock-parents = <&clk IMX8MM_CLK_24M>;
 				assigned-clock-rates = <24000000>;
 				csi_id = <0>;
-				pwn-gpios = <&x8h7_gpio 5 GPIO_ACTIVE_HIGH>;
+				pwn-gpios = <&x8h7_gpio 3 GPIO_ACTIVE_HIGH>; /* stm32h7 PF4 */
 				mclk = <24000000>;
 				mclk_source = <0>;
 				port {
 					ov5640_mipi1_ep: endpoint {
 						remote-endpoint = <&mipi1_sensor_ep>;
-						data-lanes = <2>;
 						link-frequencies = /bits/ 64 <297000000>;
 					};
 				};
@@ -94,6 +93,9 @@
 				mipi1_sensor_ep: endpoint@1 {
 					remote-endpoint = <&ov5640_mipi1_ep>;
 					data-lanes = <2>;
+					csis-hs-settle = <13>;
+					csis-clk-settle = <2>;
+					csis-wclk;
 				};
 			};
 		};

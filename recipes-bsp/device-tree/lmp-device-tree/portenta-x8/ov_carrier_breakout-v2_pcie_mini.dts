@@ -1,7 +1,7 @@
 /**
  * Portenta-X8 dtb overlay file
- * Arduino 2021
- * Enable pcie mini connector on Arduino Max carrier board
+ * Arduino 2023
+ * Enable pcie mini connector on Portenta Mid carrier board
  */
 
 /dts-v1/;
