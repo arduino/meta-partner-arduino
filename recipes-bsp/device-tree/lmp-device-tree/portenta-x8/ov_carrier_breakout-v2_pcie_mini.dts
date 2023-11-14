@@ -2,6 +2,7 @@
  * Portenta-X8 dtb overlay file
  * Arduino 2023
  * Enable pcie mini connector on Portenta Mid carrier board
+ * WARNING: see notes on reg_pcie0 below
  */
 
 /dts-v1/;
@@ -38,15 +39,17 @@
 				clock-frequency = <100000000>;
 			};
 
+			/* This regulator enables 3V3 BUCK, you need to short
+			this rail to 3V3 PCIE using J9 */
 			reg_pcie0: pcie0_pmic {
 				compatible = "regulator-fixed";
-				regulator-name = "pcie0_regulators";
+				regulator-name = "pcie0_regulator";
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
-				/*gpio = <&x8h7_gpio 29 GPIO_ACTIVE_HIGH>;  stm32h7 PWM6 */
+				gpio = <&x8h7_gpio 5 GPIO_ACTIVE_HIGH>; /* stm32h7 PE10 */
 				enable-active-high;
 				regulator-always-on;
-				/*startup-delay-us = <500000>;*/
+				startup-delay-us = <500000>;
 			};
 		};
 	};
@@ -56,7 +59,7 @@
 		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pcie0>;
-			disable-gpio = <&x8h7_gpio 26 GPIO_ACTIVE_HIGH>;
+			disable-gpio = <&x8h7_gpio 2 GPIO_ACTIVE_HIGH>; /* stm32h7 PF3 */
 			fsl,max-link-speed = <1>;
 			vpcie-supply = <&reg_pcie0>;
 			reset-gpio = <&gpio3 25 GPIO_ACTIVE_LOW>;
