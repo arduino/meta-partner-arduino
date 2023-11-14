@@ -355,7 +355,10 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
   struct can_bittiming *bt = &priv->can.bittiming;
   union x8h7_can_init_message x8h7_msg;
 
-  DBG_PRINT("sjw: %d, brp: %d, phase_seg1: %d, prop_seg: %d, phase_seg2: %d, freq: %d ctrlmode: %08X\n",
+  DBG_PRINT("bitrate: %d, sample_point: %d, tq: %d, sjw: %d, brp: %d, phase_seg1: %d, prop_seg: %d, phase_seg2: %d, freq: %d ctrlmode: %08X\n",
+            bt->bitrate,
+            bt->sample_point,
+            bt->tq,
             bt->sjw,
             bt->brp,
             bt->phase_seg1,
@@ -365,9 +368,15 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
             priv->can.ctrlmode);
 
   x8h7_msg.field.baud_rate_prescaler = bt->brp;
-  x8h7_msg.field.time_segment_1 = bt->phase_seg1;
-  x8h7_msg.field.time_segment_2 = bt->phase_seg2;
-  x8h7_msg.field.sync_jump_width = bt->sjw;
+  x8h7_msg.field.time_segment_1      = bt->prop_seg + bt->phase_seg1 - bt->phase_seg2;
+  x8h7_msg.field.time_segment_2      = can_bit_time(bt) - x8h7_msg.field.time_segment_1 - CAN_SYNC_SEG;
+  x8h7_msg.field.sync_jump_width     = bt->sjw;
+
+  DBG_PRINT("baud_rate_prescaler: %d, time_segment_1: %d, time_segment_2: %d, sync_jump_width: %d\n",
+            x8h7_msg.field.baud_rate_prescaler,
+            x8h7_msg.field.time_segment_1,
+            x8h7_msg.field.time_segment_2,
+            x8h7_msg.field.sync_jump_width);
 
   x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
   x8h7_pkt_send();
