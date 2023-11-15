@@ -46,6 +46,7 @@
 // Op code
 #define X8H7_CAN_OC_INIT    0x10
 #define X8H7_CAN_OC_DEINIT  0x11
+#define X8H7_CAN_OC_BITTIM  0x12
 #define X8H7_CAN_OC_SEND    0x01
 #define X8H7_CAN_OC_RECV    0x01
 #define X8H7_CAN_OC_STS     0x40
@@ -88,9 +89,26 @@ union x8h7_can_init_message
 {
   struct __attribute__((packed))
   {
-    uint32_t can_bitrate_Hz;
+    uint32_t baud_rate_prescaler;
+    uint32_t time_segment_1;
+    uint32_t time_segment_2;
+    uint32_t sync_jump_width;
   } field;
-  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */];
+  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */ + sizeof(uint32_t) /* time_segment_1 */ + sizeof(uint32_t) /* time_segment_2 */ + sizeof(uint32_t) /* sync_jump_width */];
+};
+
+/**
+ */
+union x8h7_can_bittiming_message
+{
+  struct __attribute__((packed))
+  {
+    uint32_t baud_rate_prescaler;
+    uint32_t time_segment_1;
+    uint32_t time_segment_2;
+    uint32_t sync_jump_width;
+  } field;
+  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */ + sizeof(uint32_t) /* time_segment_1 */ + sizeof(uint32_t) /* time_segment_2 */ + sizeof(uint32_t) /* sync_jump_width */];
 };
 
 /**
@@ -352,20 +370,28 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
   struct can_bittiming *bt = &priv->can.bittiming;
   union x8h7_can_init_message x8h7_msg;
 
-  DBG_PRINT("sjw: %d, brp: %d, phase_seg1: %d, prop_seg: %d, phase_seg2: %d, freq: %d ctrlmode: %08X\n",
+  DBG_PRINT("bitrate: %d, sample_point: %d, tq: %d, prop_seg: %d, phase_seg1: %d, phase_seg2: %d, sjw: %d, brp: %d, freq: %d ctrlmode: %08X\n",
+            bt->bitrate,
+            bt->sample_point,
+            bt->tq,
+            bt->prop_seg,
+            bt->phase_seg1,
+            bt->phase_seg2,
             bt->sjw,
             bt->brp,
-            bt->phase_seg1,
-            bt->prop_seg,
-            bt->phase_seg2,
             priv->can.clock.freq,
             priv->can.ctrlmode);
 
-  // Reconstruct frequency since the lower level API accepts the "raw" bitrate
-  x8h7_msg.field.can_bitrate_Hz = (priv->can.clock.freq / bt->brp) /
-                                  (bt->sjw + bt->phase_seg1 + bt->prop_seg + bt->phase_seg2);
+  x8h7_msg.field.baud_rate_prescaler = bt->brp;
+  x8h7_msg.field.time_segment_1      = bt->prop_seg + bt->phase_seg1 - bt->phase_seg2;
+  x8h7_msg.field.time_segment_2      = can_bit_time(bt) - x8h7_msg.field.time_segment_1 - CAN_SYNC_SEG;
+  x8h7_msg.field.sync_jump_width     = bt->sjw;
 
-  DBG_PRINT("frequency_requested = %d\n", x8h7_msg.field.can_bitrate_Hz);
+  DBG_PRINT("baud_rate_prescaler: %d, time_segment_1: %d, time_segment_2: %d, sync_jump_width: %d\n",
+            x8h7_msg.field.baud_rate_prescaler,
+            x8h7_msg.field.time_segment_1,
+            x8h7_msg.field.time_segment_2,
+            x8h7_msg.field.sync_jump_width);
 
   x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
   x8h7_pkt_send();
@@ -691,6 +717,33 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
 
 /**
  */
+static int x8h7_can_hw_do_set_bittiming(struct net_device *net)
+{
+  struct x8h7_can_priv *priv = netdev_priv(net);
+  struct can_bittiming *bt = &priv->can.bittiming;
+  union x8h7_can_bittiming_message x8h7_msg;
+
+  DBG_PRINT("\n");
+
+  x8h7_msg.field.baud_rate_prescaler = bt->brp;
+  x8h7_msg.field.time_segment_1      = bt->prop_seg + bt->phase_seg1 - bt->phase_seg2;
+  x8h7_msg.field.time_segment_2      = can_bit_time(bt) - x8h7_msg.field.time_segment_1 - CAN_SYNC_SEG;
+  x8h7_msg.field.sync_jump_width     = bt->sjw;
+
+  DBG_PRINT("baud_rate_prescaler: %d, time_segment_1: %d, time_segment_2: %d, sync_jump_width: %d\n",
+            x8h7_msg.field.baud_rate_prescaler,
+            x8h7_msg.field.time_segment_1,
+            x8h7_msg.field.time_segment_2,
+            x8h7_msg.field.sync_jump_width);
+
+  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_BITTIM, sizeof(x8h7_msg.buf), x8h7_msg.buf);
+  x8h7_pkt_send();
+
+  return 0;
+}
+
+/**
+ */
 static int x8h7_can_do_set_mode(struct net_device *net, enum can_mode mode)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
@@ -961,6 +1014,7 @@ static int x8h7_can_probe(struct platform_device *pdev)
 
   priv->can.clock.freq          = clock_freq;
   priv->can.bittiming_const     = &x8h7_can_bittiming_const;
+  priv->can.do_set_bittiming    = x8h7_can_hw_do_set_bittiming;
   priv->can.do_set_mode         = x8h7_can_do_set_mode;
   priv->can.do_get_berr_counter = x8h7_can_do_get_berr_counter;
   priv->can.ctrlmode_supported  = CAN_CTRLMODE_LOOPBACK      |
