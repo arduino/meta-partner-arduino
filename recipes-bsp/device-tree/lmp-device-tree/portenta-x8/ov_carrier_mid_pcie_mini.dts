@@ -22,8 +22,8 @@
 				pinctrl_pcie0: pcie0grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_SAI5_MCLK_GPIO3_IO25		0x41  /* PCIE_nRST */
-						/* PCIE_CLKREQ open drain, pull up, PWM9 stm32h7 gpio 32 */
-						/* PCIE_W_DISABLE, A1 stm32h7 gpio 8 */
+						/* PCIE_CLKREQ open drain, pull up, GPIO1 stm32h7 PF6 */
+						/* PCIE_W_DISABLE, GPIO2 stm32h7 PF3 */
 					>;
 				};
 			};
@@ -59,7 +59,7 @@
 		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pcie0>;
-			disable-gpio = <&x8h7_gpio 2 GPIO_ACTIVE_HIGH>; /* stm32h7 PF3 */
+			/*disable-gpio = <&x8h7_gpio 2 GPIO_ACTIVE_LOW>;*/ /* stm32h7 PF3 */
 			fsl,max-link-speed = <1>;
 			vpcie-supply = <&reg_pcie0>;
 			reset-gpio = <&gpio3 25 GPIO_ACTIVE_LOW>;
