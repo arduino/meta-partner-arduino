@@ -21,8 +21,8 @@
 				pinctrl_pcie0: pcie0grp {
 					fsl,pins = <
 						MX8MM_IOMUXC_SAI5_MCLK_GPIO3_IO25		0x41  /* PCIE_nRST */
-						/* PCIE_CLKREQ open drain, pull up, PWM9 stm32h7 gpio 32 */
-						/* PCIE_W_DISABLE, A1 stm32h7 gpio 8 */
+						/* PCIE_CLKREQ open drain, pull up, PWM9 stm32h7 PC8 */
+						/* PCIE_W_DISABLE, A1 stm32h7 PA6 */
 					>;
 				};
 			};
