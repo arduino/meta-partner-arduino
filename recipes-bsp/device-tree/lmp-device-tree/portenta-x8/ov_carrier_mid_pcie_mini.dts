@@ -59,7 +59,7 @@
 		__overlay__ {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_pcie0>;
-			/*disable-gpio = <&x8h7_gpio 2 GPIO_ACTIVE_LOW>;*/ /* stm32h7 PF3 */
+			disable-gpio = <&x8h7_gpio 2 GPIO_ACTIVE_LOW>; /* stm32h7 PF3 */
 			fsl,max-link-speed = <1>;
 			vpcie-supply = <&reg_pcie0>;
 			reset-gpio = <&gpio3 25 GPIO_ACTIVE_LOW>;
