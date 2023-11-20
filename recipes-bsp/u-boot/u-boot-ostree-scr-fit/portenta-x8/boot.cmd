@@ -57,7 +57,8 @@ setenv max_ovl ' \
 
 # Rasp-Tenta carrier ov list
 setenv rasp_base_ovl ' \
-  ov_carrier_rasptenta_base '
+  ov_carrier_rasptenta_base \
+  ov_carrier_rasptenta_spi'
 
 # Following variables can be used to disable
 # auto carrier detection mechanism

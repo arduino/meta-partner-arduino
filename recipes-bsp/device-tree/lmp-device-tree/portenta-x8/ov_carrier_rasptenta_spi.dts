@@ -1,0 +1,30 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Rasp-Tenta base board
+ * Enable:
+ * - SPI (SPI1, ecspi1)
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	/* Enable SPI (SPI1) */
+	fragment@0 {
+		target = <&ecspi1>;
+		__overlay__ {
+			status = "okay";
+			spidev_cb: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <1000000>;
+				reg = <0>;
+			};
+		};
+	};
+};
