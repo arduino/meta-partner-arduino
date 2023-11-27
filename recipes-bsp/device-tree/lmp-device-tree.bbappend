@@ -54,10 +54,13 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_mid_ov5647_camera_mipi.dts \
     file://ov_carrier_mid_pcie_mini.dts \
     file://ov_carrier_mid_imx219_camera_mipi.dts \
+    file://ov_carrier_mid_dsi_panel.dts \
+    file://anx7625_video.dts \
 "
 
 SRC_URI:append:portenta-mx8mm = " \
-    file://anx7625.dtsi \
+    file://video.dtsi \
+    file://anx7625_pd.dtsi \
     file://arduino_portenta-mx8mm.dtsi \
     ${DTB_OVERLAYS} \
 "
