@@ -429,7 +429,7 @@ static int x8h7_probe(struct spi_device *spi)
   spidev->spi = spi;
   mutex_init(&spidev->buf_lock);
 
-  spidev->speed_hz = spi->max_speed_hz;
+  spidev->speed_hz = 25*1000*1000UL;
 
   status = 0;
 
