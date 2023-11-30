@@ -14,7 +14,10 @@ or
 ```bash
 adb push ./tmp-lmp_xwayland/sysroots-components/portenta_x8/x8h7/usr/lib/modules/5.10.93-lmp-standard/extra/*.ko /home/fio
 adb shell
+sudo rmmod x8h7_can
+sudo mount -o remount,rw /usr
 sudo mv *.ko /lib/modules/5.10.93-lmp-standard/extra/
+sudo modprobe x8h7_can
 ```
 #### Unload/Reload
 ```bash
