@@ -266,14 +266,26 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
       data1 |= CAN_ERR_CRTL_RX_OVERFLOW;
       x8h7_can_error_skb(net, can_id, data1);
     }
-    if (eflag & X8H7_CAN_STS_FLG_TX_OVR)
+    if (eflag & X8H7_CAN_STS_FLG_TX_EP)
     {
-      net->stats.tx_fifo_errors++;
+      DBG_ERROR("transmit error");
       net->stats.tx_errors++;
+      priv->tx_len = 0;
       can_id |= CAN_ERR_CRTL;
       data1 |= CAN_ERR_CRTL_TX_OVERFLOW;
       x8h7_can_error_skb(net, can_id, data1);
     }
+    if (eflag & X8H7_CAN_STS_FLG_TX_OVR)
+    {
+      DBG_ERROR("transmit buffer overflow");
+      net->stats.tx_fifo_errors++;
+      net->stats.tx_errors++;
+      priv->tx_len = 0;
+      can_id |= CAN_ERR_CRTL;
+      data1 |= CAN_ERR_CRTL_TX_OVERFLOW;
+      x8h7_can_error_skb(net, can_id, data1);
+    }
+    netif_wake_queue(net);
   }
 
   if (priv->can.state == CAN_STATE_BUS_OFF) {
@@ -289,12 +301,10 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
 
   if (intf & X8H7_CAN_STS_INT_TX) {
     net->stats.tx_packets++;
-    net->stats.tx_bytes += priv->tx_len - 1;
+    net->stats.tx_bytes += priv->tx_len;
+    priv->tx_len = 0;
     can_led_event(net, CAN_LED_EVENT_TX);
-    if (priv->tx_len) {
-      can_get_echo_skb(net, 0);
-      priv->tx_len = 0;
-    }
+    can_get_echo_skb(net, 0);
     netif_wake_queue(net);
   }
 }
@@ -558,7 +568,7 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
 
     x8h7_can_hw_tx_enqueue(priv, frame);
 
-    priv->tx_len = 1 + frame->can_dlc;
+    priv->tx_len += frame->can_dlc;
     can_put_echo_skb(next_frame, net, 0);
   }
   x8h7_can_hw_tx_send();
@@ -703,14 +713,18 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
 
   DBG_PRINT("\n");
 
-  //if (priv->tx_skb || priv->tx_len) { // @TODO: original impl.
   if (priv->tx_busy) {
     DBG_ERROR("hard_xmit called while tx busy\n");
     return NETDEV_TX_BUSY;
   }
 
-  if (can_dropped_invalid_skb(net, skb))
-  {
+  if (skb_queue_len(&priv->tx_head) >= 32) {
+    DBG_PRINT("hard_xmit internal TX queue is full\n");
+    queue_work(priv->wq, &priv->tx_work);
+    return NETDEV_TX_BUSY;
+  }
+
+  if (can_dropped_invalid_skb(net, skb)) {
     return NETDEV_TX_OK;
   }
 
