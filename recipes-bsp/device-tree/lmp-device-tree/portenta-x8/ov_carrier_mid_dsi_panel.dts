@@ -72,4 +72,19 @@
 			};
 		};
 	};
+
+	fragment@2 {
+		target = <&i2c3>;
+		__overlay__ {
+			touchscreen@14 {
+				pinctrl-names = "default";
+				compatible = "goodix,gt911";
+				reg = <0x14>;
+				interrupts-extended = <&x8h7_gpio 1 GPIO_ACTIVE_HIGH>;
+				//irq-gpios = <&x8h7_gpio 1 GPIO_ACTIVE_HIGH>;
+				touchscreen-size-x = <800>;
+                touchscreen-size-y = <480>;
+			};
+		};
+	};
 };
