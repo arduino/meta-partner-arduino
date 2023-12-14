@@ -27,6 +27,7 @@ DTB_OVERLAYS:append:portenta-m8 = " \
 
 DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_som_x8h7.dts \
+    file://ov_som_anx7625_video.dts \
     file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_spi0.dts \
     file://ov_carrier_breakout_spi1.dts \
@@ -55,22 +56,22 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_mid_pcie_mini.dts \
     file://ov_carrier_mid_imx219_camera_mipi.dts \
     file://ov_carrier_mid_dsi_panel.dts \
-    file://anx7625_video.dts \
 "
 
 SRC_URI:append:portenta-mx8mm = " \
-    file://video.dtsi \
-    file://anx7625_pd.dtsi \
     file://arduino_portenta-mx8mm.dtsi \
     ${DTB_OVERLAYS} \
 "
 
 SRC_URI:append:portenta-m8 = " \
     file://arduino_portenta-m8.dts \
+    file://anx7625.dtsi \
 "
 
 SRC_URI:append:portenta-x8 = " \
     file://arduino_portenta-x8.dts \
+    file://video.dtsi \
+    file://anx7625_base.dtsi \
 "
 
 # This patch is necessary since usbc need to be
