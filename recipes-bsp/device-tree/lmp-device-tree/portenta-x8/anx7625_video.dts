@@ -1,3 +1,9 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Enable audio and video on anx7625, on Arduino Portenta-X8 SoM.
+ */
+
 /dts-v1/;
 /plugin/;
 
@@ -6,7 +12,7 @@
 #include <dt-bindings/clock/imx8mm-clock.h>
 
 / {
-    compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
 
 	fragment@0 {
 		target-path = "/";
@@ -37,7 +43,7 @@
 				enable-active-low;
 				regulator-boot-on;
 				regulator-always-on;
-			};		
+			};
 		};
 	};
 
@@ -56,42 +62,42 @@
 		};
 	};
 
-    fragment@2 {
-        target = <&analogix>;
-        __overlay__ {
-            ports {
-			    #address-cells = <1>;
-			    #size-cells = <0>;
+	fragment@2 {
+		target = <&analogix>;
+		__overlay__ {
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
 
-			    port@0 {
-			    	reg = <0>;
-			    	lvds_from_dsi: endpoint {
-			    		remote-endpoint = <&dsi_to_lvds>;
-			    	};
-			    };
+				port@0 {
+					reg = <0>;
+					lvds_from_dsi: endpoint {
+						remote-endpoint = <&dsi_to_lvds>;
+					};
+				};
 
-                port@3 {
-				    reg = <3>;
-				    codec_endpoint: endpoint {
-				    	remote-endpoint = <&sai6_cpu_endpoint>;
-				    };
-			    };
-            };
-        };
-    };
+				port@3 {
+					reg = <3>;
+					codec_endpoint: endpoint {
+						remote-endpoint = <&sai6_cpu_endpoint>;
+					};
+				};
+			};
+		};
+	};
 
-    fragment@3 {
-        target = <&mipi_dsi>;
-        __overlay__ {
-	        status = "okay";
-	        port@1 {
-	        	dsi_to_lvds: endpoint {
-	        		remote-endpoint = <&lvds_from_dsi>;
-	        		attach-bridge;
-		        };
-	        };
-        };
-    };
+	fragment@3 {
+		target = <&mipi_dsi>;
+		__overlay__ {
+			status = "okay";
+			port@1 {
+				dsi_to_lvds: endpoint {
+					remote-endpoint = <&lvds_from_dsi>;
+					attach-bridge;
+				};
+			};
+		};
+	};
 
 	fragment@4 {
 		target = <&lcdif>;
@@ -174,7 +180,7 @@
 			fsl,shared-interrupt;
 			#sound-dai-cells = <0>;
 			status = "okay";
-		
+
 			ports {
 				sai6_port0: port@0 {
 					sai6_cpu_endpoint: endpoint {

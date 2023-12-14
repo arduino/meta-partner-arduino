@@ -1,4 +1,8 @@
 /**
+ * Portenta-X8 dtb include file
+ * Arduino 2023
+ * Handles basic anx7625 functionalities such as control pins and
+ * USB Type-C connector for Power Delivery.
  */
 
 &iomuxc {
