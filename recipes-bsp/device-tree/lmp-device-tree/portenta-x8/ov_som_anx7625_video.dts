@@ -1,7 +1,7 @@
 /**
  * Portenta-X8 dtb overlay file
  * Arduino 2023
- * Enable audio and video on anx7625, on Arduino Portenta-X8 SoM.
+ * Enable audio and video interfaces on anx7625, on Arduino Portenta-X8 SoM.
  * The anx7625 works as a bridge between DSI signals
  * from i.MX 8M Mini and the DP port on USB Type-C connector.
  */
