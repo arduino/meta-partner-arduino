@@ -26,7 +26,8 @@ setenv uboot_hwpart 1
 # Som ov list
 setenv som_ovl ' \
   ov_som_lbee5kl1dx \
-  ov_som_x8h7'
+  ov_som_x8h7 \
+  ov_som_anx7625_video'
 
 # Breakout carrier ov list
 setenv breakout_ovl ' \
