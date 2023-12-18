@@ -39,6 +39,7 @@ LMP_EXTRA = " \
     lmp-device-tree \
     lmp-auto-hostname \
     u-boot-fio-env \
+    tmate \
 "
 
 ADB = " \
