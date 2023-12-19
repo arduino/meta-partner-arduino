@@ -76,8 +76,11 @@ SRC_URI:append:portenta-x8 = " \
 
 # This patch is necessary since usbc need to be
 # used with specific driver for uuu communication
-SRC_URI:append:lmp-mfgtool = " \
-    file://force-usbc-device-mfgtool.patch \
+SRC_URI:append:lmp-mfgtool:portenta-m8 = " \
+    file://force-usbc-device-mfgtool-m8.patch \
+"
+SRC_URI:append:lmp-mfgtool:portenta-x8 = " \
+    file://force-usbc-device-mfgtool-x8.patch \
 "
 
 COMPATIBLE_MACHINE:portenta-mx8mm = ".*"

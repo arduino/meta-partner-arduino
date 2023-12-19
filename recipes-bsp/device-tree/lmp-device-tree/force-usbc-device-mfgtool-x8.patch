@@ -1,0 +1,63 @@
+diff --git a/anx7625_base.dtsi b/anx7625_base.dtsi
+index 8fb6547..2d4b189 100644
+--- a/anx7625_base.dtsi
++++ b/anx7625_base.dtsi
+@@ -41,28 +41,5 @@
+ 		cbl_det-gpios = <&gpio4 27 0x0>;    // VIDEO_CABLE cable input active high
+ 		intr_comm-gpios = <&gpio4 20 IRQ_TYPE_NONE>;  // VIDEO_ALT comm irq input active low
+ 		#sound-dai-cells = <0>;
+-
+-		typec1_con: connector {
+-			compatible = "usb-c-connector";
+-			label = "USB-C";
+-			power-role = "dual";
+-			data-role = "dual";
+-			try-power-role = "sink";
+-			source-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
+-			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
+-			             PDO_VAR(5000, 20000, 3000)>;
+-			op-sink-microwatt = <15000000>;
+-			self-powered;
+-			ports {
+-				#address-cells = <1>;
+-				#size-cells = <0>;
+-				port@1 {
+-					reg = <1>;
+-					typec1_dr_sw: endpoint {
+-						remote-endpoint = <&usb1_drd_sw>;
+-					};
+-				};
+-			};
+-		};
+ 	};
+ };
+diff --git a/arduino_portenta-mx8mm.dtsi b/arduino_portenta-mx8mm.dtsi
+index 2049e94..1291559 100644
+--- a/arduino_portenta-mx8mm.dtsi
++++ b/arduino_portenta-mx8mm.dtsi
+@@ -112,7 +112,7 @@
+ };
+ 
+ &usbotg1 { /* usbc */
+-	dr_mode = "otg";
++	dr_mode = "peripheral";
+ 	hnp-disable;
+ 	srp-disable;
+ 	adp-disable;
+@@ -121,12 +121,11 @@
+ 	samsung,picophy-pre-emp-curr-control = <3>;
+ 	samsung,picophy-dc-vol-level-adjust = <7>;
+ 	status = "okay";
++};
+ 
+-	port {
+-		usb1_drd_sw: endpoint {
+-			remote-endpoint = <&typec1_dr_sw>;
+-		};
+-	};
++&usbotg2 { /* usb host type-A on Breakout carrier */
++	dr_mode = "host";
++	status = "okay";
+ };
+ 
+ &usdhc3 { /* emmc flash */
