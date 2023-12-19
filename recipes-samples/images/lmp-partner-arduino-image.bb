@@ -45,6 +45,7 @@ LMP_EXTRA = " \
     lmp-device-tree \
     lmp-auto-hostname \
     compose-apps-early-start \
+    tmate \
 "
 
 ADB = " \
