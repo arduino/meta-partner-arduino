@@ -1,33 +1,3 @@
-diff --git a/arduino_portenta-mx8mm.dtsi b/arduino_portenta-mx8mm.dtsi
-index 0647c23..787d725 100644
---- a/arduino_portenta-mx8mm.dtsi
-+++ b/arduino_portenta-mx8mm.dtsi
-@@ -113,7 +113,7 @@
- };
- 
- &usbotg1 { /* usbc */
--	dr_mode = "otg";
-+	dr_mode = "peripheral";
- 	hnp-disable;
- 	srp-disable;
- 	adp-disable;
-@@ -121,12 +121,11 @@
- 	picophy,pre-emp-curr-control = <3>;
- 	picophy,dc-vol-level-adjust = <7>;
- 	status = "okay";
-+};
- 
--	port {
--		usb1_drd_sw: endpoint {
--			remote-endpoint = <&typec1_dr_sw>;
--		};
--	};
-+&usbotg2 { /* usb host type-A on Breakout carrier */
-+	dr_mode = "host";
-+	status = "okay";
- };
- 
- &usdhc3 { /* emmc flash */
 diff --git a/anx7625.dtsi b/anx7625.dtsi
 index 06980b0..91b1676 100644
 --- a/anx7625.dtsi
@@ -61,4 +31,34 @@ index 06980b0..91b1676 100644
 -		};
  	};
  };
+diff --git a/arduino_portenta-mx8mm.dtsi b/arduino_portenta-mx8mm.dtsi
+index e15a976..2cc1362 100644
+--- a/arduino_portenta-mx8mm.dtsi
++++ b/arduino_portenta-mx8mm.dtsi
+@@ -112,21 +112,19 @@
+ };
  
+ &usbotg1 { /* usbc */
+-	dr_mode = "otg";
++	dr_mode = "peripheral";
+ 	hnp-disable;
+ 	srp-disable;
+ 	adp-disable;
+-	usb-role-switch;
+ 	disable-over-current;
+ 	samsung,picophy-pre-emp-curr-control = <3>;
+ 	samsung,picophy-dc-vol-level-adjust = <7>;
+ 	status = "okay";
++};
+ 
+-	port {
+-		usb1_drd_sw: endpoint {
+-			remote-endpoint = <&typec1_dr_sw>;
+-		};
+-	};
++&usbotg2 { /* usb host type-A on Breakout carrier */
++	dr_mode = "host";
++	status = "okay";
+ };
+ 
+ &usdhc3 { /* emmc flash */
