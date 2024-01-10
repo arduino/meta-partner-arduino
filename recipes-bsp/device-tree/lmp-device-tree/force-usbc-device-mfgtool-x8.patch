@@ -32,10 +32,10 @@ index 8fb6547..2d4b189 100644
  	};
  };
 diff --git a/arduino_portenta-mx8mm.dtsi b/arduino_portenta-mx8mm.dtsi
-index 2049e94..1291559 100644
+index e15a976..2cc1362 100644
 --- a/arduino_portenta-mx8mm.dtsi
 +++ b/arduino_portenta-mx8mm.dtsi
-@@ -112,7 +112,7 @@
+@@ -112,21 +112,19 @@
  };
  
  &usbotg1 { /* usbc */
@@ -44,7 +44,8 @@ index 2049e94..1291559 100644
  	hnp-disable;
  	srp-disable;
  	adp-disable;
-@@ -121,12 +121,11 @@
+-	usb-role-switch;
+ 	disable-over-current;
  	samsung,picophy-pre-emp-curr-control = <3>;
  	samsung,picophy-dc-vol-level-adjust = <7>;
  	status = "okay";
