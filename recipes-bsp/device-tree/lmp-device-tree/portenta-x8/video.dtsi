@@ -1,3 +1,9 @@
+/**
+ * Portenta-X8 dtb include file
+ * Arduino 2023
+ * Enables several video-related blocks such as gpu and vpus.
+ */
+
 &lcdif {
 	status = "okay";
 };
