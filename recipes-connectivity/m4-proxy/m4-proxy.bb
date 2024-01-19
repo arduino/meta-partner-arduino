@@ -16,7 +16,7 @@ SRC_URI = " \
     git://${GO_IMPORT}.git;protocol=https;destsuffix=${BPN}-${PV}/src/${GO_IMPORT};branch=master \
     file://m4-proxy.service \
 "
-SRCREV = "b9af564047a2db923443dbc360d1393a24fb5409"
+SRCREV = "51a9327f50da14eb4885870325641f453a3205b6"
 
 inherit go-mod
 
