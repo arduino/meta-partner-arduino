@@ -73,7 +73,7 @@
 #define IMX708_DGTL_GAIN_DEFAULT	0x0100
 #define IMX708_DGTL_GAIN_STEP		1
 
-/* Colour balance controls */
+/* Color balance controls */
 #define IMX708_REG_COLOUR_BALANCE_RED   0x0b90
 #define IMX708_REG_COLOUR_BALANCE_BLUE	0x0b92
 #define IMX708_COLOUR_BALANCE_MIN	0x01
@@ -89,7 +89,7 @@
 #define IMX708_TEST_PATTERN_GREY_COLOR	3
 #define IMX708_TEST_PATTERN_PN9		4
 
-/* Test pattern colour components */
+/* Test pattern color components */
 #define IMX708_REG_TEST_PATTERN_R	0x0602
 #define IMX708_REG_TEST_PATTERN_GR	0x0604
 #define IMX708_REG_TEST_PATTERN_B	0x0606
@@ -797,7 +797,7 @@ static const char * const imx708_supply_name[] = {
 };
 
 /*
- * Initialisation delay between XCLR low->high and the moment when the sensor
+ * Initialization delay between XCLR low->high and the moment when the sensor
  * can start capture (i.e. can leave software standby), given by T7 in the
  * datasheet is 8ms.  This does include I2C setup time as well.
  *
@@ -1047,7 +1047,7 @@ static void imx708_adjust_exposure_range(struct imx708 *imx708,
 {
 	int exposure_max, exposure_def;
 
-	/* Honour the VBLANK limits when setting exposure. */
+	/* Honor the VBLANK limits when setting exposure. */
 	exposure_max = imx708->mode->height + imx708->vblank->val -
 		IMX708_EXPOSURE_OFFSET;
 	exposure_def = min(exposure_max, imx708->exposure->val);

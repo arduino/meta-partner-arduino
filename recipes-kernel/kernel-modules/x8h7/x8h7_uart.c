@@ -272,7 +272,7 @@ static void x8h7_uart_stop_rx(struct uart_port *port)
 /**
  * Return TIOCSER_TEMT when transmitter is not busy.
  * @TODO: need to understand when H7 is still busy
- * in trasmitting data on uart due to slower throughput in
+ * in transmitting data on uart due to slower throughput in
  * comparison with spi. Introduce status byte?
  */
 static unsigned int x8h7_uart_tx_empty(struct uart_port *port)

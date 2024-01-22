@@ -86,7 +86,7 @@ static ssize_t x8h7_ui_read(struct file *file,
   wait_event_interruptible(wq, priv->rx_len != 0);
 
   *offset = 0;
-  //DBG_PRINT("cpoy to user %d bytes\n", count);
+  //DBG_PRINT("copy to user %d bytes\n", count);
   ret = simple_read_from_buffer(buf, count, offset, priv->rx_data, priv->rx_len);
   priv->rx_len = 0;
 
@@ -108,7 +108,7 @@ static ssize_t x8h7_ui_write(struct file *file,
 
   ret = copy_from_user(data, buf, len);
   if (ret) {
-    DBG_ERROR("Could't copy %zd bytes from the user\n", ret);
+    DBG_ERROR("Couldn't copy %zd bytes from the user\n", ret);
     return -EFAULT;
   }
 

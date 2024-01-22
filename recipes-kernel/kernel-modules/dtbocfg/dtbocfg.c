@@ -128,7 +128,7 @@ static int dtbocfg_overlay_item_create(struct dtbocfg_overlay_item *overlay)
 }
 
 /**
- * dtbocfg_overlay_item_release() - Relase Device Tree Overlay
+ * dtbocfg_overlay_item_release() - Release Device Tree Overlay
  * @overlay: Pointer to Device Tree Overlay Item
  * return    none
  */
@@ -155,7 +155,7 @@ static inline struct dtbocfg_overlay_item* container_of_dtbocfg_overlay_item(str
 }
 
 /**
- * dtbocfg_overlay_item_status_store() - Set Status Attibute
+ * dtbocfg_overlay_item_status_store() - Set Status Attribute
  * @item:  Pointer to Configuration Item
  * @page:  Pointer to Value Buffer
  * @count: Size of Value Buffer Size
@@ -184,7 +184,7 @@ static ssize_t dtbocfg_overlay_item_status_store(struct config_item *item, const
 }
 
 /**
- * dtbocfg_overlay_item_status_show() - Show Status Attibute
+ * dtbocfg_overlay_item_status_show() - Show Status Attribute
  * @item : Pointer to Configuration Item
  * @page : Pointer to Value for Store
  * return  String Size or Error Status.
