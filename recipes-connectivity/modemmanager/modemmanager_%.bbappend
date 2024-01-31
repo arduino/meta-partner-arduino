@@ -3,6 +3,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 SYSTEMD_AUTO_ENABLE:portenta-mx8mm = "disable"
 
 SRC_URI += " \
+    file://0001-Add-NETDEVCTL-command-at-the-end.patch \
     file://tweak-modemmanager-service.patch \
     file://modem_on.sh \
     file://modem_off.sh \
