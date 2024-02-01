@@ -30,7 +30,7 @@
 #define DRIVER_NAME "x8h7_can"
 
 /* DEBUG HANDLING */
-// #define DEBUG
+//#define DEBUG
 #include "debug.h"
 #ifdef DEBUG
   #define DBG_CAN_STATE(d, s) { \
@@ -149,8 +149,7 @@ struct x8h7_can_priv {
   //int                       rx_cnt;
   //x8h7_pkt_t                rx_pkt;
 
-  struct sk_buff_head       tx_head;
-  int                       tx_busy;
+  struct sk_buff           *tx_skb;
   int                       tx_len;
 
   struct workqueue_struct  *wq;
@@ -289,11 +288,12 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
 
   if (intf & X8H7_CAN_STS_INT_TX) {
     net->stats.tx_packets++;
-    net->stats.tx_bytes += priv->tx_len - 1;
+    net->stats.tx_bytes += priv->tx_len;
+    priv->tx_len = 0;
     can_led_event(net, CAN_LED_EVENT_TX);
-    if (priv->tx_len) {
+    if (priv->tx_skb) {
       can_get_echo_skb(net, 0);
-      priv->tx_len = 0;
+      priv->tx_skb = NULL;
     }
     netif_wake_queue(net);
   }
@@ -350,19 +350,15 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
  */
 static void x8h7_can_clean(struct net_device *net)
 {
-  struct x8h7_can_priv * priv = netdev_priv(net);
-  struct sk_buff       * skb  = NULL;
-  struct sk_buff       * tmp  = NULL;
+  struct x8h7_can_priv *priv = netdev_priv(net);
 
   DBG_PRINT("\n");
-  if (!skb_queue_empty(&priv->tx_head)) {
-    net->stats.tx_errors++;
-  }
 
-  skb_queue_walk_safe(&priv->tx_head, skb, tmp)
+  if (priv->tx_skb)
   {
-    skb_unlink(skb, &priv->tx_head);
-    dev_kfree_skb(skb);
+    net->stats.tx_errors++;
+    can_free_echo_skb(priv->net, 0);
+    priv->tx_skb = NULL;
   }
   priv->tx_len = 0;
 }
@@ -545,25 +541,18 @@ static void x8h7_can_hw_tx_send(void)
  */
 static void x8h7_can_tx_work_handler(struct work_struct *ws)
 {
-  struct x8h7_can_priv  *priv = container_of(ws, struct x8h7_can_priv, tx_work);
-  struct net_device     *net = priv->net;
+  struct x8h7_can_priv *priv = container_of(ws, struct x8h7_can_priv, tx_work);
+  struct can_frame     *frame;
 
   DBG_PRINT("\n");
-  priv->tx_busy = 1;
 
-  while (!skb_queue_empty(&priv->tx_head))
+  if (priv->tx_skb)
   {
-    struct sk_buff * next_frame = skb_dequeue(&priv->tx_head);
-    struct can_frame * frame = (struct can_frame *)next_frame->data;
-
+    frame = (struct can_frame *)priv->tx_skb->data;
+    priv->tx_len = frame->can_dlc;
     x8h7_can_hw_tx_enqueue(priv, frame);
-
-    priv->tx_len = 1 + frame->can_dlc;
-    can_put_echo_skb(next_frame, net, 0);
+    x8h7_can_hw_tx_send();
   }
-  x8h7_can_hw_tx_send();
-
-  priv->tx_busy = 0;
 }
 
 /**
@@ -624,8 +613,6 @@ static int x8h7_can_open(struct net_device *net)
 
   priv->force_quit = 0;
 
-  skb_queue_head_init(&priv->tx_head);
-  priv->tx_busy = 0;
   priv->tx_len  = 0;
 
   priv->wq = alloc_workqueue("x8h7_can_wq", WQ_FREEZABLE | WQ_MEM_RECLAIM, 0);
@@ -700,22 +687,21 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
                                        struct net_device *net)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
+  const struct device  *dev = priv->dev;
 
   DBG_PRINT("\n");
 
-  //if (priv->tx_skb || priv->tx_len) { // @TODO: original impl.
-  if (priv->tx_busy) {
-    DBG_ERROR("hard_xmit called while tx busy\n");
+  if (can_dropped_invalid_skb(net, skb))
+    return NETDEV_TX_OK;
+
+  if (priv->tx_skb) {
+    netif_stop_queue(net);
+    dev_warn(dev, "hard_xmit called while tx busy\n");
     return NETDEV_TX_BUSY;
   }
 
-  if (can_dropped_invalid_skb(net, skb))
-  {
-    return NETDEV_TX_OK;
-  }
-
-  netif_stop_queue(net);
-  skb_queue_tail(&priv->tx_head, skb);
+  priv->tx_skb = skb;
+  can_put_echo_skb(priv->tx_skb, net, 0);
   queue_work(priv->wq, &priv->tx_work);
 
   return NETDEV_TX_OK;
