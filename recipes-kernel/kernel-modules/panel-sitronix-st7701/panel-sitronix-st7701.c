@@ -579,6 +579,7 @@ static const struct drm_panel_funcs st7701_funcs = {
 	.get_modes	= st7701_get_modes,
 	.get_orientation = st7701_get_orientation,
 };
+
 static const struct drm_display_mode arduino_giga_display_mode = {
 	.clock		  = 27500,
 
