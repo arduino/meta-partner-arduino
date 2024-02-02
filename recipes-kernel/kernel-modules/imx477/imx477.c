@@ -97,7 +97,7 @@ MODULE_PARM_DESC(trigger_mode, "Set vsync trigger mode: 1=source, 2=sink");
 #define IMX477_TEST_PATTERN_GREY_COLOR	3
 #define IMX477_TEST_PATTERN_PN9		4
 
-/* Test pattern color components */
+/* Test pattern colour components */
 #define IMX477_REG_TEST_PATTERN_R	0x0602
 #define IMX477_REG_TEST_PATTERN_GR	0x0604
 #define IMX477_REG_TEST_PATTERN_B	0x0606
@@ -1078,7 +1078,7 @@ static const char * const imx477_supply_name[] = {
 #define IMX477_NUM_SUPPLIES ARRAY_SIZE(imx477_supply_name)
 
 /*
- * Initialization delay between XCLR low->high and the moment when the sensor
+ * Initialisation delay between XCLR low->high and the moment when the sensor
  * can start capture (i.e. can leave software standby), given by T7 in the
  * datasheet is 8ms.  This does include I2C setup time as well.
  *
@@ -1307,7 +1307,7 @@ static void imx477_adjust_exposure_range(struct imx477 *imx477)
 {
 	int exposure_max, exposure_def;
 
-	/* Honor the VBLANK limits when setting exposure. */
+	/* Honour the VBLANK limits when setting exposure. */
 	exposure_max = imx477->mode->height + imx477->vblank->val -
 		       IMX477_EXPOSURE_OFFSET;
 	exposure_def = min(exposure_max, imx477->exposure->val);

@@ -25,7 +25,7 @@ index 49f1b3be68..c075eac8f5 100644
  #define ANX7625_NEGOTIATE_PD          1
  #define ANX7625_NEGOTIATE_ERROR       1 /* If defined when negotiation fails blink red led repeatedly to warn the user and doesn't boot into kernel */
 -#define ANX7625_NEGOTIATE_ENDS_SETUP  1 /* If defined exits immediately after power negotiation is finished */
-+#define ANX7625_NEGOTIATE_ENDS_SETUP  1 /* If defined exits immediately after power negotiation is finished, otherwise waits for the timeout to occurs */
++#define ANX7625_NEGOTIATE_ENDS_SETUP  1 /* If defined exits immediately after power negotiation is finished, otherwise waits for the timeout to occours */
  
  static uint8_t last_chip_addr;
  

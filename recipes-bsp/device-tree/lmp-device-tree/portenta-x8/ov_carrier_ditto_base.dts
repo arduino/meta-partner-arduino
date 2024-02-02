@@ -16,7 +16,7 @@
  * - Ethernet phy configured in u-boot
  * - USB2514B/M2 hub configured in u-boot
  * - UART2 is shell cmd
- * - EEPROM I2C1 address 0xAE read in u-boot (auto carrier detection)
+ * - EEPROM I2C1 address 0xAE readed in u-boot (auto carrier detection)
  */
 
 /dts-v1/;

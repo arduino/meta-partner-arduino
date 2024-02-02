@@ -1366,7 +1366,7 @@ static int anx7625_chip_register_init(struct anx7625_data *ctx)
 	return ret;
 }
 
-/* Pd disable means you are not going to using pd negotiation */
+/* Pd disable means you are not gonna using pd negotiation */
 static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;
@@ -1390,7 +1390,7 @@ static void anx7625_disable_pd_protocol(struct anx7625_data *ctx)
 		DRM_DEV_DEBUG_DRIVER(dev, "disable PD feature succeeded.\n");
 }
 
-/* Pd disable means you are not going to using pd negotiation */
+/* Pd disable means you are not gonna using pd negotiation */
 static int anx7625_enable_pd_protocol(struct anx7625_data *ctx)
 {
 	struct device *dev = &ctx->client->dev;

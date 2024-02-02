@@ -99,7 +99,7 @@
 #define IMX219_TEST_PATTERN_GREY_COLOR	3
 #define IMX219_TEST_PATTERN_PN9		4
 
-/* Test pattern color components */
+/* Test pattern colour components */
 #define IMX219_REG_TESTP_RED		0x0602
 #define IMX219_REG_TESTP_GREENR		0x0604
 #define IMX219_REG_TESTP_BLUE		0x0606
@@ -442,8 +442,8 @@ static const u32 codes[] = {
 };
 
 /*
- * Initialization delay between XCLR low->high and the moment when the sensor
- * can start capture (i.e. can leave software standby) must be not less than:
+ * Initialisation delay between XCLR low->high and the moment when the sensor
+ * can start capture (i.e. can leave software stanby) must be not less than:
  *   t4 + max(t5, t6 + <time to initialize the sensor register over I2C>)
  * where
  *   t4 is fixed, and is max 200uS,
@@ -943,7 +943,7 @@ static int imx219_set_pad_format(struct v4l2_subdev *sd,
 					 exposure_def);
 		/*
 		 * Currently PPL is fixed to IMX219_PPL_DEFAULT, so hblank
-		 * depends on mode->width only, and is not changeable in any
+		 * depends on mode->width only, and is not changeble in any
 		 * way other than changing the mode.
 		 */
 		hblank = IMX219_PPL_DEFAULT - mode->width;

@@ -4,7 +4,7 @@ Date: Mon, 11 Oct 2021 16:03:52 -0700
 Subject: [PATCH 02/45] portenta-m8: sync with imx8mm_evk
 
 - add bootm_size var
-- replace more occurrences of fdt_addr with fdt_addr_r
+- replace more ocurrances of fdt_addr with fdt_addr_r
 - replace 5 with nandrootfs setting for ubi.mtd kernel param
 
 Signed-off-by: Michael Scott <mike@foundries.io>

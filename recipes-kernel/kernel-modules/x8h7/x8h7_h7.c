@@ -216,7 +216,7 @@ static ssize_t x8h7_h7_write(struct file *file,
 
   ret = copy_from_user(data, buf, len);
   if (ret) {
-    DBG_ERROR("Couldn't copy %zd bytes from the user\n", ret);
+    DBG_ERROR("Could't copy %zd bytes from the user\n", ret);
     return -EFAULT;
   }
 

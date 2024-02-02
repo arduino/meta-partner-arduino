@@ -1179,7 +1179,7 @@ index 48cc92f359..0000000000
 -	{ 0x13730, 0x0 },
 -	{ 0x13830, 0x0 },
 -};
--/* P0 message block parameter for training firmware */
+-/* P0 message block paremeter for training firmware */
 -struct dram_cfg_param ddr_fsp0_cfg[] = {
 -	{ 0xd0000, 0x0 },
 -	{ 0x54003, 0xbb8 },
@@ -1218,7 +1218,7 @@ index 48cc92f359..0000000000
 -};
 -
 -
--/* P1 message block parameter for training firmware */
+-/* P1 message block paremeter for training firmware */
 -struct dram_cfg_param ddr_fsp1_cfg[] = {
 -	{ 0xd0000, 0x0 },
 -	{ 0x54002, 0x101 },
@@ -1258,7 +1258,7 @@ index 48cc92f359..0000000000
 -};
 -
 -
--/* P2 message block parameter for training firmware */
+-/* P2 message block paremeter for training firmware */
 -struct dram_cfg_param ddr_fsp2_cfg[] = {
 -	{ 0xd0000, 0x0 },
 -	{ 0x54002, 0x102 },
@@ -1298,7 +1298,7 @@ index 48cc92f359..0000000000
 -};
 -
 -
--/* P0 2D message block parameter for training firmware */
+-/* P0 2D message block paremeter for training firmware */
 -struct dram_cfg_param ddr_fsp0_2d_cfg[] = {
 -	{ 0xd0000, 0x0 },
 -	{ 0x54003, 0xbb8 },

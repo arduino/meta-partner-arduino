@@ -49,7 +49,7 @@ index df08dffdca..6c0be4ff44 100644
 + * DRP mode: after connection we switch between Rp(DFP) and Rd(UFP) until we detect a valid connection. When
 + * connection is detected, start either in UFP or DFP mode.
 + * The DFP sends SOURCE_CAPS in loop immediately after connection and waits for ack.
-+ * In case DFP becomes SINK (or SINK becomes DFP like in our case) then SINK needs to send SNK_CAPS that need
++ * In case DFP becames SINK (or SINK becames DFP like in our case) then SINK needs to send SNK_CAPS that need
 + * to be accepted by other device. This is because current sink may be different between DFP and UFP modes.
 + * In DFP only mode we can switch data role (became DFP) after POWER_RDY message. The Rp/Rd connection
 + * remains fixed, only data role is changed.

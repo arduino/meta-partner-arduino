@@ -996,7 +996,7 @@ err:
 }
 
 /* sensor changes between scaling and subsampling
- * go through exposure calculation
+ * go through exposure calcualtion
  */
 static int ov5647_change_mode_exposure_calc(enum ov5647_frame_rate frame_rate,
 				enum ov5647_mode mode)
@@ -1154,7 +1154,7 @@ static int ov5647_init_mode(enum ov5647_frame_rate frame_rate,
 	} else if ((dn_mode == SUBSAMPLING && orig_dn_mode == SCALING) ||
 			(dn_mode == SCALING && orig_dn_mode == SUBSAMPLING)) {
 		/* change between subsampling and scaling
-		 * go through exposure calculation */
+		 * go through exposure calucation */
 		retval = ov5647_change_mode_exposure_calc(frame_rate, mode);
 	} else {
 		/* change inside subsampling or scaling
@@ -1288,7 +1288,7 @@ static int ov5647_s_parm(struct v4l2_subdev *sd, struct v4l2_streamparm *a)
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ov5647 *sensor = to_ov5647(client);
 	struct v4l2_fract *timeperframe = &a->parm.capture.timeperframe;
-	u32 tgt_fps;	/* target frames per second */
+	u32 tgt_fps;	/* target frames per secound */
 	enum ov5647_frame_rate frame_rate;
 	enum ov5647_mode orig_mode;
 	int ret = 0;
@@ -1496,7 +1496,7 @@ static int ov5647_enum_frameintervals(struct v4l2_subdev *sd,
 static int init_device(void)
 {
 	u32 tgt_xclk;	/* target xclk */
-	u32 tgt_fps;	/* target frames per second */
+	u32 tgt_fps;	/* target frames per secound */
 	enum ov5647_frame_rate frame_rate;
 	int ret;
 

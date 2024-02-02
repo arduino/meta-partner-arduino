@@ -6,7 +6,7 @@
  * Gpios:
  * DE controls tx
  * REn controls rx
- * behavior is always rx except while transmitting. Direction
+ * behaviour is always rx except while transmitting. Direction
  * is handled by driver with gpios, no direct hardware control
  */
 
