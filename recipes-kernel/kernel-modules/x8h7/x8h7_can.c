@@ -664,6 +664,7 @@ static int x8h7_can_stop(struct net_device *net)
   DBG_PRINT("\n");
 
   x8h7_can_hw_stop(priv);
+  x8h7_can_clean(net);
 
   close_candev(net);
   priv->force_quit = 1;
