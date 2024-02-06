@@ -2,13 +2,15 @@
 /**
  * Portenta X8
  * X8 H7 communication protocol
- * How it works:
- * This driver has two entry points:
- * 1) From userspace spidev char driver
- * 2) From kernel space peripheral subdrivers (/dev/adc, /dev/pwm, etc) calls that can invoke exported functions x8h7_pkt_enq x8h7_pkt_send x8h7_hook_set
- * Data transmission on SPI can be triggered by following sources:
- * a) From this module (accessing previous entry points) to h7
- * b) After reception of interrupt from h7
+ * How it works: this driver is a SPI bus single aggregator.
+ * Kernel space peripheral subdrivers (/dev/adc, /dev/pwm, etc) calls will invoke
+ * exported functions x8h7_pkt_enq x8h7_pkt_send x8h7_hook_set to enqueue their payload to be transmitted in x8h7_pkt_send_priv method
+ * Data transmission on SPI bus can be triggered by the following sources:
+ * a) From this module (peripheral subdrivers ioctl'ed typically) to H7
+ * b) When an interrupt event from H7 is received
+ *
+ * Please check available documentation on the H7 firmware repo
+ * - https://github.com/arduino/portentax8-stm32h7-fw/tree/master/doc
  *
  * Based on:
  *  Simple synchronous userspace interface to SPI devices
