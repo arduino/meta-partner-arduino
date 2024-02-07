@@ -182,7 +182,6 @@ static const struct can_bittiming_const x8h7_can_bittiming_const = {
   .brp_inc   =   1,
 };
 
-//static void x8h7_can_hw_rx(struct x8h7_can_priv *priv);
 static void x8h7_can_error_skb(struct net_device *net, int can_id, int data1);
 
 /**
@@ -383,61 +382,6 @@ static void x8h7_can_error_skb(struct net_device *net, int can_id, int data1)
     netdev_err(net, "cannot allocate error skb\n");
   }
 }
-
-/**
- */
-#if 0
-static void x8h7_can_hw_rx(struct x8h7_can_priv *priv)
-{
-  struct sk_buff   *skb;
-  struct can_frame *frame;
-  uint8_t          *data = priv->rx_pkt.data;
-
-  skb = alloc_can_skb(priv->net, &frame);
-  if (!skb) {
-    dev_err(priv->dev, "cannot allocate RX skb\n");
-    priv->net->stats.rx_dropped++;
-    return;
-  }
-
-  /*
-   * Controller Area Network Identifier structure
-   *
-   * bit 0-28 : CAN identifier (11/29 bit)
-   * bit 29   : error message frame flag (0 = data frame, 1 = error message)
-   * bit 30   : remote transmission request flag (1 = rtr frame)
-   * bit 31   : frame format flag (0 = standard 11 bit, 1 = extended 29 bit)
-   *
-   * CAN_EFF_FLAG 0x80000000U   EFF/SFF is set in the MSB
-   * CAN_RTR_FLAG 0x40000000U   remote transmission request
-   * CAN_ERR_FLAG 0x20000000U   error message frame
-   */
-  if (data[0] & 0x80) {
-    /* Extended ID format */
-    frame->can_id = CAN_EFF_FLAG;
-    frame->can_id |= ((data[0] & 0x1F) << 24) |
-                     (data[1] << 16) | (data[2] << 8) | data[3];
-  } else {
-    /* Standard ID format */
-    frame->can_id = ((data[2] & 0x01) << 8) | data[3];
-  }
-  /* Remote transmission request */
-  if (data[0] & 0x40) {
-    frame->can_id |= CAN_RTR_FLAG;
-  }
-
-  /* Data length */
-  frame->can_dlc = get_can_dlc(data[4] & 0x0F);
-  memcpy(frame->data, data + 5, frame->can_dlc);
-
-  priv->net->stats.rx_packets++;
-  priv->net->stats.rx_bytes += frame->can_dlc;
-
-  can_led_event(priv->net, CAN_LED_EVENT_RX);
-
-  netif_rx_ni(skb);
-}
-#endif
 
 /**
  */
