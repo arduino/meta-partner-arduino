@@ -205,54 +205,10 @@ static char* can_sts(enum can_state sts)
 static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
 {
   struct net_device  *net = priv->net;
-  enum can_state      new_state;
   int                 can_id = 0;
   int                 data1 = 0;
 
   DBG_PRINT("\n");
-  /* Update can state */
-  if (eflag & X8H7_CAN_STS_FLG_TX_BO) {
-    new_state = CAN_STATE_BUS_OFF;
-    can_id |= CAN_ERR_BUSOFF;
-  } else if (eflag & X8H7_CAN_STS_FLG_TX_EP) {
-    new_state = CAN_STATE_ERROR_PASSIVE;
-    can_id |= CAN_ERR_CRTL;
-    data1 |= CAN_ERR_CRTL_TX_PASSIVE;
-  } else if (eflag & X8H7_CAN_STS_FLG_RX_EP) {
-    new_state = CAN_STATE_ERROR_PASSIVE;
-    can_id |= CAN_ERR_CRTL;
-    data1 |= CAN_ERR_CRTL_RX_PASSIVE;
-  } else if (eflag & X8H7_CAN_STS_FLG_TX_WAR) {
-    new_state = CAN_STATE_ERROR_WARNING;
-    can_id |= CAN_ERR_CRTL;
-    data1 |= CAN_ERR_CRTL_TX_WARNING;
-  } else if (eflag & X8H7_CAN_STS_FLG_RX_WAR) {
-    new_state = CAN_STATE_ERROR_WARNING;
-    can_id |= CAN_ERR_CRTL;
-    data1 |= CAN_ERR_CRTL_RX_WARNING;
-  } else {
-    new_state = CAN_STATE_ERROR_ACTIVE;
-  }
-
-  /* Update can state statistics */
-  switch (priv->can.state) {
-  case CAN_STATE_ERROR_ACTIVE:
-    if (new_state >= CAN_STATE_ERROR_WARNING &&
-        new_state <= CAN_STATE_BUS_OFF) {
-      priv->can.can_stats.error_warning++;
-    }
-    /* fall through */
-  case CAN_STATE_ERROR_WARNING:
-    if (new_state >= CAN_STATE_ERROR_PASSIVE &&
-        new_state <= CAN_STATE_BUS_OFF) {
-      priv->can.can_stats.error_passive++;
-    }
-    break;
-  default:
-    break;
-  }
-  priv->can.state = new_state;
-  DBG_CAN_STATE(priv->net->name, priv->can.state);
 
   if (intf & X8H7_CAN_STS_INT_ERR)
   {
@@ -272,17 +228,6 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
       can_id |= CAN_ERR_CRTL;
       data1 |= CAN_ERR_CRTL_TX_OVERFLOW;
       x8h7_can_error_skb(net, can_id, data1);
-    }
-  }
-
-  if (priv->can.state == CAN_STATE_BUS_OFF) {
-    if (priv->can.restart_ms == 0) {
-      // @TODO: priv->force_quit = 1;
-      priv->can.can_stats.bus_off++;
-      can_bus_off(net);
-      // @TODO: mcp251x_hw_sleep(spi);
-      //break;
-      return;
     }
   }
 
