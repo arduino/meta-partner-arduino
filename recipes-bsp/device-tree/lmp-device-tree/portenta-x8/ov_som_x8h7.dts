@@ -61,7 +61,7 @@
 				pinctrl-0 = <&pinctrl_irq_x8h7>, <&pinctrl_gpio_x8h7>;
 				interrupt-parent = <&gpio1>;
 				interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
-				spi-max-frequency = <50000000>;
+				spi-max-frequency = <25000000>;
 			};
 		};
 	};
