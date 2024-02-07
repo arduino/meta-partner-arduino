@@ -414,15 +414,6 @@ static int x8h7_probe(struct spi_device *spi)
   int                  status;
   uint32_t             value;
 
-  /*
-   * spidev should never be referenced in DT without a specific
-   * compatible string, it is a Linux implementation thing
-   * rather than a description of the hardware.
-   */
-  WARN(spi->dev.of_node &&
-      of_device_is_compatible(spi->dev.of_node, "spidev"),
-      "%pOF: buggy DT: spidev listed directly in DT\n", spi->dev.of_node);
-
   /* Allocate driver data */
   spidev = kzalloc(sizeof(*spidev), GFP_KERNEL);
   if (!spidev)
