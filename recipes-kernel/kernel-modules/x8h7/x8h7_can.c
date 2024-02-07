@@ -557,7 +557,7 @@ static int x8h7_can_open(struct net_device *net)
   mutex_lock(&priv->lock);
 
   priv->force_quit = 0;
-
+  priv->tx_skb  = 0;
   priv->tx_len  = 0;
 
   priv->wq = alloc_workqueue("x8h7_can_wq", WQ_FREEZABLE | WQ_MEM_RECLAIM, 0);
