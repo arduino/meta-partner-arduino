@@ -412,6 +412,7 @@ static int x8h7_probe(struct spi_device *spi)
 {
   struct spidev_data  *spidev;
   int                  status;
+  uint32_t             value;
 
   /*
    * spidev should never be referenced in DT without a specific
@@ -431,7 +432,9 @@ static int x8h7_probe(struct spi_device *spi)
   spidev->spi = spi;
   mutex_init(&spidev->buf_lock);
 
-  spidev->speed_hz = spidev->spi->max_speed_hz;
+  /* Device speed */
+  if (!of_property_read_u32(spi->dev.of_node, "spi-max-frequency", &value))
+    spidev->speed_hz = value;
   DBG_PRINT("Configuring speed_hz=%d\n", spidev->speed_hz);
 
   status = 0;
