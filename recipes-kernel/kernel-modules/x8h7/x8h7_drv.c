@@ -400,8 +400,6 @@ EXPORT_SYMBOL_GPL(x8h7_dbg_set);
  */
 static irqreturn_t x8h7_threaded_isr(int irq, void *data)
 {
-  //struct spidev_data  *spidev = (struct spidev_data*)data;
-
   DBG_PRINT("Got IRQ from H7\n");
   x8h7_pkt_send_priv(1);
 
@@ -430,7 +428,7 @@ static int x8h7_probe(struct spi_device *spi)
 
   status = 0;
 
-  /* interrupt request */
+  /* Interrupt request */
   if (spi->irq > 0) {
     int ret;
     ret = devm_request_threaded_irq(&spi->dev, spi->irq,
@@ -474,7 +472,7 @@ static int x8h7_remove(struct spi_device *spi)
 {
   struct spidev_data	*spidev = spi_get_drvdata(spi);
 
-  /* make sure ops on existing fds can abort cleanly */
+  /* Make sure ops on existing fds can abort cleanly */
   kfree(spidev);
 
   return 0;
