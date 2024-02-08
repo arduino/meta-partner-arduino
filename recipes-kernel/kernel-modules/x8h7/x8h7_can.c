@@ -30,7 +30,7 @@
 #define DRIVER_NAME "x8h7_can"
 
 /* DEBUG HANDLING */
-//#define DEBUG
+#define DEBUG
 #include "debug.h"
 #ifdef DEBUG
   #define DBG_CAN_STATE(d, s) { \
@@ -145,16 +145,12 @@ struct x8h7_can_priv {
   struct device            *dev;
   int                       periph;
 
-  //wait_queue_head_t         wait;
-  //int                       rx_cnt;
-  //x8h7_pkt_t                rx_pkt;
-
-  struct sk_buff           *tx_skb;
+  int                       tx_frame_rdy_cnt;
+  struct timer_list         tx_timer;
   int                       tx_len;
 
   struct workqueue_struct  *wq;
   struct work_struct        tx_work;
-  struct work_struct        restart_work;
 
   int                       force_quit;
   int                       after_suspend;
@@ -235,10 +231,7 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
     net->stats.tx_bytes += priv->tx_len;
     priv->tx_len = 0;
     can_led_event(net, CAN_LED_EVENT_TX);
-    if (priv->tx_skb) {
-      can_get_echo_skb(net, 0);
-      priv->tx_skb = NULL;
-    }
+    //can_get_echo_skb(net, 0);
     netif_wake_queue(net);
   }
 }
@@ -298,13 +291,8 @@ static void x8h7_can_clean(struct net_device *net)
 
   DBG_PRINT("\n");
 
-  if (priv->tx_skb)
-  {
-    net->stats.tx_errors++;
-    can_free_echo_skb(priv->net, 0);
-    priv->tx_skb = NULL;
-  }
-  priv->tx_len = 0;
+  net->stats.tx_errors++;
+  can_free_echo_skb(priv->net, 0);
 }
 
 /**
@@ -421,9 +409,17 @@ static void x8h7_can_hw_tx_enqueue(struct x8h7_can_priv *priv, struct can_frame 
 
 /**
  */
-static void x8h7_can_hw_tx_send(void)
+void x8h7_can_hw_tx_timer_callback(struct timer_list * t)
 {
-  x8h7_pkt_send();
+  struct x8h7_can_priv *priv = from_timer(priv, t, tx_timer);
+
+  DBG_PRINT("\n");
+
+  if (priv->tx_frame_rdy_cnt) {
+    queue_work(priv->wq, &priv->tx_work);
+  }
+
+  mod_timer(&priv->tx_timer, jiffies + msecs_to_jiffies(1000));
 }
 
 /**
@@ -431,56 +427,13 @@ static void x8h7_can_hw_tx_send(void)
 static void x8h7_can_tx_work_handler(struct work_struct *ws)
 {
   struct x8h7_can_priv *priv = container_of(ws, struct x8h7_can_priv, tx_work);
-  struct can_frame     *frame;
 
   DBG_PRINT("\n");
 
-  if (priv->tx_skb)
-  {
-    frame = (struct can_frame *)priv->tx_skb->data;
-    priv->tx_len = frame->can_dlc;
-    x8h7_can_hw_tx_enqueue(priv, frame);
-    x8h7_can_hw_tx_send();
+  if (priv->tx_frame_rdy_cnt) {
+    x8h7_pkt_send();
+    priv->tx_frame_rdy_cnt = 0;
   }
-}
-
-/**
- */
-static void x8h7_can_restart_work_handler(struct work_struct *ws)
-{
-  struct x8h7_can_priv *priv = container_of(ws, struct x8h7_can_priv, restart_work);
-  struct net_device    *net = priv->net;
-
-  DBG_PRINT("\n");
-  mutex_lock(&priv->lock);
-  if (priv->after_suspend) {
-    x8h7_can_hw_stop(priv);
-    x8h7_can_hw_setup(priv);
-    priv->force_quit = 0;
-    if (priv->after_suspend & AFTER_SUSPEND_RESTART) {
-      DBG_PRINT("AFTER_SUSPEND_RESTART\n");
-      x8h7_can_set_normal_mode(priv);
-    } else if (priv->after_suspend & AFTER_SUSPEND_UP) {
-      DBG_PRINT("AFTER_SUSPEND_UP\n");
-      netif_device_attach(net);
-      x8h7_can_clean(net);
-      x8h7_can_set_normal_mode(priv);
-      netif_wake_queue(net);
-    } else {
-      //mcp251x_hw_sleep(spi); @TODO:
-    }
-    priv->after_suspend = 0;
-  }
-
-  if (priv->restart_tx) {
-    DBG_PRINT("restart_tx\n");
-    priv->restart_tx = 0;
-    //mcp251x_write_reg(spi, TXBCTRL(0), 0); @TODO: cosa fa?
-    x8h7_can_clean(net);
-    netif_wake_queue(net);
-    x8h7_can_error_skb(net, CAN_ERR_RESTARTED, 0);
-  }
-  mutex_unlock(&priv->lock);
 }
 
 /**
@@ -498,11 +451,9 @@ static int x8h7_can_open(struct net_device *net)
     return ret;
   }
 
-  mutex_lock(&priv->lock);
-
   priv->force_quit = 0;
-  priv->tx_skb  = 0;
   priv->tx_len  = 0;
+  priv->tx_frame_rdy_cnt = 0;
 
   priv->wq = alloc_workqueue("x8h7_can_wq", WQ_FREEZABLE | WQ_MEM_RECLAIM, 0);
   if (!priv->wq) {
@@ -510,7 +461,6 @@ static int x8h7_can_open(struct net_device *net)
     goto out_clean;
   }
   INIT_WORK(&priv->tx_work, x8h7_can_tx_work_handler);
-  INIT_WORK(&priv->restart_work, x8h7_can_restart_work_handler);
 
   mutex_init(&priv->lock);
 
@@ -527,10 +477,11 @@ static int x8h7_can_open(struct net_device *net)
     goto out_free_wq;
   }
 
+  timer_setup(&priv->tx_timer, x8h7_can_hw_tx_timer_callback, 0);
+
   can_led_event(net, CAN_LED_EVENT_OPEN);
 
   netif_wake_queue(net);
-  mutex_unlock(&priv->lock);
 
   return 0;
 
@@ -538,9 +489,7 @@ out_free_wq:
   destroy_workqueue(priv->wq);
 out_clean:
   x8h7_hook_set(priv->periph, NULL, NULL);
-//out_close:
   close_candev(net);
-  mutex_unlock(&priv->lock);
   return ret;
 }
 
@@ -556,14 +505,13 @@ static int x8h7_can_stop(struct net_device *net)
   x8h7_can_clean(net);
 
   close_candev(net);
-  priv->force_quit = 1;
   mutex_lock(&priv->lock);
   x8h7_hook_set(priv->periph, NULL, NULL);
   destroy_workqueue(priv->wq);
   priv->wq = NULL;
+  del_timer(&priv->tx_timer);
 
   priv->can.state = CAN_STATE_STOPPED;
-
   mutex_unlock(&priv->lock);
 
   can_led_event(net, CAN_LED_EVENT_STOP);
@@ -578,21 +526,29 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
   const struct device  *dev = priv->dev;
+  struct can_frame     *frame;
+
 
   DBG_PRINT("\n");
 
   if (can_dropped_invalid_skb(net, skb))
     return NETDEV_TX_OK;
 
-  if (priv->tx_skb) {
+  if (priv->tx_frame_rdy_cnt == 32) {
     netif_stop_queue(net);
     dev_warn(dev, "hard_xmit called while tx busy\n");
     return NETDEV_TX_BUSY;
   }
 
-  priv->tx_skb = skb;
-  can_put_echo_skb(priv->tx_skb, net, 0);
-  queue_work(priv->wq, &priv->tx_work);
+  frame = (struct can_frame *)skb->data;
+  x8h7_can_hw_tx_enqueue(priv, frame);
+  priv->tx_frame_rdy_cnt++;
+  //can_put_echo_skb(skb, net, 0);
+
+  if (timer_pending(&priv->tx_timer))
+     mod_timer_pending(&priv->tx_timer, jiffies + msecs_to_jiffies(1000));
+  else
+    add_timer(&priv->tx_timer);
 
   return NETDEV_TX_OK;
 }
@@ -636,11 +592,6 @@ static int x8h7_can_do_set_mode(struct net_device *net, enum can_mode mode)
     x8h7_can_clean(net);
     /* We have to delay work since SPI I/O may sleep */
     priv->can.state = CAN_STATE_ERROR_ACTIVE;
-    priv->restart_tx = 1;
-    if (priv->can.restart_ms == 0) {
-      priv->after_suspend = AFTER_SUSPEND_RESTART;
-    }
-    queue_work(priv->wq, &priv->restart_work);
     break;
   default:
     return -EOPNOTSUPP;
