@@ -53,9 +53,13 @@
 
 struct spidev_data {
   struct spi_device  *spi;
-  struct mutex        buf_lock;
+  struct mutex        spi_lock;
   u32                 speed_hz;
-  u8                 *x8h7_txb;
+  struct mutex        txb_lock;
+  u8                 *x8h7_txb_1;
+  u8                 *x8h7_txb_2;
+  u8                 *x8h7_txb_active;
+  u8                 *x8h7_txb_transfer;
   u16                 x8h7_txl;
   u8                 *x8h7_rxb;
 };
@@ -177,9 +181,9 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
   x8h7_subpkt_t      *pkt;
   uint8_t            *ptr;
 
-  mutex_lock(&spidev->buf_lock);
+  mutex_lock(&spidev->txb_lock);
 
-  ptr = spidev->x8h7_txb;
+  ptr = spidev->x8h7_txb_active;
   hdr = (x8h7_pkthdr_t*)ptr;
 
   if ((hdr->size + sizeof(x8h7_subpkt_t) + size) < X8H7_BUF_SIZE) {
@@ -199,11 +203,11 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
     hdr->size += sizeof(x8h7_subpkt_t) + size;
     hdr->checksum = hdr->size ^ 0x5555;
     spidev->x8h7_txl = hdr->size;
-    mutex_unlock(&spidev->buf_lock);
+    mutex_unlock(&spidev->txb_lock);
     return 0;
   }
 
-  mutex_unlock(&spidev->buf_lock);
+  mutex_unlock(&spidev->txb_lock);
 
   return -1;
 }
@@ -315,18 +319,26 @@ static inline int x8h7_pkt_send_priv(int arg)
   x8h7_pkthdr_t        *hdr;
   int                   len;
 
-  mutex_lock(&spidev->buf_lock);
-
   DBG_PRINT("\n");
+
+  mutex_lock(&spidev->txb_lock);
+
+  spidev->x8h7_txb_transfer = spidev->x8h7_txb_active;
+  spidev->x8h7_txb_active = (spidev->x8h7_txb_active == spidev->x8h7_txb_1) ? spidev->x8h7_txb_2 : spidev->x8h7_txb_1;
+
+  mutex_unlock(&spidev->txb_lock);
+
+
+  mutex_lock(&spidev->spi_lock);
 
   /* Exchange of the packet header. */
   x8h7_spi_trx(spidev->spi,
-               spidev->x8h7_txb, spidev->x8h7_rxb, sizeof(x8h7_pkthdr_t));
+               spidev->x8h7_txb_transfer, spidev->x8h7_rxb, sizeof(x8h7_pkthdr_t));
 
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
   if ((hdr->size != 0) && ((hdr->size ^ 0x5555) != hdr->checksum)) {
     DBG_ERROR("Out of sync %x %x\n", hdr->size, hdr->checksum);
-    mutex_unlock(&spidev->buf_lock);
+    mutex_unlock(&spidev->spi_lock);
     return -1;
   }
 
@@ -334,16 +346,16 @@ static inline int x8h7_pkt_send_priv(int arg)
   if (len == 0) {
     DBG_ERROR("Transaction length is zero\n");
     x8h7_spi_trx(spidev->spi,
-                 spidev->x8h7_txb + sizeof(x8h7_pkthdr_t), spidev->x8h7_rxb,
+                 spidev->x8h7_txb_transfer + sizeof(x8h7_pkthdr_t), spidev->x8h7_rxb,
                  sizeof(x8h7_pkthdr_t));
-    mutex_unlock(&spidev->buf_lock);
+    mutex_unlock(&spidev->spi_lock);
     return 0;
   }
 
-  pkt_dump("Send", spidev->x8h7_txb);
+  pkt_dump("Send", spidev->x8h7_txb_transfer);
 
   x8h7_spi_trx(spidev->spi,
-               spidev->x8h7_txb + sizeof(x8h7_pkthdr_t),
+               spidev->x8h7_txb_transfer + sizeof(x8h7_pkthdr_t),
                spidev->x8h7_rxb + sizeof(x8h7_pkthdr_t), len);
 
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
@@ -356,11 +368,11 @@ static inline int x8h7_pkt_send_priv(int arg)
     }
   }
 
-  memset(spidev->x8h7_txb, 0, X8H7_BUF_SIZE);
+  memset(spidev->x8h7_txb_transfer, 0, X8H7_BUF_SIZE);
   memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
   spidev->x8h7_txl = 0;
 
-  mutex_unlock(&spidev->buf_lock);
+  mutex_unlock(&spidev->spi_lock);
   return 0;
 }
 
@@ -419,7 +431,7 @@ static int x8h7_probe(struct spi_device *spi)
 
   /* Initialize the driver data */
   spidev->spi = spi;
-  mutex_init(&spidev->buf_lock);
+  mutex_init(&spidev->spi_lock);
 
   /* Device speed */
   if (!of_property_read_u32(spi->dev.of_node, "spi-max-frequency", &value))
@@ -442,13 +454,26 @@ static int x8h7_probe(struct spi_device *spi)
     DBG_PRINT("IRQ request irq %d OK\n", spi->irq);
   }
 
+  mutex_init(&spidev->txb_lock);
+
   if (status == 0) {
-    spidev->x8h7_txb = devm_kzalloc(&spi->dev, X8H7_BUF_SIZE, GFP_KERNEL);
-    if (!spidev->x8h7_txb) {
-      DBG_ERROR("X8H7 Tx buffer memory fail\n");
+    spidev->x8h7_txb_1 = devm_kzalloc(&spi->dev, X8H7_BUF_SIZE, GFP_KERNEL);
+    if (!spidev->x8h7_txb_1) {
+      DBG_ERROR("X8H7 Tx buffer 1 memory fail\n");
       status = -ENOMEM;
     }
   }
+
+  if (status == 0) {
+    spidev->x8h7_txb_2 = devm_kzalloc(&spi->dev, X8H7_BUF_SIZE, GFP_KERNEL);
+    if (!spidev->x8h7_txb_2) {
+      DBG_ERROR("X8H7 Tx buffer 2 memory fail\n");
+      status = -ENOMEM;
+    }
+  }
+
+  spidev->x8h7_txb_active   = spidev->x8h7_txb_1;
+  spidev->x8h7_txb_transfer = 0;
 
   if (status == 0) {
     spidev->x8h7_rxb = devm_kzalloc(&spi->dev, X8H7_BUF_SIZE, GFP_KERNEL);
