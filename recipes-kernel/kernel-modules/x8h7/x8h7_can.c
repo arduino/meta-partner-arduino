@@ -280,6 +280,7 @@ static int x8h7_can_open(struct net_device *net)
     return ret;
   }
 
+  spin_lock_init(&priv->tx_obj_buf.lock);
   priv->tx_obj_buf.head      = 0;
   priv->tx_obj_buf.tail      = 0;
   priv->tx_obj_buf.num_elems = 0;
@@ -349,6 +350,19 @@ static int x8h7_can_stop(struct net_device *net)
 
 /**
  */
+static int x8h7_can_frame_message_tx_obj_num_elems(struct x8h7_can_frame_message_tx_obj_buf * tx_obj_buf)
+{
+  uint8_t num_elems = 0;
+
+  spin_lock(&tx_obj_buf->lock);
+  num_elems = tx_obj_buf->num_elems;
+  spin_unlock(&tx_obj_buf->lock);
+
+  return num_elems;
+}
+
+/**
+ */
 static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
                                        struct net_device *net)
 {
@@ -362,16 +376,20 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
   if (can_dropped_invalid_skb(net, skb))
     return NETDEV_TX_OK;
 
-  if (priv->tx_obj_buf.num_elems == 32) {
+  if (x8h7_can_frame_message_tx_obj_num_elems(&priv->tx_obj_buf) == X8H7_TX_FIFO_SIZE) {
     netif_stop_queue(net);
     dev_warn(dev, "hard_xmit called while tx fifo is full\n");
     return NETDEV_TX_BUSY;
   }
 
+  spin_lock(&priv->tx_obj_buf.lock);
+
   frame = (struct can_frame *)skb->data;
   x8h7_can_frame_to_tx_obj(frame, priv->tx_obj_buf.data + priv->tx_obj_buf.head);
   priv->tx_obj_buf.head = (priv->tx_obj_buf.head + 1) % X8H7_TX_FIFO_SIZE;
   priv->tx_obj_buf.num_elems++;
+
+  spin_unlock(&priv->tx_obj_buf.lock);
 
   //can_put_echo_skb(skb, net, 0);
 
@@ -394,23 +412,30 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
 
   DBG_PRINT("\n");
 
-  while (priv->tx_obj_buf.tail != priv->tx_obj_buf.head)
+  while (x8h7_can_frame_message_tx_obj_num_elems(&priv->tx_obj_buf) > 0)
   {
-    union x8h7_can_frame_message * x8h7_can_msg = priv->tx_obj_buf.data + priv->tx_obj_buf.tail;
+    union x8h7_can_frame_message x8h7_can_msg;
 
-    x8h7_pkt_enq(priv->periph,
-                 X8H7_CAN_OC_SEND,
-                 X8H7_CAN_HEADER_SIZE + x8h7_can_msg->field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
-                 x8h7_can_msg->buf);
+    spin_lock(&priv->tx_obj_buf.lock);
 
+    memcpy(&x8h7_can_msg,
+           priv->tx_obj_buf.data + priv->tx_obj_buf.tail,
+           sizeof(x8h7_can_msg));
     priv->tx_obj_buf.tail = (priv->tx_obj_buf.tail + 1) % X8H7_TX_FIFO_SIZE;
     priv->tx_obj_buf.num_elems--;
 
+    spin_unlock(&priv->tx_obj_buf.lock);
+
+    x8h7_pkt_enq(priv->periph,
+                 X8H7_CAN_OC_SEND,
+                 X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+                 x8h7_can_msg.buf);
+
 #ifdef DEBUG
     i = 0; len = 0;
-    for (i = 0; (i < x8h7_can_msg->field.len) && (len < sizeof(data_str)); i++)
-      len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", x8h7_can_msg->field.data[i]);
-    DBG_PRINT("Enqueue CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg->field.id, x8h7_can_msg->field.len, data_str);
+    for (i = 0; (i < x8h7_can_msg.field.len) && (len < sizeof(data_str)); i++)
+      len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", x8h7_can_msg.field.data[i]);
+    DBG_PRINT("Enqueue CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg.field.id, x8h7_can_msg.field.len, data_str);
 #endif
   }
 
