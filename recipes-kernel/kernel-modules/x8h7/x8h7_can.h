@@ -99,6 +99,7 @@ union x8h7_can_frame_message
 
 struct x8h7_can_frame_message_tx_obj_buf
 {
+  spinlock_t                   lock;
   uint8_t                      head;
   uint8_t                      tail;
   uint8_t                      num_elems;
