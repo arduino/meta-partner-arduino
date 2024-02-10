@@ -60,7 +60,8 @@ struct spidev_data {
   u8                 *x8h7_txb_2;
   u8                 *x8h7_txb_active;
   u8                 *x8h7_txb_transfer;
-  u16                 x8h7_txl;
+  u16                 x8h7_txl_active;
+  u16                 x8h7_txl_transfer;
   u8                 *x8h7_rxb;
 };
 
@@ -202,7 +203,7 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
     }
     hdr->size += sizeof(x8h7_subpkt_t) + size;
     hdr->checksum = hdr->size ^ 0x5555;
-    spidev->x8h7_txl = hdr->size;
+    spidev->x8h7_txl_active = hdr->size;
     mutex_unlock(&spidev->txb_lock);
     return 0;
   }
@@ -325,6 +326,10 @@ static inline int x8h7_pkt_send_priv(int arg)
 
   spidev->x8h7_txb_transfer = spidev->x8h7_txb_active;
   spidev->x8h7_txb_active = (spidev->x8h7_txb_active == spidev->x8h7_txb_1) ? spidev->x8h7_txb_2 : spidev->x8h7_txb_1;
+  memset(spidev->x8h7_txb_active, 0, X8H7_BUF_SIZE);
+
+  spidev->x8h7_txl_transfer = spidev->x8h7_txl_active;
+  spidev->x8h7_txl_active = 0;
 
   mutex_unlock(&spidev->txb_lock);
 
@@ -337,12 +342,12 @@ static inline int x8h7_pkt_send_priv(int arg)
 
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
   if ((hdr->size != 0) && ((hdr->size ^ 0x5555) != hdr->checksum)) {
-    DBG_ERROR("Out of sync %x %x\n", hdr->size, hdr->checksum);
+    DBG_ERROR("Out of sync %04x %04x\n", hdr->size, hdr->checksum);
     mutex_unlock(&spidev->spi_lock);
     return -1;
   }
 
-  len = max(hdr->size, spidev->x8h7_txl);
+  len = max(hdr->size, spidev->x8h7_txl_transfer);
   if (len == 0) {
     DBG_ERROR("Transaction length is zero\n");
     x8h7_spi_trx(spidev->spi,
@@ -368,9 +373,7 @@ static inline int x8h7_pkt_send_priv(int arg)
     }
   }
 
-  memset(spidev->x8h7_txb_transfer, 0, X8H7_BUF_SIZE);
   memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
-  spidev->x8h7_txl = 0;
 
   mutex_unlock(&spidev->spi_lock);
   return 0;
@@ -440,20 +443,6 @@ static int x8h7_probe(struct spi_device *spi)
 
   status = 0;
 
-  /* Interrupt request */
-  if (spi->irq > 0) {
-    int ret;
-    ret = devm_request_threaded_irq(&spi->dev, spi->irq,
-                                    NULL, x8h7_threaded_isr,
-                                    IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-                                    "x8h7", spidev);
-    if (ret) {
-      DBG_ERROR("Failed request IRQ #%d\n", spi->irq);
-      status = -ENODEV;
-    }
-    DBG_PRINT("IRQ request irq %d OK\n", spi->irq);
-  }
-
   mutex_init(&spidev->txb_lock);
 
   if (status == 0) {
@@ -472,8 +461,16 @@ static int x8h7_probe(struct spi_device *spi)
     }
   }
 
-  spidev->x8h7_txb_active   = spidev->x8h7_txb_1;
-  spidev->x8h7_txb_transfer = 0;
+  if (status == 0)
+  {
+    memset(spidev->x8h7_txb_1, 0, X8H7_BUF_SIZE);
+    memset(spidev->x8h7_txb_2, 0, X8H7_BUF_SIZE);
+
+    spidev->x8h7_txb_active = spidev->x8h7_txb_1;
+    spidev->x8h7_txb_transfer = 0;
+    spidev->x8h7_txl_active = 0;
+    spidev->x8h7_txl_transfer = 0;
+  }
 
   if (status == 0) {
     spidev->x8h7_rxb = devm_kzalloc(&spi->dev, X8H7_BUF_SIZE, GFP_KERNEL);
@@ -481,6 +478,20 @@ static int x8h7_probe(struct spi_device *spi)
       DBG_ERROR("X8H7 Rx buffer memory fail\n");
       status = -ENOMEM;
     }
+  }
+
+  /* Configure interrupt request */
+  if (spi->irq > 0) {
+    int ret;
+    ret = devm_request_threaded_irq(&spi->dev, spi->irq,
+                                    NULL, x8h7_threaded_isr,
+                                    IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+                                    "x8h7", spidev);
+    if (ret) {
+      DBG_ERROR("Failed request IRQ #%d\n", spi->irq);
+      status = -ENODEV;
+    }
+    DBG_PRINT("IRQ request irq %d OK\n", spi->irq);
   }
 
   x8h7_spidev = spidev;
