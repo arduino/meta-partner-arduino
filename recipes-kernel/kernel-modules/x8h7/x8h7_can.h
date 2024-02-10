@@ -27,9 +27,11 @@
 #define X8H7_CAN_OC_STS     0x40
 #define X8H7_CAN_OC_FLT     0x50
 
-#define X8H7_CAN_STS_INT_TX      0x01
-#define X8H7_CAN_STS_INT_RX      0x02
-#define X8H7_CAN_STS_INT_ERR     0x04
+#define X8H7_CAN_STS_INT_TX_COMPLETE       0x01
+#define X8H7_CAN_STS_INT_RX                0x02
+#define X8H7_CAN_STS_INT_ERR               0x04
+#define X8H7_CAN_STS_INT_TX_ABORT_COMPLETE 0x08
+#define X8H7_CAN_STS_INT_TX_FIFO_EMPTY     0x10
 
 #define X8H7_CAN_STS_FLG_RX_OVR  0x01  // Receive Buffer Overflow
 #define X8H7_CAN_STS_FLG_TX_BO   0x02  // Bus-Off
