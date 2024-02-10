@@ -115,6 +115,8 @@ struct x8h7_can_priv {
   int                       periph;
 
   struct x8h7_can_frame_message_tx_obj_buf tx_obj_buf;
+  int                       req_cnt;
+  int                       ack_cnt;
 
   int                       tx_len;
 
