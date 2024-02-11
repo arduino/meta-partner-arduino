@@ -177,8 +177,6 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
   x8h7_subpkt_t      *pkt;
   uint8_t            *ptr;
 
-  mutex_lock(&spidev->lock);
-
   ptr = spidev->x8h7_txb;
   hdr = (x8h7_pkthdr_t*)ptr;
 
@@ -199,15 +197,39 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
     hdr->size += sizeof(x8h7_subpkt_t) + size;
     hdr->checksum = hdr->size ^ 0x5555;
     spidev->x8h7_txl = hdr->size;
-    mutex_unlock(&spidev->lock);
     return 0;
   }
 
+  return -ENOMEM;
+}
+
+static int x8h7_pkt_send(void);
+/**
+ */
+int x8h7_pkt_send_sync(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
+{
+  struct spidev_data *spidev = x8h7_spidev;
+  int ret;
+
+  mutex_lock(&spidev->lock);
+  ret = x8h7_pkt_enq(peripheral, opcode, size, data);
+  if (ret < 0) {
+    printk("x8h7_pkt_enq failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  ret = x8h7_pkt_send();
+  if (ret < 0) {
+    printk("x8h7_pkt_send failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
   mutex_unlock(&spidev->lock);
 
-  return -1;
+  return ret;
 }
-EXPORT_SYMBOL_GPL(x8h7_pkt_enq);
+EXPORT_SYMBOL_GPL(x8h7_pkt_send_sync);
+
 
 /**
  * Function to parse data coming from h7
@@ -284,8 +306,6 @@ int x8h7_spi_trx(struct spi_device *spi,
     uint8_t * data_ptr = 0;
     int i = 0, l = 0;
 
-    DBG_PRINT("\n");
-
     l = 0;
     data_ptr = (uint8_t *)tx_buf;
     for (i = 0; (i < len) && (l < sizeof(data_str)); i++)
@@ -307,15 +327,12 @@ int x8h7_spi_trx(struct spi_device *spi,
  * Function to send/receive physically data over SPI,
  * moreover in this function we process received data
  * and dispatch to corresponding peripheral
- * @TODO: remove arg?
  */
-static inline int x8h7_pkt_send_priv(int arg)
+static int x8h7_pkt_send(void)
 {
   struct spidev_data   *spidev = x8h7_spidev;
   x8h7_pkthdr_t        *hdr;
   int                   len;
-
-  mutex_lock(&spidev->lock);
 
   DBG_PRINT("\n");
 
@@ -326,7 +343,6 @@ static inline int x8h7_pkt_send_priv(int arg)
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
   if ((hdr->size != 0) && ((hdr->size ^ 0x5555) != hdr->checksum)) {
     DBG_ERROR("Out of sync %04x %04x\n", hdr->size, hdr->checksum);
-    mutex_unlock(&spidev->lock);
     return -1;
   }
 
@@ -336,7 +352,6 @@ static inline int x8h7_pkt_send_priv(int arg)
     x8h7_spi_trx(spidev->spi,
                  spidev->x8h7_txb + sizeof(x8h7_pkthdr_t), spidev->x8h7_rxb,
                  sizeof(x8h7_pkthdr_t));
-    mutex_unlock(&spidev->lock);
     return 0;
   }
 
@@ -356,19 +371,12 @@ static inline int x8h7_pkt_send_priv(int arg)
     }
   }
 
+  memset(spidev->x8h7_txb, 0, X8H7_BUF_SIZE);
   memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
+  spidev->x8h7_txl = 0;
 
-  mutex_unlock(&spidev->lock);
   return 0;
 }
-
-/**
- */
-int x8h7_pkt_send(void)
-{
-  return x8h7_pkt_send_priv(0);
-}
-EXPORT_SYMBOL_GPL(x8h7_pkt_send);
 
 /**
  */
@@ -398,8 +406,12 @@ EXPORT_SYMBOL_GPL(x8h7_dbg_set);
  */
 static irqreturn_t x8h7_threaded_isr(int irq, void *data)
 {
+  struct spidev_data  *spidev = (struct spidev_data*)data;
+
+  mutex_lock(&spidev->lock);
   DBG_PRINT("Got IRQ from H7\n");
-  x8h7_pkt_send_priv(1);
+  x8h7_pkt_send();
+  mutex_unlock(&spidev->lock);
 
   return IRQ_HANDLED;
 }

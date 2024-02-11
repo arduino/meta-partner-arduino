@@ -220,8 +220,7 @@ static ssize_t x8h7_h7_write(struct file *file,
     return -EFAULT;
   }
 
-  x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_DATA, len, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_H7_PERIPH, X8H7_H7_OC_DATA, len, data);
 
   return len;
   */
@@ -248,8 +247,7 @@ static long x8h7_h7_ioctl(struct file *file, unsigned int cmd, unsigned long arg
   }
   switch (cmd) {
   case X8H7_IOCTL_FW_VER:
-    x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
-    x8h7_pkt_send();
+    x8h7_pkt_send_sync(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
     retval = x8h7_h7_pkt_get(priv);
     if (retval < 0) {
       return -ETIMEDOUT;
@@ -287,17 +285,13 @@ static long x8h7_h7_ioctl(struct file *file, unsigned int cmd, unsigned long arg
   case X8H7_IOCTL_MODE_GET:
     retval = put_user(priv->mode, (__u32 __user *)arg);
     break;
-  case X8H7_IOCTL_PKT_ENQ:
+  case X8H7_IOCTL_PKT_SYNC_SEND:
     retval = copy_from_user(&pkt, (void __user *)arg, sizeof(pkt));
     if (retval == 0) {
-      retval = x8h7_pkt_enq(pkt.peripheral, pkt.opcode, pkt.size, pkt.data);
-      DBG_PRINT("x8h7_pkt_enq(%02X, %02X, %04X, ...) return %d\n",
+      retval = x8h7_pkt_send_sync(pkt.peripheral, pkt.opcode, pkt.size, pkt.data);
+      DBG_PRINT("x8h7_pkt_send_sync(%02X, %02X, %04X, ...) return %d\n",
                 pkt.peripheral, pkt.opcode, pkt.size, retval);
     }
-    break;
-  case X8H7_IOCTL_PKT_SEND:
-    retval = x8h7_pkt_send();
-    DBG_PRINT("x8h7_pkt_send() return: %ld\n", retval);
     break;
   default:
     retval = -ENOTTY;
@@ -319,8 +313,7 @@ ssize_t x8h7_read_firmware_version(char * buf, size_t const buf_size)
 {
   struct x8h7_h7_priv * priv = x8h7_h7;
 
-  x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_H7_PERIPH, X8H7_H7_OC_FW_GET, 0, NULL);
   if (x8h7_h7_pkt_get(priv) < 0)
     return -ETIMEDOUT;
 
@@ -354,8 +347,7 @@ ssize_t x8h7_read_chip_uid(char * buf, size_t const buf_size)
 {
   struct x8h7_h7_priv * priv = x8h7_h7;
 
-  x8h7_pkt_enq(X8H7_H7_PERIPH, X8H7_GET_UID_REQ, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_H7_PERIPH, X8H7_GET_UID_REQ, 0, NULL);
   if (x8h7_h7_pkt_get(priv) < 0)
     return -ETIMEDOUT;
 

@@ -243,8 +243,7 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
             x8h7_msg.field.time_segment_2,
             x8h7_msg.field.sync_jump_width);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
 
   return 0;
 }
@@ -253,8 +252,7 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
  */
 static int x8h7_can_hw_stop(struct x8h7_can_priv *priv)
 {
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
 
   return 0;
 }
@@ -461,28 +459,28 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
   int   len;
 #endif
 
-  DBG_PRINT("\n");
-
   while (tx_obj_buf_num_elems(&priv->tx_obj_buf) > 0 && h7_tx_fifo_fill_level(priv) < 1)
   {
     union x8h7_can_frame_message x8h7_can_msg;
     tx_obj_buf_pop(&priv->tx_obj_buf, &x8h7_can_msg);
-    x8h7_pkt_enq(priv->periph,
-                 X8H7_CAN_OC_SEND,
-                 X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
-                 x8h7_can_msg.buf);
+
 #ifdef DEBUG
     i = 0; len = 0;
     for (i = 0; (i < x8h7_can_msg.field.len) && (len < sizeof(data_str)); i++)
       len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", x8h7_can_msg.field.data[i]);
-    DBG_PRINT("Enqueue CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg.field.id, x8h7_can_msg.field.len, data_str);
+    DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg.field.id, x8h7_can_msg.field.len, data_str);
 #endif
 
     spin_lock(&priv->tx_obj_buf.lock);
     priv->req_cnt++;
     spin_unlock(&priv->tx_obj_buf.lock);
+
+    x8h7_pkt_send_sync(priv->periph,
+                       X8H7_CAN_OC_SEND,
+                       X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+                       x8h7_can_msg.buf);
   }
-  x8h7_pkt_send();
+//  x8h7_pkt_send();
 }
 
 /**
@@ -506,8 +504,7 @@ static int x8h7_can_hw_do_set_bittiming(struct net_device *net)
             x8h7_msg.field.time_segment_2,
             x8h7_msg.field.sync_jump_width);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_BITTIM, sizeof(x8h7_msg.buf), x8h7_msg.buf);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_BITTIM, sizeof(x8h7_msg.buf), x8h7_msg.buf);
 
   return 0;
 }
@@ -567,8 +564,7 @@ static int x8h7_can_hw_config_filter(struct x8h7_can_priv *priv,
 
   DBG_PRINT("SEND idx %X, id %X, mask %X\n", idx, id, mask);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
 
   return 0;
 }
