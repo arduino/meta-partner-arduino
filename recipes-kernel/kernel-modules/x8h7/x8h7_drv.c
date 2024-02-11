@@ -60,11 +60,6 @@ struct spidev_data {
   u8                 *x8h7_rxb;
 };
 
-
-static unsigned bufsiz = 4096;
-module_param(bufsiz, uint, S_IRUGO);
-MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
-
 /*-------------------------------------------------------------------------*/
 
 struct spidev_data  *x8h7_spidev;
