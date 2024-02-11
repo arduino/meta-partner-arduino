@@ -23,7 +23,7 @@ index 28b00548..87b73baf 100644
      MMFirmwareUpdateSettings *update_settings;
      const gchar              *version;
  
-+    mm_obj_dbg (self, "ilario: firmware version -> configure netdev");
++    mm_obj_dbg (self, "arduino: firmware version -> configure netdev");
 +
      update_settings = g_task_get_task_data (task);
  
@@ -34,7 +34,7 @@ index 28b00548..87b73baf 100644
          mm_firmware_update_settings_set_version (update_settings, version);
  
 +    if (version)
-+        mm_obj_dbg (self, "ilario: firmware version: %s", version);
++        mm_obj_dbg (self, "arduino: firmware version: %s", version);
 +
      g_task_return_pointer (task, g_object_ref (update_settings), g_object_unref);
      g_object_unref (task);
@@ -43,7 +43,7 @@ index 28b00548..87b73baf 100644
  {
      MMFirmwareUpdateSettings *update_settings;
  
-+    mm_obj_dbg (self, "ilario: fastboot ready -> firmware version");
++    mm_obj_dbg (self, "arduino: fastboot ready -> firmware version");
 +
      update_settings = g_task_get_task_data (task);
  
@@ -57,15 +57,15 @@ index 28b00548..87b73baf 100644
 +                               GAsyncResult *res,
 +                               GTask        *task)
 +{
-+    mm_obj_dbg (self, "ilario: configure netdev -> end");
++    mm_obj_dbg (self, "arduino: configure netdev -> end");
 +
 +    if (mm_base_modem_at_command_finish (self, res, NULL))
 +    {
-+        mm_obj_dbg (self, "ilario: configure netdev success");
++        mm_obj_dbg (self, "arduino: configure netdev success");
 +    }
 +    else
 +    {
-+        mm_obj_dbg (self, "ilario: configure netdev failed");
++        mm_obj_dbg (self, "arduino: configure netdev failed");
 +    }
 +
 +    /* Check fastboot support */
@@ -90,7 +90,7 @@ index 28b00548..87b73baf 100644
      g_autoptr(GPtrArray)         ids = NULL;
      GError                      *error = NULL;
  
-+    mm_obj_dbg (self, "ilario: firmware revision ready -> fastboot");
++    mm_obj_dbg (self, "arduino: firmware revision ready -> fastboot");
 +
      update_settings = g_task_get_task_data (task);
  
@@ -135,12 +135,11 @@ index 28b00548..87b73baf 100644
  void
  mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
                                                   GAsyncReadyCallback   callback,
-@@ -239,6 +290,9 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
+@@ -239,6 +290,8 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
      MMPortSerialAt *at_port;
      MMFirmwareUpdateSettings *update_settings;
  
-+    mm_obj_dbg (self, "ilario: fw load update settings -> firmware revision");
-+
++    mm_obj_dbg (self, "arduino: fw load update settings -> firmware revision");
 +
      task = g_task_new (self, NULL, callback, user_data);
  
