@@ -225,6 +225,45 @@ int x8h7_pkt_send_sync(uint8_t peripheral, uint8_t opcode, uint16_t size, void *
 }
 EXPORT_SYMBOL_GPL(x8h7_pkt_send_sync);
 
+/**
+ */
+int x8h7_pkt_send_defer(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
+{
+  struct spidev_data *spidev = x8h7_spidev;
+  int ret;
+
+  mutex_lock(&spidev->lock);
+  ret = x8h7_pkt_enq(peripheral, opcode, size, data);
+  if (ret < 0) {
+    printk("x8h7_pkt_enq failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  /* No mutex unlocking here ... */
+
+  return ret;
+}
+EXPORT_SYMBOL_GPL(x8h7_pkt_send_defer);
+
+/**
+ */
+int x8h7_pkt_send_now(void)
+{
+  /* No mutex locking here ... */
+  struct spidev_data *spidev = x8h7_spidev;
+  int ret;
+
+  ret = x8h7_pkt_send();
+  if (ret < 0) {
+    printk("x8h7_pkt_send failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  mutex_unlock(&spidev->lock);
+
+  return ret;
+}
+EXPORT_SYMBOL_GPL(x8h7_pkt_send_now);
 
 /**
  * Function to parse data coming from h7
