@@ -112,8 +112,7 @@ static ssize_t x8h7_ui_write(struct file *file,
     return -EFAULT;
   }
 
-  x8h7_pkt_enq(X8H7_UI_PERIPH, X8H7_UI_OC_DATA, len, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_UI_PERIPH, X8H7_UI_OC_DATA, len, data);
 
   return len;
 }

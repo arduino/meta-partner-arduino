@@ -46,8 +46,7 @@ static int x8h7_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
   //@TODO: period_ns must be greater than 953
   x8h7->pkt.duty = duty_ns;
   x8h7->pkt.period = period_ns;
-  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
 
   return 0;
 }
@@ -89,8 +88,7 @@ static int x8h7_pwm_capture(struct pwm_chip *chip, struct pwm_device *pwm,
   struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
 
   //@TODO: period_ns must be greater than 953
-  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm | 0x60, sizeof(x8h7->pkt), &x8h7->pkt);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm | 0x60, sizeof(x8h7->pkt), &x8h7->pkt);
 
   x8h7->pkt.duty = 0;
   x8h7->pkt.period = 0;
@@ -112,8 +110,7 @@ static int x8h7_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
 
   DBG_PRINT("\n");
   x8h7->pkt.enable = 1;
-  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
 
   return 0;
 }
@@ -124,8 +121,7 @@ static void x8h7_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
 
   DBG_PRINT("\n");
   x8h7->pkt.enable = 0;
-  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
 }
 
 static const struct pwm_ops x8h7_pwm_ops = {

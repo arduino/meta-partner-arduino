@@ -17,8 +17,7 @@ typedef struct {
 
 typedef void (*x8h7_hook_t)(void *priv, x8h7_pkt_t *pkt);
 
-int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data);
-int x8h7_pkt_send(void);
+int x8h7_pkt_send_sync(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data);
 int x8h7_hook_set(uint8_t idx, x8h7_hook_t hook, void *priv);
 int x8h7_dbg_set(void (*hook)(void*, uint8_t*, uint16_t), void *priv);
 #endif  /* __X8H7_H */

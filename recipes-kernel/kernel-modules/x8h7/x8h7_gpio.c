@@ -125,8 +125,7 @@ static void gpio_irq_ack_work_func(struct work_struct *work)
   DBG_PRINT("\n");
   data[0] = inf->ack_irq;
   data[1] = 0x55;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
   return;
 }
 
@@ -185,8 +184,7 @@ static int x8h7_gpio_direction_input(struct gpio_chip *chip, unsigned offset)
   data[0] = offset;
   data[1] = GPIO_MODE_INPUT;
 
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
 
   DBG_PRINT(" dir %08X\n", inf->gpio_dir);
   return 0;
@@ -204,8 +202,7 @@ static int x8h7_gpio_get(struct gpio_chip *chip, unsigned offset)
   }
 
   data[0] = offset;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_RD, 1, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_RD, 1, data);
   if (x8h7_gpio_pkt_get(inf) < 0)
     return -ETIMEDOUT;
 
@@ -241,10 +238,9 @@ static int x8h7_gpio_direction_output(struct gpio_chip *chip, unsigned offset,
   }
   data[0] = offset;
   data[1] = !!value;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_WR, 2, data);
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_WR, 2, data);
   data[1] = GPIO_MODE_OUTPUT_PP;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
 
   DBG_PRINT("dir %08X write %08X\n", inf->gpio_dir, inf->gpio_val);
   return 0;
@@ -269,8 +265,7 @@ static void x8h7_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
 
   data[0] = offset;
   data[1] = !!value;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_WR, 2, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_WR, 2, data);
 
   DBG_PRINT("write %08X\n", inf->gpio_val);
 }
@@ -305,8 +300,7 @@ static int x8h7_gpio_set_config(struct gpio_chip *chip, unsigned int offset,
   default:
     return -ENOTSUPP;
   }
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_DIR, 2, data);
 
   return 0;
 }
@@ -338,7 +332,7 @@ static void x8h7_gpio_irq_unmask(struct irq_data *d)
   // Send mask
   data[0] = irq;
   data[1] = inf->gpio_ien;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
   inf->tx_cnt++;
 
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
@@ -356,7 +350,7 @@ static void x8h7_gpio_irq_mask(struct irq_data *d)
   // Send mask
   data[0] = irq;
   data[1] = inf->gpio_ien;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IEN, 2, data);
   inf->tx_cnt++;
 
   DBG_PRINT("irq %ld, ien %02X\n", irq, inf->gpio_ien);
@@ -396,7 +390,7 @@ static int x8h7_gpio_irq_set_type(struct irq_data *d, unsigned int flow_type)
   // Send interrupt type
   data[0] = irq;
   data[1] = inf->irq_conf;
-  x8h7_pkt_enq(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
+  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IRQ_TYPE, 2, data);
   inf->tx_cnt++;
 
   return 0;
@@ -419,7 +413,7 @@ static void x8h7_gpio_irq_bus_sync_unlock(struct irq_data *d)
 
   /* Invoke send only if there are pending events */
   if(inf->tx_cnt != 0) {
-    x8h7_pkt_send();
+    //x8h7_pkt_send();
     inf->tx_cnt = 0;
   }
   mutex_unlock(&inf->lock);
