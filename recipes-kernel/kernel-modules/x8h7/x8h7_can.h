@@ -99,29 +99,17 @@ union x8h7_can_frame_message
   uint8_t buf[X8H7_CAN_HEADER_SIZE + X8H7_CAN_FRAME_MAX_DATA_LEN];
 };
 
-struct x8h7_can_frame_message_tx_obj_buf
-{
-  spinlock_t                   lock;
-  uint8_t                      head;
-  uint8_t                      tail;
-  uint8_t                      num_elems;
-  union x8h7_can_frame_message data[X8H7_TX_FIFO_SIZE];
-};
-
 struct x8h7_can_priv {
   struct can_priv           can;
   struct net_device        *net;
   struct device            *dev;
   int                       periph;
 
-  struct x8h7_can_frame_message_tx_obj_buf tx_obj_buf;
-  int                       req_cnt;
-  int                       ack_cnt;
-
   int                       tx_len;
 
-  struct workqueue_struct  *wq;
-  struct work_struct        work;
+  struct workqueue_struct     *wq;
+  struct work_struct           work;
+  union x8h7_can_frame_message tx_frame;
 
   struct can_filter         std_flt[X8H7_STD_FLT_MAX];
   struct can_filter         ext_flt[X8H7_EXT_FLT_MAX];
