@@ -58,6 +58,7 @@ struct spidev_data {
   u8                 *x8h7_txb;
   u16                 x8h7_txl;
   u8                 *x8h7_rxb;
+  struct gpio_desc   *flow_ctrl_gpio;
 };
 
 /*-------------------------------------------------------------------------*/
@@ -488,6 +489,19 @@ static int x8h7_probe(struct spi_device *spi)
   memset(spidev->x8h7_txb, 0, X8H7_BUF_SIZE);
   memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
   spidev->x8h7_txl = 0;
+
+  /* Request optional flow control pin, in case it's a list the first */
+  spidev->flow_ctrl_gpio = devm_gpiod_get_optional(&spi->dev, "flow-ctrl", GPIOD_IN);
+  if ((int)spidev->flow_ctrl_gpio < 0) {
+    DBG_ERROR("Cannot obtain flow-ctrl-gpio\n");
+    return (int)spidev->flow_ctrl_gpio;
+  }
+
+  /* Example: read flow control pin */
+  if (spidev->flow_ctrl_gpio) {
+    value = gpiod_get_value_cansleep(spidev->flow_ctrl_gpio);
+    DBG_PRINT("Flow control GPIO value: %d\n", value);
+  }
 
   /* Configure interrupt request */
   if (spi->irq > 0) {
