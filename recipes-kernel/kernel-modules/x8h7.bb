@@ -16,6 +16,7 @@ SRC_URI = " \
   file://x8h7_gpio.c \
   file://x8h7_pwm.c \
   file://x8h7_rtc.c \
+  file://x8h7_can.h \
   file://x8h7_can.c \
   file://x8h7_uart.c \
   file://x8h7_ui.c \

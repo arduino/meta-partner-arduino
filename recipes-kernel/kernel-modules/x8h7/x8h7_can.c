@@ -2,6 +2,8 @@
  * X8H7 CAN driver
  */
 
+#include "x8h7_can.h"
+
 #include <linux/can/core.h>
 #include <linux/can/dev.h>
 #include <linux/can/led.h>
@@ -40,132 +42,6 @@
   #define DBG_CAN_STATE(i, s)
 #endif
 
-// Peripheral code
-#define X8H7_CAN1_PERIPH  0x03
-#define X8H7_CAN2_PERIPH  0x04
-// Op code
-#define X8H7_CAN_OC_INIT    0x10
-#define X8H7_CAN_OC_DEINIT  0x11
-#define X8H7_CAN_OC_BITTIM  0x12
-#define X8H7_CAN_OC_SEND    0x01
-#define X8H7_CAN_OC_RECV    0x01
-#define X8H7_CAN_OC_STS     0x40
-#define X8H7_CAN_OC_FLT     0x50
-
-#define X8H7_CAN_STS_INT_TX      0x01
-#define X8H7_CAN_STS_INT_RX      0x02
-#define X8H7_CAN_STS_INT_ERR     0x04
-/*
-MERRE: Message Error
-WAKIE: Wake-up Interrupt Enable
-ERRIE: Error Interrupt Enable bit (multiple sources in EFLG register
-TX2IE: Transmit Buffer 2 Empty
-RX1IE: Receive Buffer 1 Full I      questo non serve
-*/
-
-#define X8H7_CAN_STS_FLG_RX_OVR  0x01  // Receive Buffer Overflow
-#define X8H7_CAN_STS_FLG_TX_BO   0x02  // Bus-Off
-#define X8H7_CAN_STS_FLG_TX_EP   0x04  // Transmit Error-Passive
-#define X8H7_CAN_STS_FLG_RX_EP   0x08  // Receive Error-Passive
-#define X8H7_CAN_STS_FLG_TX_WAR  0x10  // Transmit Error Warning
-#define X8H7_CAN_STS_FLG_RX_WAR  0x20  // Receive Error Warning
-#define X8H7_CAN_STS_FLG_EWARN   0x40  // Error Warning
-#define X8H7_CAN_STS_FLG_TX_OVR  0x80  // Transmit Buffer Overflow
-
-#define X8H7_CAN_HEADER_SIZE        5
-#define X8H7_CAN_FRAME_MAX_DATA_LEN 8
-
-#define AFTER_SUSPEND_UP      1
-#define AFTER_SUSPEND_DOWN    2
-#define AFTER_SUSPEND_POWER   4
-#define AFTER_SUSPEND_RESTART 8
-
-#define X8H7_STD_FLT_MAX  128
-#define X8H7_EXT_FLT_MAX   64
-
-/**
- */
-union x8h7_can_init_message
-{
-  struct __attribute__((packed))
-  {
-    uint32_t baud_rate_prescaler;
-    uint32_t time_segment_1;
-    uint32_t time_segment_2;
-    uint32_t sync_jump_width;
-  } field;
-  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */ + sizeof(uint32_t) /* time_segment_1 */ + sizeof(uint32_t) /* time_segment_2 */ + sizeof(uint32_t) /* sync_jump_width */];
-};
-
-/**
- */
-union x8h7_can_bittiming_message
-{
-  struct __attribute__((packed))
-  {
-    uint32_t baud_rate_prescaler;
-    uint32_t time_segment_1;
-    uint32_t time_segment_2;
-    uint32_t sync_jump_width;
-  } field;
-  uint8_t buf[sizeof(uint32_t) /* can_bitrate_Hz */ + sizeof(uint32_t) /* time_segment_1 */ + sizeof(uint32_t) /* time_segment_2 */ + sizeof(uint32_t) /* sync_jump_width */];
-};
-
-/**
- */
-union x8h7_can_filter_message
-{
-  struct __attribute__((packed))
-  {
-    uint32_t idx;
-    uint32_t id;
-    uint32_t mask;
-  } field;
-  uint8_t buf[sizeof(uint32_t) /* idx */ + sizeof(uint32_t) /* id */ + sizeof(uint32_t) /* mask */];
-};
-
-/**
- */
-union x8h7_can_frame_message
-{
-  struct __attribute__((packed))
-  {
-    uint32_t id;
-    uint8_t  len;
-    uint8_t  data[X8H7_CAN_FRAME_MAX_DATA_LEN];
-  } field;
-  uint8_t buf[X8H7_CAN_HEADER_SIZE + X8H7_CAN_FRAME_MAX_DATA_LEN];
-};
-
-/**
- */
-struct x8h7_can_priv {
-  struct can_priv           can;
-  struct net_device        *net;
-  struct device            *dev;
-  int                       periph;
-
-  //wait_queue_head_t         wait;
-  //int                       rx_cnt;
-  //x8h7_pkt_t                rx_pkt;
-
-  struct sk_buff           *tx_skb;
-  int                       tx_len;
-
-  struct workqueue_struct  *wq;
-  struct work_struct        tx_work;
-  struct work_struct        restart_work;
-
-  int                       force_quit;
-  int                       after_suspend;
-  int                       restart_tx;
-
-  struct can_filter std_flt[X8H7_STD_FLT_MAX];
-  struct can_filter ext_flt[X8H7_EXT_FLT_MAX];
-
-  struct mutex        lock;
-};
-
 /**
  * Those parameters are valid for the STM32H7 CAN driver using
  * CAN classic. For CAN FD different values are needed.
@@ -182,7 +58,21 @@ static const struct can_bittiming_const x8h7_can_bittiming_const = {
   .brp_inc   =   1,
 };
 
+static void x8h7_can_tx_work_handler(struct work_struct *ws);
 static void x8h7_can_error_skb(struct net_device *net, int can_id, int data1);
+
+/**
+ */
+static void x8h7_can_frame_to_tx_obj(struct can_frame const *frame, union x8h7_can_frame_message *x8h7_can_msg)
+{
+  if (frame->can_id & CAN_EFF_FLAG)
+    x8h7_can_msg->field.id  = CAN_EFF_FLAG | (frame->can_id & CAN_EFF_MASK);
+  else
+    x8h7_can_msg->field.id  =                (frame->can_id & CAN_SFF_MASK);
+
+  x8h7_can_msg->field.len = (frame->can_dlc <= X8H7_CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : X8H7_CAN_FRAME_MAX_DATA_LEN;
+  memcpy(x8h7_can_msg->field.data, frame->data, x8h7_can_msg->field.len);
+}
 
 /**
  */
@@ -207,7 +97,7 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
   int                 can_id = 0;
   int                 data1 = 0;
 
-  DBG_PRINT("\n");
+  //DBG_PRINT("\n");
 
   if (intf & X8H7_CAN_STS_INT_ERR)
   {
@@ -230,16 +120,24 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
     }
   }
 
-  if (intf & X8H7_CAN_STS_INT_TX) {
+  if (intf & X8H7_CAN_STS_INT_TX_COMPLETE) {
+    DBG_PRINT("TX COMPLETE");
     net->stats.tx_packets++;
     net->stats.tx_bytes += priv->tx_len;
     priv->tx_len = 0;
     can_led_event(net, CAN_LED_EVENT_TX);
-    if (priv->tx_skb) {
-      can_get_echo_skb(net, 0);
-      priv->tx_skb = NULL;
-    }
+    can_get_echo_skb(net, 0);
     netif_wake_queue(net);
+  }
+
+  if (intf & X8H7_CAN_STS_INT_TX_ABORT_COMPLETE)
+  {
+    DBG_PRINT("TX ABORT COMPLETE");
+  }
+
+  if (intf & X8H7_CAN_STS_INT_TX_FIFO_EMPTY)
+  {
+    DBG_PRINT("TX FIFO EMPTY");
   }
 }
 
@@ -298,13 +196,8 @@ static void x8h7_can_clean(struct net_device *net)
 
   DBG_PRINT("\n");
 
-  if (priv->tx_skb)
-  {
-    net->stats.tx_errors++;
-    can_free_echo_skb(priv->net, 0);
-    priv->tx_skb = NULL;
-  }
-  priv->tx_len = 0;
+  net->stats.tx_errors++;
+  can_free_echo_skb(priv->net, 0);
 }
 
 /**
@@ -337,8 +230,7 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
             x8h7_msg.field.time_segment_2,
             x8h7_msg.field.sync_jump_width);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_INIT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
 
   return 0;
 }
@@ -347,8 +239,7 @@ static int x8h7_can_hw_setup(struct x8h7_can_priv *priv)
  */
 static int x8h7_can_hw_stop(struct x8h7_can_priv *priv)
 {
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_DEINIT, 0, NULL);
 
   return 0;
 }
@@ -385,106 +276,6 @@ static void x8h7_can_error_skb(struct net_device *net, int can_id, int data1)
 
 /**
  */
-static void x8h7_can_hw_tx_enqueue(struct x8h7_can_priv *priv, struct can_frame *frame)
-{
-  union x8h7_can_frame_message x8h7_can_msg;
-#ifdef DEBUG
-  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4];
-  int   i;
-  int   len;
-#endif
-
-  DBG_PRINT("\n");
-
-  if (frame->can_id & CAN_EFF_FLAG)
-    x8h7_can_msg.field.id  = CAN_EFF_FLAG | (frame->can_id & CAN_EFF_MASK);
-  else
-    x8h7_can_msg.field.id  =                (frame->can_id & CAN_SFF_MASK);
-
-  x8h7_can_msg.field.len = (frame->can_dlc <= X8H7_CAN_FRAME_MAX_DATA_LEN) ? frame->can_dlc : X8H7_CAN_FRAME_MAX_DATA_LEN;
-  memcpy(x8h7_can_msg.field.data, frame->data, x8h7_can_msg.field.len);
-
-#ifdef DEBUG
-  i = 0; len = 0;
-  for (i = 0; (i < x8h7_can_msg.field.len) && (len < sizeof(data_str)); i++)
-  {
-    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", x8h7_can_msg.field.data[i]);
-  }
-  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", x8h7_can_msg.field.id, x8h7_can_msg.field.len, data_str);
-#endif
-
-  x8h7_pkt_enq(priv->periph,
-               X8H7_CAN_OC_SEND,
-               X8H7_CAN_HEADER_SIZE + x8h7_can_msg.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
-               x8h7_can_msg.buf);
-}
-
-/**
- */
-static void x8h7_can_hw_tx_send(void)
-{
-  x8h7_pkt_send();
-}
-
-/**
- */
-static void x8h7_can_tx_work_handler(struct work_struct *ws)
-{
-  struct x8h7_can_priv *priv = container_of(ws, struct x8h7_can_priv, tx_work);
-  struct can_frame     *frame;
-
-  DBG_PRINT("\n");
-
-  if (priv->tx_skb)
-  {
-    frame = (struct can_frame *)priv->tx_skb->data;
-    priv->tx_len = frame->can_dlc;
-    x8h7_can_hw_tx_enqueue(priv, frame);
-    x8h7_can_hw_tx_send();
-  }
-}
-
-/**
- */
-static void x8h7_can_restart_work_handler(struct work_struct *ws)
-{
-  struct x8h7_can_priv *priv = container_of(ws, struct x8h7_can_priv, restart_work);
-  struct net_device    *net = priv->net;
-
-  DBG_PRINT("\n");
-  mutex_lock(&priv->lock);
-  if (priv->after_suspend) {
-    x8h7_can_hw_stop(priv);
-    x8h7_can_hw_setup(priv);
-    priv->force_quit = 0;
-    if (priv->after_suspend & AFTER_SUSPEND_RESTART) {
-      DBG_PRINT("AFTER_SUSPEND_RESTART\n");
-      x8h7_can_set_normal_mode(priv);
-    } else if (priv->after_suspend & AFTER_SUSPEND_UP) {
-      DBG_PRINT("AFTER_SUSPEND_UP\n");
-      netif_device_attach(net);
-      x8h7_can_clean(net);
-      x8h7_can_set_normal_mode(priv);
-      netif_wake_queue(net);
-    } else {
-      //mcp251x_hw_sleep(spi); @TODO:
-    }
-    priv->after_suspend = 0;
-  }
-
-  if (priv->restart_tx) {
-    DBG_PRINT("restart_tx\n");
-    priv->restart_tx = 0;
-    //mcp251x_write_reg(spi, TXBCTRL(0), 0); @TODO: cosa fa?
-    x8h7_can_clean(net);
-    netif_wake_queue(net);
-    x8h7_can_error_skb(net, CAN_ERR_RESTARTED, 0);
-  }
-  mutex_unlock(&priv->lock);
-}
-
-/**
- */
 static int x8h7_can_open(struct net_device *net)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
@@ -498,10 +289,6 @@ static int x8h7_can_open(struct net_device *net)
     return ret;
   }
 
-  mutex_lock(&priv->lock);
-
-  priv->force_quit = 0;
-  priv->tx_skb  = 0;
   priv->tx_len  = 0;
 
   priv->wq = alloc_workqueue("x8h7_can_wq", WQ_FREEZABLE | WQ_MEM_RECLAIM, 0);
@@ -509,8 +296,7 @@ static int x8h7_can_open(struct net_device *net)
     ret = -ENOMEM;
     goto out_clean;
   }
-  INIT_WORK(&priv->tx_work, x8h7_can_tx_work_handler);
-  INIT_WORK(&priv->restart_work, x8h7_can_restart_work_handler);
+  INIT_WORK(&priv->work, x8h7_can_tx_work_handler);
 
   mutex_init(&priv->lock);
 
@@ -530,7 +316,6 @@ static int x8h7_can_open(struct net_device *net)
   can_led_event(net, CAN_LED_EVENT_OPEN);
 
   netif_wake_queue(net);
-  mutex_unlock(&priv->lock);
 
   return 0;
 
@@ -538,9 +323,7 @@ out_free_wq:
   destroy_workqueue(priv->wq);
 out_clean:
   x8h7_hook_set(priv->periph, NULL, NULL);
-//out_close:
   close_candev(net);
-  mutex_unlock(&priv->lock);
   return ret;
 }
 
@@ -556,14 +339,12 @@ static int x8h7_can_stop(struct net_device *net)
   x8h7_can_clean(net);
 
   close_candev(net);
-  priv->force_quit = 1;
   mutex_lock(&priv->lock);
   x8h7_hook_set(priv->periph, NULL, NULL);
   destroy_workqueue(priv->wq);
   priv->wq = NULL;
 
   priv->can.state = CAN_STATE_STOPPED;
-
   mutex_unlock(&priv->lock);
 
   can_led_event(net, CAN_LED_EVENT_STOP);
@@ -576,25 +357,48 @@ static int x8h7_can_stop(struct net_device *net)
 static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
                                        struct net_device *net)
 {
-  struct x8h7_can_priv *priv = netdev_priv(net);
-  const struct device  *dev = priv->dev;
+  struct x8h7_can_priv        *priv = netdev_priv(net);
+  const struct device         *dev = priv->dev;
+  struct can_frame            *frame;
 
   DBG_PRINT("\n");
 
   if (can_dropped_invalid_skb(net, skb))
     return NETDEV_TX_OK;
 
-  if (priv->tx_skb) {
-    netif_stop_queue(net);
-    dev_warn(dev, "hard_xmit called while tx busy\n");
-    return NETDEV_TX_BUSY;
-  }
+  netif_stop_queue(net);
 
-  priv->tx_skb = skb;
-  can_put_echo_skb(priv->tx_skb, net, 0);
-  queue_work(priv->wq, &priv->tx_work);
+  frame = (struct can_frame *)skb->data;
+  x8h7_can_frame_to_tx_obj(frame, &priv->tx_frame);
+  can_put_echo_skb(skb, net, 0);
+  queue_work(priv->wq, &priv->work);
 
   return NETDEV_TX_OK;
+}
+
+/**
+ */
+static void x8h7_can_tx_work_handler(struct work_struct *ws)
+{
+  struct x8h7_can_priv *priv = container_of(ws, struct x8h7_can_priv, work);
+
+#ifdef DEBUG
+  char  data_str[X8H7_CAN_FRAME_MAX_DATA_LEN * 4];
+  int   i;
+  int   len;
+
+  i = 0; len = 0;
+  for (i = 0; (i < priv->tx_frame.field.len) && (len < sizeof(data_str)); i++)
+    len += snprintf(data_str + len, sizeof(data_str) - len, " %02X", priv->tx_frame.field.data[i]);
+  DBG_PRINT("Send CAN frame to H7: id = %08X, len = %d, data = [%s ]\n", priv->tx_frame.field.id, priv->tx_frame.field.len, data_str);
+#endif
+
+  priv->tx_len = priv->tx_frame.field.len;
+
+  x8h7_pkt_send_sync(priv->periph,
+                     X8H7_CAN_OC_SEND,
+                     X8H7_CAN_HEADER_SIZE + priv->tx_frame.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
+                     priv->tx_frame.buf);
 }
 
 /**
@@ -618,8 +422,7 @@ static int x8h7_can_hw_do_set_bittiming(struct net_device *net)
             x8h7_msg.field.time_segment_2,
             x8h7_msg.field.sync_jump_width);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_BITTIM, sizeof(x8h7_msg.buf), x8h7_msg.buf);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_BITTIM, sizeof(x8h7_msg.buf), x8h7_msg.buf);
 
   return 0;
 }
@@ -634,13 +437,7 @@ static int x8h7_can_do_set_mode(struct net_device *net, enum can_mode mode)
   switch (mode) {
   case CAN_MODE_START:
     x8h7_can_clean(net);
-    /* We have to delay work since SPI I/O may sleep */
     priv->can.state = CAN_STATE_ERROR_ACTIVE;
-    priv->restart_tx = 1;
-    if (priv->can.restart_ms == 0) {
-      priv->after_suspend = AFTER_SUSPEND_RESTART;
-    }
-    queue_work(priv->wq, &priv->restart_work);
     break;
   default:
     return -EOPNOTSUPP;
@@ -654,8 +451,7 @@ static int x8h7_can_do_set_mode(struct net_device *net, enum can_mode mode)
 static int x8h7_can_do_get_berr_counter(const struct net_device *net,
                                         struct can_berr_counter *bec)
 {
-  //struct x8h7_can_priv *priv = netdev_priv(net);
-//@TODO: to be read from device
+  //@TODO: to be read from device
   bec->txerr = 0;
   bec->rxerr = 0;
 
@@ -686,8 +482,7 @@ static int x8h7_can_hw_config_filter(struct x8h7_can_priv *priv,
 
   DBG_PRINT("SEND idx %X, id %X, mask %X\n", idx, id, mask);
 
-  x8h7_pkt_enq(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(priv->periph, X8H7_CAN_OC_FLT, sizeof(x8h7_msg.buf), x8h7_msg.buf);
 
   return 0;
 }
@@ -881,8 +676,6 @@ static int x8h7_can_probe(struct platform_device *pdev)
     DBG_PRINT("fdcan_clk = %d", clock_freq);
   }
 
-//  init_waitqueue_head(&priv->wait);
-
   net = alloc_candev(sizeof(struct x8h7_can_priv), 1);
   if (!net) {
     return -ENOMEM;
@@ -901,8 +694,7 @@ static int x8h7_can_probe(struct platform_device *pdev)
   priv->can.do_get_berr_counter = x8h7_can_do_get_berr_counter;
   priv->can.ctrlmode_supported  = CAN_CTRLMODE_LOOPBACK      |
                                   CAN_CTRLMODE_LISTENONLY    |
-                                  CAN_CTRLMODE_3_SAMPLES     ;/*|
-                                  CAN_CTRLMODE_BERR_REPORTING;*/
+                                  CAN_CTRLMODE_3_SAMPLES     ;
   priv->net = net;
 
   platform_set_drvdata(pdev, priv);
@@ -972,7 +764,6 @@ MODULE_DEVICE_TABLE(platform, x8h7_can_id_table);
 static struct platform_driver x8h7_can_driver = {
   .driver = {
     .name           = DRIVER_NAME,
-    //.pm             = &x8h7_can_pm_ops,
     .of_match_table = x8h7_can_of_match,
   },
   .probe    = x8h7_can_probe,

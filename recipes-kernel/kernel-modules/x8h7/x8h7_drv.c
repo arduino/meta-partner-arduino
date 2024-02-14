@@ -53,17 +53,13 @@
 
 struct spidev_data {
   struct spi_device  *spi;
-  struct mutex        buf_lock;
+  struct mutex        lock;
   u32                 speed_hz;
   u8                 *x8h7_txb;
   u16                 x8h7_txl;
   u8                 *x8h7_rxb;
+  struct gpio_desc   *flow_ctrl_gpio;
 };
-
-
-static unsigned bufsiz = 4096;
-module_param(bufsiz, uint, S_IRUGO);
-MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
 
 /*-------------------------------------------------------------------------*/
 
@@ -177,8 +173,6 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
   x8h7_subpkt_t      *pkt;
   uint8_t            *ptr;
 
-  mutex_lock(&spidev->buf_lock);
-
   ptr = spidev->x8h7_txb;
   hdr = (x8h7_pkthdr_t*)ptr;
 
@@ -199,15 +193,78 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
     hdr->size += sizeof(x8h7_subpkt_t) + size;
     hdr->checksum = hdr->size ^ 0x5555;
     spidev->x8h7_txl = hdr->size;
-    mutex_unlock(&spidev->buf_lock);
     return 0;
   }
 
-  mutex_unlock(&spidev->buf_lock);
-
-  return -1;
+  return -ENOMEM;
 }
-EXPORT_SYMBOL_GPL(x8h7_pkt_enq);
+
+static int x8h7_pkt_send(void);
+/**
+ */
+int x8h7_pkt_send_sync(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
+{
+  struct spidev_data *spidev = x8h7_spidev;
+  int ret;
+
+  mutex_lock(&spidev->lock);
+  ret = x8h7_pkt_enq(peripheral, opcode, size, data);
+  if (ret < 0) {
+    printk("x8h7_pkt_enq failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  ret = x8h7_pkt_send();
+  if (ret < 0) {
+    printk("x8h7_pkt_send failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  mutex_unlock(&spidev->lock);
+
+  return ret;
+}
+EXPORT_SYMBOL_GPL(x8h7_pkt_send_sync);
+
+/**
+ */
+int x8h7_pkt_send_defer(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
+{
+  struct spidev_data *spidev = x8h7_spidev;
+  int ret;
+
+  mutex_lock(&spidev->lock);
+  ret = x8h7_pkt_enq(peripheral, opcode, size, data);
+  if (ret < 0) {
+    printk("x8h7_pkt_enq failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  /* No mutex unlocking here ... */
+
+  return ret;
+}
+EXPORT_SYMBOL_GPL(x8h7_pkt_send_defer);
+
+/**
+ */
+int x8h7_pkt_send_now(void)
+{
+  /* No mutex locking here ... */
+  struct spidev_data *spidev = x8h7_spidev;
+  int ret;
+
+  ret = x8h7_pkt_send();
+  if (ret < 0) {
+    printk("x8h7_pkt_send failed with %d", ret);
+    mutex_unlock(&spidev->lock);
+    return ret;
+  }
+  mutex_unlock(&spidev->lock);
+
+  return ret;
+}
+EXPORT_SYMBOL_GPL(x8h7_pkt_send_now);
 
 /**
  * Function to parse data coming from h7
@@ -284,8 +341,6 @@ int x8h7_spi_trx(struct spi_device *spi,
     uint8_t * data_ptr = 0;
     int i = 0, l = 0;
 
-    DBG_PRINT("\n");
-
     l = 0;
     data_ptr = (uint8_t *)tx_buf;
     for (i = 0; (i < len) && (l < sizeof(data_str)); i++)
@@ -307,15 +362,12 @@ int x8h7_spi_trx(struct spi_device *spi,
  * Function to send/receive physically data over SPI,
  * moreover in this function we process received data
  * and dispatch to corresponding peripheral
- * @TODO: remove arg?
  */
-static inline int x8h7_pkt_send_priv(int arg)
+static int x8h7_pkt_send(void)
 {
   struct spidev_data   *spidev = x8h7_spidev;
   x8h7_pkthdr_t        *hdr;
   int                   len;
-
-  mutex_lock(&spidev->buf_lock);
 
   DBG_PRINT("\n");
 
@@ -325,18 +377,13 @@ static inline int x8h7_pkt_send_priv(int arg)
 
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
   if ((hdr->size != 0) && ((hdr->size ^ 0x5555) != hdr->checksum)) {
-    DBG_ERROR("Out of sync %x %x\n", hdr->size, hdr->checksum);
-    mutex_unlock(&spidev->buf_lock);
+    DBG_ERROR("Out of sync %04X %04X\n", hdr->size, hdr->checksum);
     return -1;
   }
 
   len = max(hdr->size, spidev->x8h7_txl);
   if (len == 0) {
     DBG_ERROR("Transaction length is zero\n");
-    x8h7_spi_trx(spidev->spi,
-                 spidev->x8h7_txb + sizeof(x8h7_pkthdr_t), spidev->x8h7_rxb,
-                 sizeof(x8h7_pkthdr_t));
-    mutex_unlock(&spidev->buf_lock);
     return 0;
   }
 
@@ -360,17 +407,8 @@ static inline int x8h7_pkt_send_priv(int arg)
   memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
   spidev->x8h7_txl = 0;
 
-  mutex_unlock(&spidev->buf_lock);
   return 0;
 }
-
-/**
- */
-int x8h7_pkt_send(void)
-{
-  return x8h7_pkt_send_priv(0);
-}
-EXPORT_SYMBOL_GPL(x8h7_pkt_send);
 
 /**
  */
@@ -400,8 +438,12 @@ EXPORT_SYMBOL_GPL(x8h7_dbg_set);
  */
 static irqreturn_t x8h7_threaded_isr(int irq, void *data)
 {
+  struct spidev_data  *spidev = (struct spidev_data*)data;
+
+  mutex_lock(&spidev->lock);
   DBG_PRINT("Got IRQ from H7\n");
-  x8h7_pkt_send_priv(1);
+  x8h7_pkt_send();
+  mutex_unlock(&spidev->lock);
 
   return IRQ_HANDLED;
 }
@@ -419,7 +461,7 @@ static int x8h7_probe(struct spi_device *spi)
 
   /* Initialize the driver data */
   spidev->spi = spi;
-  mutex_init(&spidev->buf_lock);
+  mutex_init(&spidev->lock);
 
   /* Device speed */
   if (!of_property_read_u32(spi->dev.of_node, "spi-max-frequency", &value))
@@ -427,20 +469,6 @@ static int x8h7_probe(struct spi_device *spi)
   DBG_PRINT("Configuring speed_hz=%d\n", spidev->speed_hz);
 
   status = 0;
-
-  /* Interrupt request */
-  if (spi->irq > 0) {
-    int ret;
-    ret = devm_request_threaded_irq(&spi->dev, spi->irq,
-                                    NULL, x8h7_threaded_isr,
-                                    IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-                                    "x8h7", spidev);
-    if (ret) {
-      DBG_ERROR("Failed request IRQ #%d\n", spi->irq);
-      status = -ENODEV;
-    }
-    DBG_PRINT("IRQ request irq %d OK\n", spi->irq);
-  }
 
   if (status == 0) {
     spidev->x8h7_txb = devm_kzalloc(&spi->dev, X8H7_BUF_SIZE, GFP_KERNEL);
@@ -456,6 +484,37 @@ static int x8h7_probe(struct spi_device *spi)
       DBG_ERROR("X8H7 Rx buffer memory fail\n");
       status = -ENOMEM;
     }
+  }
+
+  memset(spidev->x8h7_txb, 0, X8H7_BUF_SIZE);
+  memset(spidev->x8h7_rxb, 0, X8H7_BUF_SIZE);
+  spidev->x8h7_txl = 0;
+
+  /* Request optional flow control pin, in case it's a list the first */
+  spidev->flow_ctrl_gpio = devm_gpiod_get_optional(&spi->dev, "flow-ctrl", GPIOD_IN);
+  if ((int)spidev->flow_ctrl_gpio < 0) {
+    DBG_ERROR("Cannot obtain flow-ctrl-gpio\n");
+    return (int)spidev->flow_ctrl_gpio;
+  }
+
+  /* Example: read flow control pin */
+  if (spidev->flow_ctrl_gpio) {
+    value = gpiod_get_value_cansleep(spidev->flow_ctrl_gpio);
+    DBG_PRINT("Flow control GPIO value: %d\n", value);
+  }
+
+  /* Configure interrupt request */
+  if (spi->irq > 0) {
+    int ret;
+    ret = devm_request_threaded_irq(&spi->dev, spi->irq,
+                                    NULL, x8h7_threaded_isr,
+                                    IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+                                    "x8h7", spidev);
+    if (ret) {
+      DBG_ERROR("Failed request IRQ #%d\n", spi->irq);
+      status = -ENODEV;
+    }
+    DBG_PRINT("IRQ request irq %d OK\n", spi->irq);
   }
 
   x8h7_spidev = spidev;

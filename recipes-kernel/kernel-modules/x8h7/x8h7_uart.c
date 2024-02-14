@@ -301,8 +301,7 @@ static void x8h7_uart_set_mctrl(struct uart_port *port, unsigned int mctrl)
     control |= X8H7_UART_CTRL_DTR;
   }
 //@TODO: tolto per BUG: scheduling while atomic: insmod/573/0x00000002 trovare un sistema
-  //x8h7_pkt_enq(X8H7_UART_PERIPH, X8H7_UART_OC_GET_LINESTATE, 2, &control);
-  //x8h7_pkt_send();
+  //x8h7_pkt_send_sync(X8H7_UART_PERIPH, X8H7_UART_OC_GET_LINESTATE, 2, &control);
 }
 
 /**
@@ -583,9 +582,8 @@ static void x8h7_uart_work_func(struct work_struct *work)
 
   if (sport->flags & X8H7_UART_CFG_SEND) {
     sport->flags &= ~X8H7_UART_CFG_SEND;
-    x8h7_pkt_enq(X8H7_UART_PERIPH, X8H7_UART_OC_CONFIGURE,
-                 sizeof(sport->cfg), &sport->cfg);
-    x8h7_pkt_send();
+    x8h7_pkt_send_sync(X8H7_UART_PERIPH, X8H7_UART_OC_CONFIGURE,
+                       sizeof(sport->cfg), &sport->cfg);
   }
   if (sport->flags & X8H7_UART_TRANSMIT) {
     struct circ_buf  *xmit = &sport->port.state->xmit;
@@ -603,8 +601,7 @@ static void x8h7_uart_work_func(struct work_struct *work)
       }
 
       //send pkt
-      x8h7_pkt_enq(X8H7_UART_PERIPH, X8H7_UART_OC_DATA, size, txb);
-      x8h7_pkt_send();
+      x8h7_pkt_send_sync(X8H7_UART_PERIPH, X8H7_UART_OC_DATA, size, txb);
 
       sport->port.icount.tx += size;
     }

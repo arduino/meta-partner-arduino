@@ -74,8 +74,7 @@ static int x8h7_rtc_read_time(struct device *dev, struct rtc_time *tm)
   struct x8h7_rtc *rtc = dev_get_drvdata(dev);
 
   DBG_PRINT("\n");
-  x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_GET_DATE, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_RTC_PERIPH, X8H7_RTC_GET_DATE, 0, NULL);
   if (x8h7_rtc_pkt_get(rtc) < 0)
     return -ETIMEDOUT;
 
@@ -111,8 +110,7 @@ static int x8h7_rtc_set_time(struct device *dev, struct rtc_time *tm)
   data[0x05] = tm->tm_year - 100;
   data[0x06] = tm->tm_wday;
 
-  x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_SET_DATE, 7, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_RTC_PERIPH, X8H7_RTC_SET_DATE, 7, data);
 
   return 0;
 }
@@ -133,8 +131,7 @@ int x8h7_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *wa)
   wa->enabled = rtc->alarm_enabled;
   wa->pending = rtc->alarm_pending;
 
-  x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_GET_ALARM, 0, NULL);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_RTC_PERIPH, X8H7_RTC_GET_ALARM, 0, NULL);
   if (x8h7_rtc_pkt_get(rtc) < 0)
     return -ETIMEDOUT;
 
@@ -171,8 +168,7 @@ int x8h7_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *wa)
   data[0x05] = wa->time.tm_year - 100;
   data[0x06] = wa->time.tm_wday;
 
-  x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_SET_ALARM, 7, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_RTC_PERIPH, X8H7_RTC_SET_ALARM, 7, data);
 
   if (!wa->enabled) {
     rtc->alarm_pending = 0;
@@ -193,8 +189,7 @@ int x8h7_rtc_alarm_irq_enable(struct device *dev, unsigned int enabled)
   } else {
     data[0] = ~RTC_AF;
   }
-  x8h7_pkt_enq(X8H7_RTC_PERIPH, X8H7_RTC_ALARM_IEN, 1, data);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_RTC_PERIPH, X8H7_RTC_ALARM_IEN, 1, data);
   return 0;
 }
 

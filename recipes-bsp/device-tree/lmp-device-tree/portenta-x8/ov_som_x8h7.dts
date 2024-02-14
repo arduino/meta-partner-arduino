@@ -42,6 +42,7 @@
 						MX8MM_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x110 /* SWDIO_STM32 Pull Down */
 						MX8MM_IOMUXC_GPIO1_IO15_GPIO1_IO15		0x110 /* SWCLK_STM32 Pull Down */
 						MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x110 /* PA0_STM32 Pull Down M4 led red */
+						MX8MM_IOMUXC_GPIO1_IO14_GPIO1_IO14		0x151 /* PE5_STM32 Pull Up */
 					>;
 				};
 			};
@@ -61,6 +62,7 @@
 				pinctrl-0 = <&pinctrl_irq_x8h7>, <&pinctrl_gpio_x8h7>;
 				interrupt-parent = <&gpio1>;
 				interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
+				flow-ctrl-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
 				spi-max-frequency = <25000000>;
 			};
 		};
