@@ -10,23 +10,29 @@ else
 fi
 
 if [ "$IS_ON_CARRIER"=="yes" ]; then
-    if ! [ "$CARRIER_NAME"=="max" ]; then
-        echo "Not on Max Carrier"
-        exit 1
+    # @TODO: we expect to fail if pin owned by kernel (pcie_mini ov)
+    # would be more elegant a u-boot env variable to configure usb modems
+    if [ "$CARRIER_NAME"=="max" ]; then
+        echo "Power on SARA-R4 usb modem on $CARRIER_NAME"
+        # Note: we're driving open-drain n-mos
+        # pull-ups are provided internally by modem
+        gpioset gpiochip5 4=1 # PWR_ON=Low
+        gpioset gpiochip5 2=0 # RST=High
+        gpioset gpiochip5 2=1 # RST=Low
+        sleep 1
+        gpioset gpiochip5 2=0 # RST=High
+
+        echo "Power on pcie usb modem on $CARRIER_NAME"
+        gpioset gpiochip5 29=1 # PCIE 3V3 BUCK EN (stm32h7 PWM6)
+        sleep 1
+    elif [ "$CARRIER_NAME"=="mid" ]; then
+        echo "Power on pcie usb modem on $CARRIER_NAME"
+        gpioset gpiochip5 5=1 # # PCIE 3V3 BUCK EN (stm32h7 PE10)
+        sleep 1
     fi
+    exit 0
 else
     echo "Not on a carrier board"
-    exit 1
+    exit 0
 fi
-
-echo 162 > /sys/class/gpio/export
-echo 164 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio162/direction
-echo out > /sys/class/gpio/gpio164/direction
-echo 1 > /sys/class/gpio/gpio164/value
-echo 0 > /sys/class/gpio/gpio162/value
-echo 1 > /sys/class/gpio/gpio162/value
-sleep 1
-echo 0 > /sys/class/gpio/gpio162/value
-
 exit 0

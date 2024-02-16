@@ -1,4 +1,5 @@
 #!/bin/sh
+# See companion modem_on.sh
 
 ENV_FILE="/var/run/arduino_hw_info.env"
 
@@ -10,18 +11,20 @@ else
 fi
 
 if [ "$IS_ON_CARRIER"=="yes" ]; then
-    if ! [ "$CARRIER_NAME"=="max" ]; then
-        echo "Not on Max Carrier"
-        exit 1
+    if [ "$CARRIER_NAME"=="max" ]; then
+        echo "Power on SARA-R4 usb modem on $CARRIER_NAME"
+        gpioset gpiochip5 4=0 # PWR_ON=High
+        gpioset gpiochip5 2=1 # RST=Low
+
+        echo "Power off pcie usb modem on $CARRIER_NAME"
+        gpioset gpiochip5 29=0 # PCIE 3V3 BUCK EN (stm32h7 PWM6)
+    elif [ "$CARRIER_NAME"=="mid" ]; then
+        echo "Power off pcie usb modem on $CARRIER_NAME"
+        gpioset gpiochip5 5=0 # # PCIE 3V3 BUCK EN (stm32h7 PE10)
     fi
+    exit 0
 else
     echo "Not on a carrier board"
-    exit 1
+    exit 0
 fi
-
-echo 0 > /sys/class/gpio/gpio164/value
-echo 1 > /sys/class/gpio/gpio162/value
-echo 162 > /sys/class/gpio/unexport
-echo 164 > /sys/class/gpio/unexport
-
 exit 0
