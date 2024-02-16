@@ -40,7 +40,7 @@ LMP_EXTRA = " \
     lmp-auto-hostname \
     u-boot-fio-env \
     tmate \
-    libgpiod \
+    libgpiod-tools \
 "
 
 ADB = " \
