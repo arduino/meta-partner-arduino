@@ -46,6 +46,7 @@ LMP_EXTRA = " \
     lmp-auto-hostname \
     compose-apps-early-start \
     tmate \
+    libgpiod \
 "
 
 ADB = " \
