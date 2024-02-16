@@ -5,16 +5,14 @@
  * no RTS CTS only TX RX.
  * Gpios:
  * - Reset pin active low, ext. pull up of 1M on carrier
- *   (stm32h7 PF4, 163 in /sys/class/gpio/export)
+ *   (stm32h7 PF4, gpiochip5 pin 3 using gpiod)
  *
  * Example script to reset the modem:
  *
  * #!/bin/sh
- * echo 163 > /sys/class/gpio/export
- * echo out > /sys/class/gpio/gpio163/direction
- * echo 0 > /sys/class/gpio/gpio163/value
+ * gpioset gpiochip5 3=0
  * sleep 1
- * echo 1 > /sys/class/gpio/gpio163/value
+ * gpioset gpiochip5 3=1
  */
 
 /dts-v1/;
