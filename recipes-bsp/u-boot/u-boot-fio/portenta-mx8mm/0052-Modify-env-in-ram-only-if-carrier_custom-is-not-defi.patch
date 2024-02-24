@@ -1,0 +1,37 @@
+From d98eb2168ac9cd9a1d523949601a802c094a928f Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Sat, 24 Feb 2024 17:38:08 +0000
+Subject: [PATCH] Modify env in ram only if carrier_custom is not defined
+
+---
+ board/arduino/portenta-x8/portenta-x8.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
+index c5c266d808..ec7cccc9d4 100644
+--- a/board/arduino/portenta-x8/portenta-x8.c
++++ b/board/arduino/portenta-x8/portenta-x8.c
+@@ -589,12 +589,14 @@ int board_late_init(void)
+ #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+ 	env_set("board_name", model->board_name);
+ 	env_set("board_rev", model->board_rev);
+-	if (model->is_on_carrier) {
+-		env_set("is_on_carrier", "yes");
+-		env_set("carrier_name", model->carrier_name);
+-		if (model->has_hat) {
+-			env_set("has_hat", "yes");
+-			env_set("hat_name", model->hat_name);
++	if (env_get("carrier_custom") == NULL) {
++		if (model->is_on_carrier) {
++			env_set("is_on_carrier", "yes");
++			env_set("carrier_name", model->carrier_name);
++			if (model->has_hat) {
++				env_set("has_hat", "yes");
++				env_set("hat_name", model->hat_name);
++			}
+ 		}
+ 	}
+ #endif
+-- 
+2.25.1
+
