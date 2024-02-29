@@ -1,0 +1,3 @@
+[submodule "recipes-kernel/kernel-modules/x8h7"]
+	path = recipes-kernel/kernel-modules/x8h7
+	url = https://github.com/arduino/portentax8-x8h7
