@@ -7,31 +7,17 @@ inherit module
 PR = "r1"
 PV = "0.1"
 
+SRC_SHA = "6192b26b6177d6239a20556f222f2fb047dbcb78"
 SRC_URI = " \
-  file://Makefile \
-  file://x8h7_drv.c \
-  file://x8h7_ioctl.h \
-  file://x8h7.h \
-  file://x8h7_adc.c \
-  file://x8h7_gpio.c \
-  file://x8h7_pwm.c \
-  file://x8h7_rtc.c \
-  file://x8h7_can.h \
-  file://x8h7_can.c \
-  file://x8h7_uart.c \
-  file://x8h7_ui.c \
-  file://x8h7_h7.c \
-  file://debug.h \
-  file://COPYING \
-  file://blacklist.conf \
+    git://github.com/arduino/portentax8-x8h7.git;rev=${SRC_SHA};branch=main;protocol=https \
 "
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/git"
 
 do_install:append() {
     bbwarn "Blacklisting x8h7 modules"
     install -d ${D}/${sysconfdir}/modprobe.d
-    install -m 644 ${WORKDIR}/blacklist.conf ${D}/${sysconfdir}/modprobe.d/blacklist.conf
+    install -m 644 ${S}/blacklist.conf ${D}/${sysconfdir}/modprobe.d/blacklist.conf
 }
 
 FILES:${PN}:append = " ${sysconfdir}"
