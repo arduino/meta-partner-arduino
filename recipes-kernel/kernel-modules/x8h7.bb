@@ -9,7 +9,7 @@ PV = "0.1"
 
 SRC_SHA = "c8dd5860ffdd40058b08a67482539cbedc28f467"
 SRC_URI = " \
-    git://github.com/arduino/portentax8-x8h7.git;rev=${SRC_SHA};branch=main;protocol=https \
+    git://github.com/arduino/portentax8-x8h7.git;rev=${SRC_SHA};branch=next;protocol=https \
 "
 
 S = "${WORKDIR}/git"
