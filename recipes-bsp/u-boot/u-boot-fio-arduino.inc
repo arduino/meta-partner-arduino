@@ -24,5 +24,5 @@ SRC_URI:append:portenta-mx8mm = " \
     file://0022-Review-pinctrl_hog-groups.patch \
     file://0023-Fixed-STM32H7-pins-in-u-boot.patch \
     file://0024-Force-Breakout-carrier-as-default.patch \
-    file://0052-Modify-env-in-ram-only-if-carrier_custom-is-not-defi.patch
+    file://0052-Modify-env-in-ram-only-if-carrier_custom-is-not-defi.patch \
 "
