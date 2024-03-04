@@ -11,11 +11,13 @@ SRC_URI = " \
     file://create-docker-envfile.service \
     file://offline-update.service \
     file://connection_status_led \
+    file://ec200a-eu.service \
+    file://75-ec200aeu.rules \
 "
 
 inherit systemd
 
-SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service offline-update.service"
+SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service offline-update.service ec200a-eu.service"
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
@@ -24,6 +26,10 @@ do_install() {
     install -m 0644 ${WORKDIR}/secure-device.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/create-docker-envfile.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/offline-update.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/ec200a-eu.service ${D}${systemd_system_unitdir}/
+
+    install -d ${D}${systemd_system_unitdir}/udev/rules.d
+    install -m 0644 ${WORKDIR}/75-ec200aeu.rules ${D}${systemd_system_unitdir}/udev/rules.d
 
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/

@@ -1,0 +1,1 @@
+SUBSYSTEM=="net", ACTION=="add", ATTRS{idVendor}=="2c7c", ATTRS{idProduct}=="6005", NAME="ec200aeu"
