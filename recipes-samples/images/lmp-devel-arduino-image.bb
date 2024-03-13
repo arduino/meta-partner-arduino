@@ -41,6 +41,7 @@ LMP_EXTRA = " \
     u-boot-fio-env \
     tmate \
     libgpiod-tools \
+    dtc \
 "
 
 ADB = " \
