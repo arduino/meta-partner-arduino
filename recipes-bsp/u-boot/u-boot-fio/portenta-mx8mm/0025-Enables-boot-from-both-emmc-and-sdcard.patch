@@ -1,0 +1,87 @@
+From 046b04b40723b6b95410087a16259662e268556a Mon Sep 17 00:00:00 2001
+From: Riccardo Mereu <r.mereu@arduino.cc>
+Date: Thu, 21 Mar 2024 16:04:52 +0000
+Subject: [PATCH] Enables boot from both emmc and sdcard
+
+---
+ board/arduino/portenta-x8/portenta-x8.c | 6 ++++++
+ common/spl/spl_mmc.c                    | 7 ++++++-
+ env/fat.c                               | 1 +
+ include/configs/portenta-x8.h           | 4 ++++
+ 4 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/board/arduino/portenta-x8/portenta-x8.c b/board/arduino/portenta-x8/portenta-x8.c
+index c5c266d8081..564daeea172 100644
+--- a/board/arduino/portenta-x8/portenta-x8.c
++++ b/board/arduino/portenta-x8/portenta-x8.c
+@@ -587,6 +587,12 @@ int board_late_init(void)
+ #endif
+ 
+ #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
++	int boot_device = mmc_get_env_dev();
++
++	env_set_ulong("devnum", boot_device);
++	env_set_ulong("ovldev", boot_device);
++	env_set_ulong("mmcdev", boot_device);
++
+ 	env_set("board_name", model->board_name);
+ 	env_set("board_rev", model->board_rev);
+ 	if (model->is_on_carrier) {
+diff --git a/common/spl/spl_mmc.c b/common/spl/spl_mmc.c
+index b5db64e9703..6fb9252576e 100644
+--- a/common/spl/spl_mmc.c
++++ b/common/spl/spl_mmc.c
+@@ -303,7 +303,7 @@ static int spl_mmc_do_fs_boot(struct spl_image_info *spl_image,
+ 	}
+ #ifdef CONFIG_SPL_FS_LOAD_PAYLOAD_NAME
+ 	err = spl_load_image_fat(spl_image, bootdev, mmc_get_blk_desc(mmc),
+-				 CONFIG_SYS_MMCSD_FS_BOOT_PARTITION,
++				 spl_boot_device(),
+ 				 filename);
+ 	if (!err)
+ 		return err;
+@@ -425,6 +425,11 @@ int spl_mmc_load(struct spl_image_info *spl_image,
+ 
+ 	boot_mode = spl_mmc_boot_mode(bootdev->boot_device);
+ 	err = -EINVAL;
++
++	/* Using fall through from MMCSD_MODE_EMMCBOOT to MMCSD_MODE_FS.
++	This allows to use both modes. */
++	boot_mode = MMCSD_MODE_EMMCBOOT;
++
+ 	switch (boot_mode) {
+ 	case MMCSD_MODE_EMMCBOOT:
+ 		part = spl_mmc_emmc_boot_partition(mmc);
+diff --git a/env/fat.c b/env/fat.c
+index fdccd6cd2a8..818bbffaa54 100644
+--- a/env/fat.c
++++ b/env/fat.c
+@@ -39,6 +39,7 @@ static char *env_fat_device_and_part(void)
+ 
+ 	if (!part_str) {
+ 		part_str = CONFIG_ENV_FAT_DEVICE_AND_PART;
++		sprintf(part_str, "%d:1", mmc_get_env_dev());
+ 		if (!strcmp(CONFIG_ENV_FAT_INTERFACE, "mmc") && part_str[0] == ':') {
+ 			part_str = "0" CONFIG_ENV_FAT_DEVICE_AND_PART;
+ 			part_str[0] += mmc_get_env_dev();
+diff --git a/include/configs/portenta-x8.h b/include/configs/portenta-x8.h
+index 6c89405e39a..f1f418a50fa 100644
+--- a/include/configs/portenta-x8.h
++++ b/include/configs/portenta-x8.h
+@@ -219,9 +219,13 @@
+ #define CONFIG_ENV_SPI_MODE		CONFIG_SF_DEFAULT_MODE
+ #define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
+ #endif
++
++/* Unused but necessary, env device and mmcroot are contional to booting device. */
+ #define CONFIG_SYS_MMC_ENV_DEV		2   /* USDHC3 */
+ #define CONFIG_MMCROOT			"/dev/mmcblk2p2"  /* USDHC3 */
+ 
++#define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME		"u-boot.itb"
++
+ #define CONFIG_SYS_SDRAM_BASE           0x40000000
+ #define PHYS_SDRAM                      0x40000000
+ #define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
+-- 
+2.25.1
+

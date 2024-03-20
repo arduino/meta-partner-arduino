@@ -1,8 +1,6 @@
-devnum=2
 devtype=mmc
 ovlload=ext4load
 ovltype=mmc
-ovldev=2
 ovlpart=2
 ovlpath=/boot/devicetree
 fdtovaddr=0x43600000

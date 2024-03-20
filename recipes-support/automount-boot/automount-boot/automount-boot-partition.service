@@ -1,0 +1,12 @@
+[Unit]
+Description=Automount boot partition
+Before=create-docker-envfile.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/bin/sh -c '/bin/mkdir -p /mnt/boot/'
+ExecStart=/bin/sh -c '/bin/mount $(findmnt -n -o SOURCE / | sed 's/.$/1/') /mnt/boot/'
+
+[Install]
+WantedBy=basic.target
