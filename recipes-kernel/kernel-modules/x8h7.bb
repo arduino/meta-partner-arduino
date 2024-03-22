@@ -7,7 +7,7 @@ inherit module
 PR = "r1"
 PV = "0.1"
 
-SRC_SHA = "6192b26b6177d6239a20556f222f2fb047dbcb78"
+SRC_SHA = "c8dd5860ffdd40058b08a67482539cbedc28f467"
 SRC_URI = " \
     git://github.com/arduino/portentax8-x8h7.git;rev=${SRC_SHA};branch=main;protocol=https \
 "
