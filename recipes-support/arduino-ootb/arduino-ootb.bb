@@ -2,8 +2,6 @@ SUMMARY = "Arduino OOTB"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-RDEPENDS:${PN} += "systemd"
-
 SRC_URI = " \
     file://connection-status-led.timer \
     file://connection-status-led.service \
@@ -12,7 +10,6 @@ SRC_URI = " \
     file://offline-update.service \
     file://connection_status_led \
     file://ec200a-eu.service \
-    file://75-ec200aeu.rules \
 "
 
 inherit systemd
@@ -28,12 +25,11 @@ do_install() {
     install -m 0644 ${WORKDIR}/offline-update.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/ec200a-eu.service ${D}${systemd_system_unitdir}/
 
-    install -d ${D}${systemd_system_unitdir}/udev/rules.d
-    install -m 0644 ${WORKDIR}/75-ec200aeu.rules ${D}${systemd_system_unitdir}/udev/rules.d
-
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/
 }
+
+RDEPENDS:${PN} += "systemd udev-rules-portenta"
 
 FILES:${PN} += " \
     ${bindir} \
