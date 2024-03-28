@@ -1,0 +1,17 @@
+[Unit]
+Description=Ensure apps are configured and running as early as possible
+Wants=docker.service
+After=docker.service
+Before=lmp-device-auto-register.service
+StartLimitBurst=2
+ConditionPathExists=/var/sota/sql.db
+ConditionPathExists=!/var/sota/sota.toml
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/bin/aklite-offline run
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

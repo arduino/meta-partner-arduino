@@ -10,11 +10,12 @@ SRC_URI = " \
     file://offline-update.service \
     file://connection_status_led \
     file://ec200a-eu.service \
+    file://compose-apps-aklite-offline-run.service \
 "
 
 inherit systemd
 
-SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service offline-update.service ec200a-eu.service"
+SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service offline-update.service ec200a-eu.service compose-apps-aklite-offline-run.service"
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
@@ -24,6 +25,7 @@ do_install() {
     install -m 0644 ${WORKDIR}/create-docker-envfile.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/offline-update.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/ec200a-eu.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/compose-apps-aklite-offline-run.service ${D}${systemd_system_unitdir}/
 
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/
