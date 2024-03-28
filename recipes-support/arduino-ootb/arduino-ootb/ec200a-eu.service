@@ -8,3 +8,6 @@ Type=simple
 RemainAfterExit=yes
 ExecStart=/bin/sh -c '/usr/bin/nmcli c delete ec200a-eu; /usr/bin/nmcli c add type ethernet ifname ec200aeu ipv4.route-metric 800 con-name ec200a-eu && /usr/bin/nmcli c down ec200a-eu && /usr/bin/nmcli c up ec200a-eu'
 ExecStop=/bin/sh -c '/usr/bin/nmcli c down ec200a-eu && /usr/bin/nmcli c delete ec200a-eu'
+
+[Install]
+WantedBy=network.target
