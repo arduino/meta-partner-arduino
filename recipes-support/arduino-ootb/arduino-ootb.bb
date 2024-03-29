@@ -15,7 +15,7 @@ SRC_URI = " \
 
 inherit systemd
 
-SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service offline-update.service ec200a-eu.service compose-apps-aklite-offline-run.service"
+SYSTEMD_SERVICE:${PN} = "connection-status-led.timer connection-status-led.service secure-device.service create-docker-envfile.service offline-update.service compose-apps-aklite-offline-run.service"
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
