@@ -1,6 +1,6 @@
 # LMP partner specific customizations (either replace or extend options as defined by meta-lmp)
 
-PACKAGECONFIG:append:pn-networkmanager:portenta-mx8mm = " modemmanager ppp"
+PACKAGECONFIG:append:pn-networkmanager:portenta-mx8mm = " modemmanager"
 
 # drop idle timeout in weston
 PACKAGECONFIG:append:pn-weston-init:portenta-mx8mm = " no-idle-timeout"
