@@ -6,8 +6,15 @@ After=network.target sys-subsystem-net-devices-ec200aeu.device
 [Service]
 Type=simple
 RemainAfterExit=yes
-ExecStart=/bin/sh -c '/usr/bin/nmcli c delete ec200a-eu; /usr/bin/nmcli c add type ethernet ifname ec200aeu ipv4.route-metric 800 con-name ec200a-eu && /usr/bin/nmcli c down ec200a-eu && /usr/bin/nmcli c up ec200a-eu'
-ExecStop=/bin/sh -c '/usr/bin/nmcli c down ec200a-eu && /usr/bin/nmcli c delete ec200a-eu'
+ExecStart=/bin/sh -c '\
+route del default gw 192.168.43.1 dev ec200aeu &&\
+route add default gw 192.168.43.1 dev ec200aeu metric 800 &&\
+route del -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu &&\
+route add -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu metric 800'
+Restart=on-failure
+RestartSec=5s
+StartLimitBurst=1
+StartLimitIntervalSec=0
 
 [Install]
 WantedBy=network.target
