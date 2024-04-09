@@ -1,0 +1,351 @@
+From 1fc2606310d57cf20a0066a79486962797ce1461 Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.com>
+Date: Thu, 23 Mar 2023 16:53:13 +0000
+Subject: [PATCH 21/24] Added VBUS switch management
+
+---
+ board/arduino/common/anx7625.c  | 166 ++++++++++++++++++++++++--------
+ board/arduino/portenta-x8/spl.c |   6 ++
+ 2 files changed, 133 insertions(+), 39 deletions(-)
+
+diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
+index 9663b050fe2..6e8795d8695 100644
+--- a/board/arduino/common/anx7625.c
++++ b/board/arduino/common/anx7625.c
+@@ -6,7 +6,9 @@
+ 
+ #define DEBUG 1
+ #include <common.h>
++#include <asm/mach-imx/iomux-v3.h>
+ #include <asm-generic/gpio.h>
++#include <asm/arch/imx8mm_pins.h>
+ #include <asm/mach-imx/gpio.h>
+ #include <dm.h>
+ #include <i2c.h>
+@@ -139,9 +141,22 @@ enum anx7625_pd_msg_type {
+ #elif defined(CONFIG_TARGET_PORTENTA_X8)
+ #define ANX7625_POWER_EN_PAD      IMX_GPIO_NR(4, 25)
+ #define ANX7625_RESET_N_PAD       IMX_GPIO_NR(4, 26)
++#define ANX7625_CABLE_DET_PAD     IMX_GPIO_NR(4, 27)
++#define ANX7625_VBUS_CTL_PAD      IMX_GPIO_NR(4, 13)
+ #define LEDR_PAD                  IMX_GPIO_NR(5, 2)
+ #define LEDG_PAD                  IMX_GPIO_NR(4, 28)
+ #define LEDB_PAD                  IMX_GPIO_NR(5, 1)
++#define USDHC2_CD_GPIO	IMX_GPIO_NR(2, 18)
++#define USDHC2_PWR_GPIO IMX_GPIO_NR(2, 19)
++
++DECLARE_GLOBAL_DATA_PTR;
++
++#define SAI2_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PE | \
++			 PAD_CTL_FSEL2)
++#define SAI2_GPIO_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_DSE1)
++
++static iomux_v3_cfg_t const sai2_cable_det_pad =
++	IMX8MM_PAD_SAI2_MCLK_GPIO4_IO27 | MUX_PAD_CTRL(SAI2_PAD_CTRL);
+ #else
+ #error ANX/LED GPIOs not configured for this board
+ #endif
+@@ -149,7 +164,7 @@ enum anx7625_pd_msg_type {
+ #define ANX7625_DUMP_MSG              1
+ /* #define ANX7625_VERBOSE              1 */
+ #define ANX7625_NEGOTIATE_PD          1
+-#define ANX7625_NEGOTIATE_ERROR       1 /* If defined when negotiation fails blink red led repeatedly to warn the user and doesn't boot into kernel */
++#define ANX7625_LOOP_ON_ERROR         1 /* If defined when negotiation fails blink red led repeatedly to warn the user and doesn't boot into kernel */
+ #define ANX7625_NEGOTIATE_ENDS_SETUP  1 /* If defined exits immediately after power negotiation is finished, otherwise waits for the timeout to occours */
+ 
+ static uint8_t last_chip_addr;
+@@ -162,6 +177,10 @@ static void request_gpios(void)
+ 
+ 	gpio_request(ANX7625_POWER_EN_PAD, "anx_power_en");
+ 	gpio_request(ANX7625_RESET_N_PAD, "anx_reset_n");
++	gpio_request(ANX7625_CABLE_DET_PAD, "anx_cable_det");
++	imx_iomux_v3_setup_pad(sai2_cable_det_pad);
++	gpio_direction_input(ANX7625_CABLE_DET_PAD);
++	gpio_request(ANX7625_VBUS_CTL_PAD, "anx_vbus_ctl"); /* 0 = VBUS On, 1 = VBUS Off */
+ }
+ 
+ static void free_gpios(void)
+@@ -172,6 +191,8 @@ static void free_gpios(void)
+ 
+ 	gpio_free(ANX7625_POWER_EN_PAD);
+ 	gpio_free(ANX7625_RESET_N_PAD);
++	gpio_free(ANX7625_CABLE_DET_PAD);
++	gpio_free(ANX7625_VBUS_CTL_PAD);
+ }
+ 
+ static void leds_off(void)
+@@ -181,7 +202,19 @@ static void leds_off(void)
+ 	gpio_direction_output(LEDB_PAD, 1);
+ }
+ 
+-#if defined(ANX7625_NEGOTIATE_PD) && defined(ANX7625_NEGOTIATE_ERROR)
++static void vbus_off(void)
++{
++    printf("%s\n", __func__);
++    gpio_direction_output(ANX7625_VBUS_CTL_PAD, 1);
++}
++
++static void vbus_on(void)
++{
++    printf("%s\n", __func__);
++    gpio_direction_output(ANX7625_VBUS_CTL_PAD, 0);
++}
++
++#if defined(ANX7625_NEGOTIATE_PD) && defined(ANX7625_LOOP_ON_ERROR)
+ static void led_red_on(void)
+ {
+ 	gpio_direction_output(LEDR_PAD, 0);
+@@ -433,7 +466,7 @@ static int anx7625_msg_recv(struct udevice *dev, enum anx7625_pd_msg_type *msg_t
+ 	return -ETIMEDOUT;
+ }
+ 
+-/* @TODO: @MS please consider below what I know from PD
++/* @TODO: confirm/discard below
+  * DFP only mode: we always start as UFP(Rd), the other device is always DFP(Rp)
+  * DRP mode: after connection we switch between Rp(DFP) and Rd(UFP) until we detect a valid connection. When
+  * connection is detected, start either in UFP or DFP mode.
+@@ -454,11 +487,11 @@ static int anx7625_setup_pd_cap(struct udevice *dev)
+ 	/* TODO: locate data in dts */
+ 
+ 	static uint32_t init_src_caps[1] = {
+-		/*5000mV, 3A, Fixed */
++		/* 5000mV, 3A, Fixed */
+ 		PDO_FIXED(MAX_VOLTAGE_VALUE_MV, MAX_POWER_VALUE_MA, PDO_FIXED_DUAL_ROLE | PDO_FIXED_COMM_CAP | PDO_FIXED_DATA_SWAP),
+ 	};
+ 	static uint32_t init_snk_caps[3] = {
+-		/*5000mV, 3A, Fixed */
++		/* 5000mV, 3A, Fixed */
+ 		PDO_FIXED(MAX_VOLTAGE_VALUE_MV, MAX_POWER_VALUE_MA, PDO_FIXED_DUAL_ROLE | PDO_FIXED_COMM_CAP | PDO_FIXED_DATA_SWAP),
+ 	};
+ 	static uint8_t init_dp_snk_ident[16] = {
+@@ -573,24 +606,8 @@ static int anx7625_enable_auto_rdo(struct udevice *dev)
+ 	return dm_i2c_writeb(dev, AUTO_PD_MODE, valb | AUTO_PD_ENABLE_BIT);
+ }
+ 
+-static int anx7625_disable_safe_5v_during_auto_rdo(struct udevice *dev)
+-{
+-	int ret = 0;
+-	uint8_t valb = 0;
+-
+-	debug("%s\n", __func__);
+-	i2c_access_workaround(dev);
+-
+-	ret = dm_i2c_read(dev, AUTO_PD_MODE, &valb, 1);
+-	if (ret) {
+-		printf("%s failed, err %d\n", __func__, ret);
+-		return -EIO;
+-	}
+-
+-	return dm_i2c_writeb(dev, AUTO_PD_MODE, valb & ~GOTO_SAFE5V_EN);
+-}
+-
+ /* We should set role control (hw) before sending anything on CC bus */
++/* Here we configure DFP, UFP or DRP modes */
+ static int anx7625_setup_role_control(struct udevice *dev)
+ {
+ 	int ret = 0;
+@@ -623,8 +640,6 @@ static int anx7625_chip_register_init(struct udevice *dev_p0, struct udevice *de
+ 
+ 	anx7625_disable_auto_rdo(dev_p0);
+ 
+-	//anx7625_disable_safe_5v_during_auto_rdo(dev_p0); /* @TODO: @MS not needed, safe 5V is 5V@500mA, we don't need to disable this choice just elaborate obtained power later on */
+-
+ 	ret = dm_i2c_writeb(dev_p0, MAX_VOLTAGE_SETTING_REG, MAX_VOLTAGE_VALUE);
+ 	if (ret) {
+ 		printf("%s %d dm_i2c_write failed, err %d\n", __func__, __LINE__, ret);
+@@ -666,6 +681,52 @@ static int anx7625_chip_register_init(struct udevice *dev_p0, struct udevice *de
+ 	return 0;
+ }
+ 
++/* There is a known issue with CABLE_DET signal, to be confirmed by Analogix. Cable detection is
++ * done by analog circuitry using the CC pin voltage level. When you have PD data passing on CC pin, this
++ * directly produces a noise on CABLE_DET signal. */
++static int get_cable_det(void)
++{
++	unsigned int count = 10;
++	unsigned int cable_det_count = 0;
++	int val = 0;
++
++	imx_iomux_v3_setup_pad(sai2_cable_det_pad);
++	gpio_direction_input(ANX7625_CABLE_DET_PAD);
++
++	do
++	{
++		val = gpio_get_value(ANX7625_CABLE_DET_PAD);
++		if (val > 0)
++			cable_det_count++;
++		udelay(1000); /* 1ms */
++	}
++	while (count--);
++
++	if (cable_det_count > 7)
++		return 1;
++	else if (cable_det_count < 2)
++		return 0;
++}
++
++// This function is used to understand power role
++static int anx7625_is_power_provider(uint8_t sys_status)
++{
++	if (sys_status & BIT(3))
++		return 1;
++	else
++		return 0;
++}
++
++// This function is used to understand data role
++// where DFP means a host port
++static int anx7625_is_dfp(uint8_t sys_status)
++{
++	if (sys_status & BIT(5))
++		return 1;
++	else
++		return 0;
++}
++
+ static int anx7625_setup(struct udevice *dev_typec, struct udevice *dev_p0)
+ {
+ 	int ret = -ENODEV, retry_count, i;
+@@ -686,7 +747,7 @@ static int anx7625_setup(struct udevice *dev_typec, struct udevice *dev_p0)
+ 				printf("%s: OCM started\n", __func__);
+ 
+ 				ret = anx7625_chip_register_init(dev_p0, dev_typec);
+-	                        if (ret)
++				if (ret)
+ 					printf("%s: chip init registers failed!\n", __func__);
+ 				else
+ 					printf("%s: chip init registers succeeded.\n", __func__);
+@@ -708,7 +769,6 @@ static int anx7625_setup(struct udevice *dev_typec, struct udevice *dev_p0)
+ 			}
+ 			udelay(1000); /* 1ms */
+ 		}
+-
+ 		anx7625_standby();
+ 	}
+ 
+@@ -752,7 +812,7 @@ static void anx7625_print_cc_status(const char *cc, uint8_t cc_status) {
+  * */
+ static int anx7625_negotiate_pd(struct udevice *dev_typec, struct udevice *dev_p0)
+ {
+-	int ret, min_power_setting_ma;
++	int ret, min_power_setting_ma, pd_res = 0;
+ 	unsigned int count = 0;
+ 	enum anx7625_pd_msg_type msg_type;
+ 	uint8_t msg_buffer[32];
+@@ -870,20 +930,13 @@ static int anx7625_negotiate_pd(struct udevice *dev_typec, struct udevice *dev_p
+ 			}
+ 			debug("  Power: 5V @ %d [mA]\n", (valb * 500) / 5);
+ 
+-#ifdef ANX7625_NEGOTIATE_ERROR
+ 			if (valb < MIN_POWER_VALUE) {
+ 				printf("Power negotiation failure (5V @ %d [mA] below min setting 5V @ %d [mA])\n",
+-					   RDO_POWER_UNIT_TO_MA(valb), MIN_POWER_VALUE_MA);;
++					   RDO_POWER_UNIT_TO_MA(valb), MIN_POWER_VALUE_MA);
+ 				printf("Please change power adapter and/or USB-C hub and retry.\n");
+-
+-				while (1) {
+-					led_red_on();
+-					udelay(200000);
+-					led_red_off();
+-					udelay(800000);
+-				}
++				pd_res = -EINVAL;
+ 			}
+-#endif
++
+ 			printf("Power negotiation COMPLETE\n");
+ 			p0_isr &= ~PR_C_GOT_POWER;
+ 			dm_i2c_writeb(dev_p0, INTERFACE_CHANGE_INT, p0_isr);
+@@ -904,7 +957,7 @@ static int anx7625_negotiate_pd(struct udevice *dev_typec, struct udevice *dev_p
+ 		count++;
+ 	} /* End negotiation loop */
+ 
+-	return 0;
++	return pd_res;
+ }
+ #endif
+ 
+@@ -913,10 +966,13 @@ int anx7625_probe(uint8_t i2c_bus_num)
+ 	struct udevice *bus_i2c1;
+ 	struct udevice *dev_typec;
+ 	struct udevice *dev_p0;
++	uint8_t sys_status = 0, cable_det = 0;
++	int ret = -ENODEV;
+ 
+ 	debug("%s: start\n", __func__);
+ 
+ 	request_gpios();
++	vbus_off();
+ 	leds_off();
+ 
+ 	if (uclass_get_device_by_seq(UCLASS_I2C, i2c_bus_num, &bus_i2c1)) {
+@@ -941,9 +997,41 @@ int anx7625_probe(uint8_t i2c_bus_num)
+ 		return -EIO;
+ 	}
+ 
++	/* USB TypeC cable detect */
++	cable_det = get_cable_det();
++
++	if(cable_det) {
++		printf("USB TypeC cable connected\n");
+ #ifdef ANX7625_NEGOTIATE_PD
+-	anx7625_negotiate_pd(dev_typec, dev_p0);
++		ret = anx7625_negotiate_pd(dev_typec, dev_p0);
++#ifdef ANX7625_LOOP_ON_ERROR
++		if(ret) {
++			while (1) {
++				led_red_on();
++				udelay(200000); /* 200ms */
++				led_red_off();
++				udelay(800000); /* 800ms */
++			}
++		}
++#endif
++		ret = dm_i2c_read(dev_p0, INTERFACE_STATUS, &sys_status, 1);
++		if (ret) {
++			printf("%s %d dm_i2c_read failed, err %d\n", __func__, __LINE__, ret);
++			return -EIO;
++		}
++
++		if (anx7625_is_power_provider(sys_status)) {
++			vbus_on();
++		}
++
++		if (anx7625_is_dfp(sys_status)) {
++			printf("Usbc port is DFP (host)\n");
++		}
+ #endif
++	} else {
++		printf("USB TypeC cable not connected\n");
++	}
++
+ 	free_gpios();
+ 
+ 	debug("%s: done\n", __func__);
+diff --git a/board/arduino/portenta-x8/spl.c b/board/arduino/portenta-x8/spl.c
+index c512e0e1fbb..02345da337d 100644
+--- a/board/arduino/portenta-x8/spl.c
++++ b/board/arduino/portenta-x8/spl.c
+@@ -248,6 +248,8 @@ int board_fit_config_name_match(const char *name)
+ }
+ #endif
+ 
++#define ANX7625_VBUS_CTL_PAD      IMX_GPIO_NR(4, 13)
++
+ void board_init_f(ulong dummy)
+ {
+ 	int ret;
+@@ -263,6 +265,10 @@ void board_init_f(ulong dummy)
+ 
+ 	preloader_console_init();
+ 
++	printf("Turn Off VBUS\n");
++	gpio_request(ANX7625_VBUS_CTL_PAD, "anx_vbus_ctl"); /* 0 = VBUS On, 1 = VBUS Off */
++	gpio_direction_output(ANX7625_VBUS_CTL_PAD, 1);
++
+ 	ret = spl_init();
+ 	if (ret) {
+ 		debug("spl_init() failed: %d\n", ret);
+-- 
+2.34.1
+

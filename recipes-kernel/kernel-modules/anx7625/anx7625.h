@@ -10,11 +10,14 @@
 
 #include <drm/drm_bridge.h>
 
-#include <drm/drm_dp_helper.h>
+//#include <drm/drm_dp_helper.h>
+#include <linux/media-bus-format.h>
 #include <video/display_timing.h>
 
 #include <linux/usb/role.h>
 #include <linux/usb/typec.h>
+
+#define MIPI_DSI_MODE_EOT_PACKET MIPI_DSI_MODE_NO_EOT_PACKET
 
 #define ANX7625_DRV_VERSION "0.1.04"
 

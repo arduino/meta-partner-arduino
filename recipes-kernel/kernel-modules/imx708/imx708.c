@@ -992,9 +992,9 @@ static int imx708_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct imx708 *imx708 = to_imx708(sd);
 	struct v4l2_mbus_framefmt *try_fmt_img =
-		v4l2_subdev_get_try_format(sd, fh->pad, IMAGE_PAD);
+		v4l2_subdev_get_try_format(sd, fh->state, IMAGE_PAD);
 	struct v4l2_mbus_framefmt *try_fmt_meta =
-		v4l2_subdev_get_try_format(sd, fh->pad, METADATA_PAD);
+		v4l2_subdev_get_try_format(sd, fh->state, METADATA_PAD);
 	struct v4l2_rect *try_crop;
 
 	mutex_lock(&imx708->mutex);
@@ -1017,7 +1017,7 @@ static int imx708_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	try_fmt_meta->field = V4L2_FIELD_NONE;
 
 	/* Initialize try_crop */
-	try_crop = v4l2_subdev_get_try_crop(sd, fh->pad, IMAGE_PAD);
+	try_crop = v4l2_subdev_get_try_crop(sd, fh->state, IMAGE_PAD);
 	try_crop->left = IMX708_PIXEL_ARRAY_LEFT;
 	try_crop->top = IMX708_PIXEL_ARRAY_TOP;
 	try_crop->width = IMX708_PIXEL_ARRAY_WIDTH;
@@ -1237,7 +1237,7 @@ static const struct v4l2_ctrl_ops imx708_ctrl_ops = {
 };
 
 static int imx708_enum_mbus_code(struct v4l2_subdev *sd,
-				 struct v4l2_subdev_pad_config *cfg,
+				 struct v4l2_subdev_state *sd_state,
 				 struct v4l2_subdev_mbus_code_enum *code)
 {
 	struct imx708 *imx708 = to_imx708(sd);
@@ -1261,7 +1261,7 @@ static int imx708_enum_mbus_code(struct v4l2_subdev *sd,
 }
 
 static int imx708_enum_frame_size(struct v4l2_subdev *sd,
-				  struct v4l2_subdev_pad_config *cfg,
+				  struct v4l2_subdev_state *sd_state,
 				  struct v4l2_subdev_frame_size_enum *fse)
 {
 	struct imx708 *imx708 = to_imx708(sd);
@@ -1328,7 +1328,7 @@ static void imx708_update_metadata_pad_format(struct v4l2_subdev_format *fmt)
 }
 
 static int imx708_get_pad_format(struct v4l2_subdev *sd,
-				 struct v4l2_subdev_pad_config *cfg,
+				 struct v4l2_subdev_state *sd_state,
 				 struct v4l2_subdev_format *fmt)
 {
 	struct imx708 *imx708 = to_imx708(sd);
@@ -1340,7 +1340,7 @@ static int imx708_get_pad_format(struct v4l2_subdev *sd,
 
 	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
 		struct v4l2_mbus_framefmt *try_fmt =
-			v4l2_subdev_get_try_format(&imx708->sd, cfg,
+			v4l2_subdev_get_try_format(&imx708->sd, sd_state,
 						   fmt->pad);
 		/* update the code which could change due to vflip or hflip */
 		try_fmt->code = fmt->pad == IMAGE_PAD ?
@@ -1362,7 +1362,7 @@ static int imx708_get_pad_format(struct v4l2_subdev *sd,
 }
 
 static int imx708_set_pad_format(struct v4l2_subdev *sd,
-				 struct v4l2_subdev_pad_config *cfg,
+				 struct v4l2_subdev_state *sd_state,
 				 struct v4l2_subdev_format *fmt)
 {
 	struct v4l2_mbus_framefmt *framefmt;
@@ -1391,7 +1391,7 @@ static int imx708_set_pad_format(struct v4l2_subdev *sd,
 					      fmt->format.height);
 		imx708_update_image_pad_format(imx708, mode, fmt);
 		if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
-			framefmt = v4l2_subdev_get_try_format(sd, cfg,
+			framefmt = v4l2_subdev_get_try_format(sd, sd_state,
 							      fmt->pad);
 			*framefmt = fmt->format;
 		} else {
@@ -1400,7 +1400,7 @@ static int imx708_set_pad_format(struct v4l2_subdev *sd,
 		}
 	} else {
 		if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
-			framefmt = v4l2_subdev_get_try_format(sd, cfg,
+			framefmt = v4l2_subdev_get_try_format(sd, sd_state,
 							      fmt->pad);
 			*framefmt = fmt->format;
 		} else {
@@ -1415,12 +1415,12 @@ static int imx708_set_pad_format(struct v4l2_subdev *sd,
 }
 
 static const struct v4l2_rect *
-__imx708_get_pad_crop(struct imx708 *imx708, struct v4l2_subdev_pad_config *cfg,
+__imx708_get_pad_crop(struct imx708 *imx708, struct v4l2_subdev_state *sd_state,
 		      unsigned int pad, enum v4l2_subdev_format_whence which)
 {
 	switch (which) {
 	case V4L2_SUBDEV_FORMAT_TRY:
-		return v4l2_subdev_get_try_crop(&imx708->sd, cfg, pad);
+		return v4l2_subdev_get_try_crop(&imx708->sd, sd_state, pad);
 	case V4L2_SUBDEV_FORMAT_ACTIVE:
 		return &imx708->mode->crop;
 	}
@@ -1429,7 +1429,7 @@ __imx708_get_pad_crop(struct imx708 *imx708, struct v4l2_subdev_pad_config *cfg,
 }
 
 static int imx708_get_selection(struct v4l2_subdev *sd,
-				struct v4l2_subdev_pad_config *cfg,
+				struct v4l2_subdev_state *sd_state,
 				struct v4l2_subdev_selection *sel)
 {
 	switch (sel->target) {
@@ -1437,7 +1437,7 @@ static int imx708_get_selection(struct v4l2_subdev *sd,
 		struct imx708 *imx708 = to_imx708(sd);
 
 		mutex_lock(&imx708->mutex);
-		sel->r = *__imx708_get_pad_crop(imx708, cfg, sel->pad,
+		sel->r = *__imx708_get_pad_crop(imx708, sd_state, sel->pad,
 						sel->which);
 		mutex_unlock(&imx708->mutex);
 
@@ -2029,7 +2029,7 @@ static int imx708_probe(struct i2c_client *client)
 		goto error_handler_free;
 	}
 
-	ret = v4l2_async_register_subdev_sensor_common(&imx708->sd);
+	ret = v4l2_async_register_subdev_sensor(&imx708->sd);
 	if (ret < 0) {
 		dev_err(dev, "failed to register sensor sub-device: %d\n", ret);
 		goto error_media_entity;
@@ -2053,7 +2053,7 @@ error_power_off:
 	return ret;
 }
 
-static int imx708_remove(struct i2c_client *client)
+static void imx708_remove(struct i2c_client *client)
 {
 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
 	struct imx708 *imx708 = to_imx708(sd);
@@ -2066,8 +2066,6 @@ static int imx708_remove(struct i2c_client *client)
 	if (!pm_runtime_status_suspended(&client->dev))
 		imx708_power_off(&client->dev);
 	pm_runtime_set_suspended(&client->dev);
-
-	return 0;
 }
 
 static const struct of_device_id imx708_dt_ids[] = {

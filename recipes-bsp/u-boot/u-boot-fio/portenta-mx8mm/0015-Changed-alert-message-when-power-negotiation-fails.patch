@@ -1,0 +1,27 @@
+From c4861196bf40a1ba29c4b663d90506c2a18f973d Mon Sep 17 00:00:00 2001
+From: Massimo Pennazio <maxipenna@libero.it>
+Date: Fri, 17 Dec 2021 10:51:13 +0100
+Subject: [PATCH 15/24] Changed alert message when power negotiation fails
+
+Signed-off-by: George Grey <george@foundries.io>
+Signed-off-by: Massimo Pennazio <maxipenna@libero.it>
+---
+ board/arduino/common/anx7625.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/board/arduino/common/anx7625.c b/board/arduino/common/anx7625.c
+index a238886a1fb..5b8884dcaf1 100644
+--- a/board/arduino/common/anx7625.c
++++ b/board/arduino/common/anx7625.c
+@@ -874,7 +874,7 @@ static int anx7625_negotiate_pd(struct udevice *dev_typec, struct udevice *dev_p
+ 			if (valb < MIN_POWER_VALUE) {
+ 				printf("Power negotiation failure (5V @ %d [mA] below min setting 5V @ %d [mA])\n",
+ 					   RDO_POWER_UNIT_TO_MA(valb), MIN_POWER_VALUE_MA);;
+-				printf("Please change adapter and retry.\n");
++				printf("Please change power adapter and/or USB-C hub and retry.\n");
+ 
+ 				while (1) {
+ 					led_red_on();
+-- 
+2.34.1
+

@@ -1,4 +1,4 @@
-From df7ffd5476597f61a0014549c44a7887bb6dac9a Mon Sep 17 00:00:00 2001
+From 13b0286bde52a34ae53f0f409b512f4c77988077 Mon Sep 17 00:00:00 2001
 From: Jorge Ramirez-Ortiz <jorge@foundries.io>
 Date: Mon, 1 Feb 2021 09:38:25 +0100
 Subject: [PATCH] mfd: bd718x7: wait for clock
@@ -9,7 +9,7 @@ Signed-off-by: Jorge Ramirez-Ortiz <jorge@foundries.io>
  1 file changed, 11 insertions(+)
 
 diff --git a/drivers/mfd/rohm-bd718x7.c b/drivers/mfd/rohm-bd718x7.c
-index 85e7f5133365..bdf8b38713cd 100644
+index bfd81f78beaee..c6e28af2c5d96 100644
 --- a/drivers/mfd/rohm-bd718x7.c
 +++ b/drivers/mfd/rohm-bd718x7.c
 @@ -9,6 +9,8 @@
@@ -21,10 +21,10 @@ index 85e7f5133365..bdf8b38713cd 100644
  #include <linux/input.h>
  #include <linux/interrupt.h>
  #include <linux/mfd/rohm-bd718x7.h>
-@@ -123,11 +125,20 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
- 			    const struct i2c_device_id *id)
+@@ -132,11 +134,20 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
  {
- 	struct bd718xx *bd718xx;
+ 	struct regmap *regmap;
+ 	struct regmap_irq_chip_data *irq_data;
 +	struct clk *clk;
  	int ret;
  	unsigned int chip_type;
@@ -43,5 +43,5 @@ index 85e7f5133365..bdf8b38713cd 100644
  		dev_err(&i2c->dev, "No IRQ configured\n");
  		return -EINVAL;
 -- 
-2.17.1
+2.34.1
 

@@ -577,8 +577,9 @@ static const struct drm_panel_funcs st7701_funcs = {
 #endif
 	.enable		= st7701_enable,
 	.get_modes	= st7701_get_modes,
-	//.get_orientation = st7701_get_orientation,
+	.get_orientation = st7701_get_orientation,
 };
+
 static const struct drm_display_mode arduino_giga_display_mode = {
 	.clock		  = 27500,
 
@@ -1000,14 +1001,12 @@ err_attach:
 	return ret;
 }
 
-static int st7701_dsi_remove(struct mipi_dsi_device *dsi)
+static void st7701_dsi_remove(struct mipi_dsi_device *dsi)
 {
 	struct st7701 *st7701 = mipi_dsi_get_drvdata(dsi);
 
 	mipi_dsi_detach(dsi);
 	drm_panel_remove(&st7701->panel);
-
-	return 0;
 }
 
 static const struct of_device_id st7701_of_match[] = {

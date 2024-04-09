@@ -25,7 +25,6 @@
 #include <drm/drm_atomic_helper.h>
 #include <drm/drm_bridge.h>
 #include <drm/drm_crtc_helper.h>
-#include <drm/drm_dp_helper.h>
 #include <drm/drm_edid.h>
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_panel.h>
@@ -2742,7 +2741,7 @@ free_platform:
 	return ret;
 }
 
-static int anx7625_i2c_remove(struct i2c_client *client)
+static void anx7625_i2c_remove(struct i2c_client *client)
 {
 	struct anx7625_data *platform = i2c_get_clientdata(client);
 
@@ -2768,7 +2767,6 @@ static int anx7625_i2c_remove(struct i2c_client *client)
 	anx7625_audio_exit(platform);
 
 	kfree(platform);
-	return 0;
 }
 
 static const struct i2c_device_id anx7625_id[] = {

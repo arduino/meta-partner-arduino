@@ -9,8 +9,8 @@ PV = "0.1"
 
 SRC_URI = " \
   file://Makefile \
-  file://bq24195.c \
-  file://bq24195.h \
+  file://bq24190_charger.c \
+  file://bq24190_charger.h \
   file://COPYING \
 "
 

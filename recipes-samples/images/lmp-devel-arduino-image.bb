@@ -41,6 +41,7 @@ LMP_EXTRA = " \
     u-boot-fio-env \
     tmate \
     libgpiod-tools \
+    dtc \
 "
 
 ADB = " \
@@ -76,7 +77,6 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${LMP_EXTRA} \
     ${ADB} \
     ${ARDUINO} \
-    ${VIDEOTOOLS} \
     ${OPENCV} \
 "
 

@@ -1,4 +1,4 @@
-From 040ae148b20231582524bbf5dae4e76f0640ee24 Mon Sep 17 00:00:00 2001
+From 50c542506c6a186fddb97c4607f1ed5a0a000727 Mon Sep 17 00:00:00 2001
 From: Martino Facchin <m.facchin@arduino.cc>
 Date: Wed, 20 Oct 2021 11:03:09 +0200
 Subject: [PATCH] rohm-bd718xx: add dt-configurable button keycode
@@ -8,10 +8,10 @@ Subject: [PATCH] rohm-bd718xx: add dt-configurable button keycode
  1 file changed, 8 insertions(+)
 
 diff --git a/drivers/mfd/rohm-bd718x7.c b/drivers/mfd/rohm-bd718x7.c
-index bdf8b38713cd..5dd9afdd5995 100644
+index bfd81f78beaee..cd1ebe730215b 100644
 --- a/drivers/mfd/rohm-bd718x7.c
 +++ b/drivers/mfd/rohm-bd718x7.c
-@@ -24,6 +24,7 @@ static struct gpio_keys_button button = {
+@@ -22,6 +22,7 @@ static struct gpio_keys_button button = {
  	.code = KEY_POWER,
  	.gpio = -1,
  	.type = EV_KEY,
@@ -19,20 +19,20 @@ index bdf8b38713cd..5dd9afdd5995 100644
  };
  
  static struct gpio_keys_platform_data bd718xx_powerkey_data = {
-@@ -180,6 +181,13 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
+@@ -184,6 +185,13 @@ static int bd718xx_i2c_probe(struct i2c_client *i2c,
  
  	button.irq = ret;
  
 +	unsigned int keycode;
-+	ret = of_property_read_u32(bd718xx->chip.dev->of_node, "rohm,button-keycode",
++	ret = of_property_read_u32(i2c->dev.of_node, "rohm,button-keycode",
 +				   &keycode);
 +	if (!ret) {
 +		button.code = keycode;
 +	}
 +
- 	ret = devm_mfd_add_devices(bd718xx->chip.dev, PLATFORM_DEVID_AUTO,
- 				   bd718xx_mfd_cells,
- 				   ARRAY_SIZE(bd718xx_mfd_cells), NULL, 0,
+ 	ret = devm_mfd_add_devices(&i2c->dev, PLATFORM_DEVID_AUTO,
+ 				   mfd, cells, NULL, 0,
+ 				   regmap_irq_get_domain(irq_data));
 -- 
-2.33.1
+2.34.1
 

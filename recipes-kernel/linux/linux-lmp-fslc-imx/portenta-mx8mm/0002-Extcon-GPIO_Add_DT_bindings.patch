@@ -1,8 +1,66 @@
-Index: kernel-source/drivers/extcon/extcon-gpio.c
-===================================================================
---- kernel-source.orig/drivers/extcon/extcon-gpio.c
-+++ kernel-source/drivers/extcon/extcon-gpio.c
-@@ -15,29 +15,57 @@
+From 66d82bed27829a2443dd6d7fe571dc19c0f07403 Mon Sep 17 00:00:00 2001
+From: Vanessa Maegima <vanessa.maegima@foundries.io>
+Date: Thu, 16 Mar 2023 16:35:34 -0300
+Subject: [PATCH] Extcon GPIO: Add DT bindings
+
+Signed-off-by: Vanessa Maegima <vanessa.maegima@foundries.io>
+---
+ .../bindings/extcon/extcon-gpio.txt           |  38 ++++
+ drivers/extcon/extcon-gpio.c                  | 169 ++++++++++++++----
+ include/dt-bindings/extcon/extcon.h           |  46 +++++
+ 3 files changed, 219 insertions(+), 34 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/extcon/extcon-gpio.txt
+ create mode 100644 include/dt-bindings/extcon/extcon.h
+
+diff --git a/Documentation/devicetree/bindings/extcon/extcon-gpio.txt b/Documentation/devicetree/bindings/extcon/extcon-gpio.txt
+new file mode 100644
+index 0000000000000..70c36f729963e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/extcon/extcon-gpio.txt
+@@ -0,0 +1,38 @@
++GPIO Extcon device
++
++This is a virtual device used to generate specific external connector
++from the GPIO pin connected to a GPIO pin.
++
++Required properties:
++- compatible: Must be "extcon-gpio".
++- extcon-id: unique id for specific external connector.
++	     See include/dt-bindings/extcon/extcon.h.
++- extcon-gpio: GPIO pin to detect the external connector. See gpio binding.
++
++Optional properties:
++- debounce-ms: the debounce dealy for GPIO pin in millisecond.
++- wakeup-source: Boolean, extcon can wake-up the system.
++
++Example: Examples of extcon-gpio node as listed below:
++
++	usb_cable: extcon-gpio-0 {
++		compatible = "extcon-gpio";
++		extcon-id = <EXTCON_USB>;
++		extcon-gpio = <&gpio6 1 GPIO_ACTIVE_HIGH>;
++	}
++
++	ta_cable: extcon-gpio-1 {
++		compatible = "extcon-gpio";
++		extcon-id = <EXTCON_CHG_USB_DCP>;
++		extcon-gpio = <&gpio3 2 GPIO_ACTIVE_LOW>;
++		debounce-ms = <50>;	/* 50 millisecond */
++		wakeup-source;
++	}
++
++	&dwc3_usb {
++		extcon = <&usb_cable>;
++	};
++
++	&charger {
++		extcon = <&ta_cable>;
++	};
+diff --git a/drivers/extcon/extcon-gpio.c b/drivers/extcon/extcon-gpio.c
+index 4105df74f2b06..4162f6c332340 100644
+--- a/drivers/extcon/extcon-gpio.c
++++ b/drivers/extcon/extcon-gpio.c
+@@ -16,29 +16,57 @@
  #include <linux/interrupt.h>
  #include <linux/kernel.h>
  #include <linux/module.h>
@@ -50,10 +108,10 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  	struct delayed_work work;
  	unsigned long debounce_jiffies;
 -	struct gpio_desc *gpiod;
-+	
++
 +	int gpio;
-+	//struct gpio_desc *gpiod;
-+	
++	struct gpio_desc *gpiod;
++
 +	bool gpio_active_low;
  	unsigned int extcon_id;
 -	unsigned long debounce;
@@ -62,16 +120,16 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  	bool check_on_resume;
  };
  
-@@ -48,7 +76,7 @@ static void gpio_extcon_work(struct work
+@@ -49,7 +77,7 @@ static void gpio_extcon_work(struct work_struct *work)
  		container_of(to_delayed_work(work), struct gpio_extcon_data,
  			     work);
  
 -	state = gpiod_get_value_cansleep(data->gpiod);
-+	state = gpio_get_value(data->gpio);
++	state = gpio_get_value(data->gpiod);
  	extcon_set_state_sync(data->edev, data->extcon_id, state);
  }
  
-@@ -61,47 +89,90 @@ static irqreturn_t gpio_irq_handler(int
+@@ -62,47 +90,90 @@ static irqreturn_t gpio_irq_handler(int irq, void *dev_id)
  	return IRQ_HANDLED;
  }
  
@@ -188,7 +246,7 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  	data->edev = devm_extcon_dev_allocate(dev, &data->extcon_id);
  	if (IS_ERR(data->edev)) {
  		dev_err(dev, "failed to allocate extcon device\n");
-@@ -109,8 +180,10 @@ static int gpio_extcon_probe(struct plat
+@@ -110,8 +181,10 @@ static int gpio_extcon_probe(struct platform_device *pdev)
  	}
  
  	ret = devm_extcon_dev_register(dev, data->edev);
@@ -198,9 +256,9 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  		return ret;
 +	}
  
- 	INIT_DELAYED_WORK(&data->work, gpio_extcon_work);
- 
-@@ -118,16 +191,19 @@ static int gpio_extcon_probe(struct plat
+ 	ret = devm_delayed_work_autocancel(dev, &data->work, gpio_extcon_work);
+ 	if (ret)
+@@ -121,25 +194,41 @@ static int gpio_extcon_probe(struct platform_device *pdev)
  	 * Request the interrupt of gpio to detect whether external connector
  	 * is attached or detached.
  	 */
@@ -213,8 +271,8 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
 +	if (ret < 0) {
 +		DBG_ERROR("FAIL to request interrupt %d\n", data->irq);
  		return ret;
--
 +	}
+ 
  	platform_set_drvdata(pdev, data);
  	/* Perform initial detection */
  	gpio_extcon_work(&data->work.work);
@@ -222,9 +280,6 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
 +	//device_init_wakeup(&pdev->dev, data->irq_wakeup);
 +
  	return 0;
- }
- 
-@@ -141,11 +217,23 @@ static int gpio_extcon_remove(struct pla
  }
  
  #ifdef CONFIG_PM_SLEEP
@@ -248,7 +303,7 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  	if (data->check_on_resume)
  		queue_delayed_work(system_power_efficient_wq,
  			&data->work, data->debounce_jiffies);
-@@ -154,7 +242,18 @@ static int gpio_extcon_resume(struct dev
+@@ -148,13 +237,25 @@ static int gpio_extcon_resume(struct device *dev)
  }
  #endif
  
@@ -268,7 +323,6 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  
  static struct platform_driver gpio_extcon_driver = {
  	.probe		= gpio_extcon_probe,
-@@ -162,6 +261,7 @@ static struct platform_driver gpio_extco
  	.driver		= {
  		.name	= "extcon-gpio",
  		.pm	= &gpio_extcon_pm_ops,
@@ -276,53 +330,11 @@ Index: kernel-source/drivers/extcon/extcon-gpio.c
  	},
  };
  
-Index: kernel-source/Documentation/devicetree/bindings/extcon/extcon-gpio.txt
-===================================================================
+diff --git a/include/dt-bindings/extcon/extcon.h b/include/dt-bindings/extcon/extcon.h
+new file mode 100644
+index 0000000000000..46d3adb360881
 --- /dev/null
-+++ kernel-source/Documentation/devicetree/bindings/extcon/extcon-gpio.txt
-@@ -0,0 +1,38 @@
-+GPIO Extcon device
-+
-+This is a virtual device used to generate specific external connector
-+from the GPIO pin connected to a GPIO pin.
-+
-+Required properties:
-+- compatible: Must be "extcon-gpio".
-+- extcon-id: unique id for specific external connector.
-+	     See include/dt-bindings/extcon/extcon.h.
-+- extcon-gpio: GPIO pin to detect the external connector. See gpio binding.
-+
-+Optional properties:
-+- debounce-ms: the debounce dealy for GPIO pin in millisecond.
-+- wakeup-source: Boolean, extcon can wake-up the system.
-+
-+Example: Examples of extcon-gpio node as listed below:
-+
-+	usb_cable: extcon-gpio-0 {
-+		compatible = "extcon-gpio";
-+		extcon-id = <EXTCON_USB>;
-+		extcon-gpio = <&gpio6 1 GPIO_ACTIVE_HIGH>;
-+	}
-+
-+	ta_cable: extcon-gpio-1 {
-+		compatible = "extcon-gpio";
-+		extcon-id = <EXTCON_CHG_USB_DCP>;
-+		extcon-gpio = <&gpio3 2 GPIO_ACTIVE_LOW>;
-+		debounce-ms = <50>;	/* 50 millisecond */
-+		wakeup-source;
-+	}
-+
-+	&dwc3_usb {
-+		extcon = <&usb_cable>;
-+	};
-+
-+	&charger {
-+		extcon = <&ta_cable>;
-+	};
-Index: kernel-source/include/dt-bindings/extcon/extcon.h
-===================================================================
---- /dev/null
-+++ kernel-source/include/dt-bindings/extcon/extcon.h
++++ b/include/dt-bindings/extcon/extcon.h
 @@ -0,0 +1,46 @@
 +/*
 + * This header provides constants for most extcon bindings.
@@ -370,3 +382,6 @@ Index: kernel-source/include/dt-bindings/extcon/extcon.h
 +#define EXTCON_MECHANICAL	62
 +
 +#endif /* _DT_BINDINGS_EXTCON_EXTCON_H */
+-- 
+2.34.1
+

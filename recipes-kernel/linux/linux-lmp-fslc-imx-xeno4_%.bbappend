@@ -1,6 +1,6 @@
-DESCRIPTION = "kernel for Arduino Portenta MX8MM platform"
+DESCRIPTION = "EVL (Xenomai 4) kernel for Arduino Portenta MX8MM platform"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/linux-lmp-fslc-imx:"
 
 SRC_URI:append:portenta-mx8mm = " \
   file://portenta-mx8mm.cfg \
@@ -8,14 +8,8 @@ SRC_URI:append:portenta-mx8mm = " \
   file://mfd-bd718x7-wait-for-clock.patch \
 "
 
-SRC_URI:append:portenta-m8 = " \
-  file://portenta-m8-standard.scc \
-  file://portenta-m8.cfg \
-"
-
 SRC_URI:append:portenta-x8 = " \
-  file://portenta-x8-standard.scc \
+  file://portenta-x8-xeno4.scc \
   file://portenta-x8.cfg \
   file://0001-rohm-bd718xx-add-dt-configurable-button-keycode.patch \
-  file://QUECTEL-0001-support-ec200a.patch \
 "

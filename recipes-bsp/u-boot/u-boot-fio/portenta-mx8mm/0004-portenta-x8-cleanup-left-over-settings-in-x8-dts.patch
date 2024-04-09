@@ -1,0 +1,200 @@
+From 62a2bf94ce04a18e8c0423ca65a186d930666362 Mon Sep 17 00:00:00 2001
+From: Vanessa Maegima <vanessa.maegima@foundries.io>
+Date: Thu, 9 Nov 2023 12:57:41 -0300
+Subject: [PATCH 04/24] portenta-x8: cleanup left over settings in x8 dts
+
+Signed-off-by: Michael Scott <mike@foundries.io>
+Signed-off-by: Vanessa Maegima <vanessa.maegima@foundries.io>
+---
+ arch/arm/dts/portenta-x8.dts | 123 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 120 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/dts/portenta-x8.dts b/arch/arm/dts/portenta-x8.dts
+index 6126fb7b040..5e5df697d46 100644
+--- a/arch/arm/dts/portenta-x8.dts
++++ b/arch/arm/dts/portenta-x8.dts
+@@ -17,7 +17,7 @@
+ #include "imx8mm.dtsi"
+ 
+ / {
+-	model = "Arduino Portenta i.MX8MM board";
++	model = "Arduino Portenta X8 i.MX8MM board";
+ 	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+ 
+ 	chosen {
+@@ -25,6 +25,36 @@
+ 		stdout-path = &uart2;
+ 	};
+ 
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0x0 0x40000000 0 0x80000000>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_gpio_led>;
++
++		ledR {
++			label = "ledR";
++			gpios = <&gpio5 2 GPIO_ACTIVE_LOW>;
++			default-state = "off";
++		};
++
++		ledG {
++			label = "ledG";
++			gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
++			default-state = "off";
++		};
++
++		ledB {
++			label = "ledB";
++			gpios = <&gpio5 1 GPIO_ACTIVE_LOW>;
++			linux,default-trigger = "heartbeat";
++			default-state = "off";
++		};
++	};
++
+ 	reg_usdhc2_vmmc: regulator-usdhc2 {
+ 		compatible = "regulator-fixed";
+ 		pinctrl-names = "default";
+@@ -36,12 +66,61 @@
+ 		off-on-delay-us = <20000>;
+ 		enable-active-high;
+ 	};
++
++	/* Y2 SIT1532AI */
++	pmic_refclk: pmic-refclk {
++		compatible = "fixed-clock";
++		#clock-cells = <0>;
++		clock-frequency = <32768>;
++	};
+ };
+ 
+ &A53_0 {
+ 	cpu-supply = <&buck2_reg>;
+ };
+ 
++&A53_1 {
++	cpu-supply = <&buck2_reg>;
++};
++
++&A53_2 {
++	cpu-supply = <&buck2_reg>;
++};
++
++&A53_3 {
++	cpu-supply = <&buck2_reg>;
++};
++
++&ddrc {
++	operating-points-v2 = <&ddrc_opp_table>;
++
++	ddrc_opp_table: opp-table {
++		compatible = "operating-points-v2";
++
++		opp-25M {
++			opp-hz = /bits/ 64 <25000000>;
++		};
++
++		opp-100M {
++			opp-hz = /bits/ 64 <100000000>;
++		};
++
++		opp-750M {
++			opp-hz = /bits/ 64 <750000000>;
++		};
++	};
++};
++
++&ecspi3 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi3 &pinctrl_ecspi3_cs>;
++	num-cs = <1>;
++	cs-gpios = <&gpio5 25 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
+ &fec1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_fec1>;
+@@ -57,6 +136,8 @@
+ 		ethphy0: ethernet-phy@0 {
+ 			compatible = "ethernet-phy-ieee802.3-c22";
+ 			reg = <1>;
++			interrupt-parent = <&gpio3>;
++			interrupts = <7 0>;
+ 			reset-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
+ 			reset-assert-us = <100000>;
+ 		};
+@@ -207,11 +288,23 @@
+ };
+ 
+ &usbotg1 {
++	dr_mode = "otg";
++	hnp-disable;
++	srp-disable;
++	adp-disable;
++	usb-role-switch;
++	disable-over-current;
++	samsung,picophy-pre-emp-curr-control = <3>;
++	samsung,picophy-dc-vol-level-adjust = <7>;
+ 	status = "okay";
+ };
+ 
+ &usbotg2 {
+-	status = "disabled";
++	dr_mode = "host";
++	disable-over-current;
++	samsung,picophy-pre-emp-curr-control = <3>;
++	samsung,picophy-dc-vol-level-adjust = <7>;
++	status = "okay";
+ };
+ 
+ &usdhc2 {
+@@ -229,7 +322,8 @@
+ 
+ &usdhc3 {
+ 	assigned-clocks = <&clk IMX8MM_CLK_USDHC3_ROOT>;
+-	assigned-clock-rates = <400000000>;
++	/* TODO: lowered speed here from 400000000 */
++	assigned-clock-rates = <200000000>;
+ 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+ 	pinctrl-0 = <&pinctrl_usdhc3>;
+ 	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
+@@ -250,6 +344,29 @@
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_hog_1>;
+ 
++	pinctrl_ecspi3: ecspi3grp {
++		fsl,pins = <
++			MX8MM_IOMUXC_UART1_RXD_ECSPI3_SCLK              0x82
++			MX8MM_IOMUXC_UART1_TXD_ECSPI3_MOSI              0x82
++			MX8MM_IOMUXC_UART2_RXD_ECSPI3_MISO              0x82
++		>;
++	};
++
++	pinctrl_ecspi3_cs: ecspi3cs {
++		fsl,pins = <
++			// MX8MM_IOMUXC_UART2_TXD_ECSPI3_SS0            0x40000
++			MX8MM_IOMUXC_UART2_TXD_GPIO5_IO25               0x40000
++		>;
++	};
++
++	pinctrl_gpio_led: gpioledgrp {
++		fsl,pins = <
++			MX8MM_IOMUXC_SAI3_MCLK_GPIO5_IO2                0x19
++			MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28               0x19
++			MX8MM_IOMUXC_SAI3_TXD_GPIO5_IO1                 0x19
++		>;
++	};
++
+ 	pinctrl_fec1: fec1grp {
+ 		fsl,pins = <
+ 			MX8MM_IOMUXC_ENET_MDC_ENET1_MDC			0x3
+-- 
+2.34.1
+
