@@ -13,7 +13,7 @@ route del -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu &&\
 route add -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu metric 800'
 Restart=on-failure
 RestartSec=5s
-StartLimitBurst=1
+StartLimitBurst=2
 StartLimitIntervalSec=0
 
 [Install]
