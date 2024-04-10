@@ -1,4 +1,4 @@
-# Arduino custome device names to make them easier to find in /dev/arduino/
+# Arduino custom device names to make them easier to find in /dev/arduino/
 #
 # %n the "kernel number" of the device.
 #    For example, 'sda3' has a "kernel number" of '3'
