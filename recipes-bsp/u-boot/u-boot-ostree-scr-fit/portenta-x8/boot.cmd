@@ -52,8 +52,7 @@ setenv max_ovl ' \
   ov_carrier_max_usbfs \
   ov_carrier_max_sdc \
   ov_carrier_max_cs42l52 \
-  ov_carrier_enuc_lora \
-  ov_carrier_max_pcie_mini'
+  ov_carrier_enuc_lora'
 
 # Rasp-Tenta carrier ov list
 setenv rasp_base_ovl ' \
