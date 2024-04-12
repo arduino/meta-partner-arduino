@@ -7,10 +7,10 @@ inherit module
 PR = "r1"
 PV = "0.1"
 
-SRC_SHA = "8b45c753767b7c91ce7ef9ac681b1926ef0a049c"
 SRC_URI = " \
-    git://github.com/arduino/portentax8-x8h7.git;rev=${SRC_SHA};branch=next;protocol=https \
+    git://github.com/arduino/portentax8-x8h7.git;branch=next;protocol=https \
 "
+SRCREV = "${AUTOREV}"
 
 S = "${WORKDIR}/git"
 
