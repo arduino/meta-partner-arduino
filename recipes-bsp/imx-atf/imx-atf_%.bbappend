@@ -9,7 +9,7 @@ LICENSE = "BSD-3-Clause"
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI:append:portenta-mx8mm = " \
-    file://0001-Uart_2_4_Change_permission.patch \
+    file://0001-UART_4_Change_permission.patch \
 "
 
 EXTRA_OEMAKE:append:portenta-x8 = " \
