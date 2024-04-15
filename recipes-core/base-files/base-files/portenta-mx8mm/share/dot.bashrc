@@ -14,5 +14,5 @@ alias l='ls $LS_OPTIONS -lA'
 # alias cp='cp -i'
 # alias mv='mv -i'
 
-resize
 export TERM=xterm
+resize
