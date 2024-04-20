@@ -1,0 +1,73 @@
+diff --git a/arch/arm64/boot/dts/freescale/imx8mm.dtsi b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
+index c63b5c467be2..97c119dabb0c 100755
+--- a/arch/arm64/boot/dts/freescale/imx8mm.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
+@@ -155,6 +155,54 @@ a53_opp_table: opp-table {
+ 		compatible = "operating-points-v2";
+ 		opp-shared;
+ 
++		opp-100000000 {
++			opp-hz = /bits/ 64 <100000000>;
++			opp-microvolt = <850000>;
++			opp-supported-hw = <0xe>, <0x7>;
++			clock-latency-ns = <150000>;
++			opp-suspend;
++		};
++
++		opp-200000000 {
++			opp-hz = /bits/ 64 <200000000>;
++			opp-microvolt = <850000>;
++			opp-supported-hw = <0xe>, <0x7>;
++			clock-latency-ns = <150000>;
++			opp-suspend;
++		};
++
++		opp-400000000 {
++			opp-hz = /bits/ 64 <400000000>;
++			opp-microvolt = <850000>;
++			opp-supported-hw = <0xe>, <0x7>;
++			clock-latency-ns = <150000>;
++			opp-suspend;
++		};
++
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <850000>;
++			opp-supported-hw = <0xe>, <0x7>;
++			clock-latency-ns = <150000>;
++			opp-suspend;
++		};
++
++		opp-800000000 {
++			opp-hz = /bits/ 64 <800000000>;
++			opp-microvolt = <850000>;
++			opp-supported-hw = <0xe>, <0x7>;
++			clock-latency-ns = <150000>;
++			opp-suspend;
++		};
++
++		opp-1000000000 {
++			opp-hz = /bits/ 64 <1000000000>;
++			opp-microvolt = <850000>;
++			opp-supported-hw = <0xe>, <0x7>;
++			clock-latency-ns = <150000>;
++			opp-suspend;
++		};
++
+ 		opp-1200000000 {
+ 			opp-hz = /bits/ 64 <1200000000>;
+ 			opp-microvolt = <850000>;
+diff --git a/drivers/clk/imx/clk-pll14xx.c b/drivers/clk/imx/clk-pll14xx.c
+index 2ec7154c7a95..0b39f04510ff 100644
+--- a/drivers/clk/imx/clk-pll14xx.c
++++ b/drivers/clk/imx/clk-pll14xx.c
+@@ -55,6 +55,9 @@ static const struct imx_pll14xx_rate_table imx_pll1416x_tbl[] = {
+ 	PLL_1416X_RATE(750000000U,  250, 2, 2),
+ 	PLL_1416X_RATE(700000000U,  350, 3, 2),
+ 	PLL_1416X_RATE(600000000U,  300, 3, 2),
++	PLL_1416X_RATE(400000000U,  200, 3, 2),
++	PLL_1416X_RATE(200000000U,  200, 3, 3),
++	PLL_1416X_RATE(100000000U,  200, 3, 4),
+ };
+ 
+ static const struct imx_pll14xx_rate_table imx_pll1443x_tbl[] = {
