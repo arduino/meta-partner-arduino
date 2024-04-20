@@ -104,6 +104,8 @@
 	fragment@4 {
 		target = <&lcdif>;
 		__overlay__ {
+			status = "okay";
+
 			display = <&display0>;
 
 			display0: display {

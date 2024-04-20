@@ -8,7 +8,6 @@
 #include <dt-bindings/usb/pd.h>
 #include "imx8mm.dtsi"
 #include "anx7625_base.dtsi"
-#include "video.dtsi"
 
 / {
 	model = "Arduino i.MX8MM Portenta board";

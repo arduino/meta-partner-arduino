@@ -26,6 +26,7 @@ DTB_OVERLAYS:append:portenta-m8 = " \
 
 DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_som_x8h7.dts \
+    file://ov_som_gpu_vpus.dts \
     file://ov_som_anx7625_video.dts \
     file://ov_carrier_breakout_uart1.dts \
     file://ov_carrier_breakout_spi0.dts \
@@ -68,7 +69,6 @@ SRC_URI:append:portenta-m8 = " \
 
 SRC_URI:append:portenta-x8 = " \
     file://arduino_portenta-x8.dts \
-    file://video.dtsi \
     file://anx7625_base.dtsi \
 "
 

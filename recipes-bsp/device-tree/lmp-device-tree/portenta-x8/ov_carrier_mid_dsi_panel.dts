@@ -1,7 +1,7 @@
 /**
  * Portenta-X8 dtb overlay file
  * Arduino 2023
- * Enable display dsi panel and touch screen
+ * Enable display dsi panel and touch screen.
  */
 
 /dts-v1/;
@@ -78,6 +78,13 @@
 	};
 
 	fragment@2 {
+		target = <&lcdif>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@3 {
 		target = <&i2c3>;
 		__overlay__ {
 			touchscreen@5d {
