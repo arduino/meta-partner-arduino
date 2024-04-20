@@ -4,13 +4,14 @@ Wants=docker.service
 After=docker.service
 Before=lmp-device-auto-register.service
 StartLimitBurst=2
-ConditionPathExists=/var/sota/sql.db
+ConditionPathExists=/var/sota/offline-update-pending
 ConditionPathExists=!/var/sota/sota.toml
 
 [Service]
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/usr/bin/aklite-offline run
+ExecStartPost=/bin/sh -c 'rm /var/sota/offline-update-pending'
 Restart=on-failure
 
 [Install]
