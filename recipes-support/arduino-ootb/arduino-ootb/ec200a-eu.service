@@ -1,7 +1,7 @@
 [Unit]
 Description=Configure interface for modem EC200A-EU
-After=network.target sys-subsystem-net-devices-ec200aeu.device
-StartLimitBurst=4
+After=network.target ModemManager.service sys-subsystem-net-devices-ec200aeu.device
+StartLimitBurst=2
 StartLimitIntervalSec=0
 
 [Service]
