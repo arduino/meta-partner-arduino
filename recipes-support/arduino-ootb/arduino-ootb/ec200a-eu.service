@@ -1,19 +1,13 @@
 [Unit]
 Description=Configure interface for modem EC200A-EU
 After=network.target ModemManager.service sys-subsystem-net-devices-ec200aeu.device
-StartLimitBurst=2
-StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 RemainAfterExit=yes
 ExecStart=/bin/sh -c '\
-route del default gw 192.168.43.1 dev ec200aeu &&\
+sleep 2 &&\
+if ip route | grep -q "default via 192.168.43.1 dev ec200aeu"; then route del default gw 192.168.43.1 dev ec200aeu; fi &&\
 route add default gw 192.168.43.1 dev ec200aeu metric 800 &&\
-route del -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu &&\
+if ip route | grep -q "192.168.43.0/24 dev ec200aeu"; then route del -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu; fi &&\
 route add -net 192.168.43.0 netmask 255.255.255.0 dev ec200aeu metric 800'
-Restart=on-failure
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
