@@ -42,6 +42,7 @@ LMP_EXTRA = " \
     tmate \
     libgpiod-tools \
     dtc \
+    stress-ng \
 "
 
 ADB = " \
