@@ -12,16 +12,16 @@
 # %% the '%' char itself
 #
 
-# I2c
+# I2C
 SUBSYSTEM=="i2c-dev", KERNEL=="i2c-2", SYMLINK+="arduino/i2c0"
 SUBSYSTEM=="i2c-dev", KERNEL=="i2c-1", SYMLINK+="arduino/i2c1"
 SUBSYSTEM=="i2c-dev", KERNEL=="i2c-3", SYMLINK+="arduino/i2c2"
 
 # Uart
 SUBSYSTEM=="tty", KERNEL=="ttyX0", SYMLINK+="arduino/uart0"
-SUBSYSTEM=="tty", KERNEL=="ttyX1", SYMLINK+="arduino/uart1"
-SUBSYSTEM=="tty", KERNEL=="ttyX2", SYMLINK+="arduino/uart2"
-SUBSYSTEM=="tty", KERNEL=="ttyX3", SYMLINK+="arduino/uart3"
+SUBSYSTEM=="tty", KERNEL=="ttymxc1", SYMLINK+="arduino/uart1"
+SUBSYSTEM=="tty", KERNEL=="ttymxc2", SYMLINK+="arduino/uart2"
+SUBSYSTEM=="tty", KERNEL=="ttymxc3", SYMLINK+="arduino/uart3"
 
 # Spi
 SUBSYSTEM=="spidev", KERNEL=="spidev0.0", SYMLINK+="arduino/spi0"
@@ -32,4 +32,3 @@ SUBSYSTEM=="block", KERNEL=="mmcblk2", SYMLINK+="arduino/mmc"
 SUBSYSTEM=="block", KERNEL=="mmcblk2p[1-9]", SYMLINK+="arduino/mmc%n"
 SUBSYSTEM=="block", KERNEL=="mmcblk1", SYMLINK+="arduino/sdcard"
 SUBSYSTEM=="block", KERNEL=="mmcblk1p[1-9]", SYMLINK+="arduino/sdcard%n"
-
