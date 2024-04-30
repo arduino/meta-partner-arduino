@@ -38,7 +38,7 @@ start()
         # populate config, optional
         mkdir configs/c.1/strings/0x409
         CFG_STRING="adb+acm"
-        if [[ $ENABLED_SCHEMAS="*ncm*" ]]; then
+        if [[ $ENABLED_SCHEMAS =~ "ncm" ]]; then
             CFG_STRING="adb+acm+ncm"
         fi
         echo $CFG_STRING > configs/c.1/strings/0x409/configuration
@@ -50,7 +50,7 @@ start()
         # create the acm (serial) function
         mkdir functions/acm.GS0
 
-        if [[ $ENABLED_SCHEMAS="*ncm*" ]]; then
+        if [[ $ENABLED_SCHEMAS =~ "ncm" ]]; then
             # create the ncm function
             mkdir functions/ncm.usb0
 
