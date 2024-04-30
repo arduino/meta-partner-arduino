@@ -5,6 +5,8 @@ start()
     if [[ $(cat /sys/class/typec/port0/data_role) == "[device]" ]]; then
         echo "Creating Arduino usb gadgets..."
 
+        . /etc/default/usbgx
+
         PID=0061
         VID=2341
         BOARDNAME="Portenta X8"
@@ -35,7 +37,11 @@ start()
 
         # populate config, optional
         mkdir configs/c.1/strings/0x409
-        echo \"adb+acm\" > configs/c.1/strings/0x409/configuration
+        CFG_STRING="adb+acm"
+        if [[ $ENABLED_SCHEMAS="*ncm*" ]]; then
+            CFG_STRING="adb+acm+ncm"
+        fi
+        echo $CFG_STRING > configs/c.1/strings/0x409/configuration
         echo 900 > configs/c.1/MaxPower
 
         # create a generic ffs for adb
@@ -43,6 +49,14 @@ start()
 
         # create the acm (serial) function
         mkdir functions/acm.GS0
+
+        if [[ $ENABLED_SCHEMAS="*ncm*" ]]; then
+            # create the ncm function
+            mkdir functions/ncm.usb0
+
+            # assign ncm function to configuration
+            ln -s functions/ncm.usb0/ configs/c.1
+        fi
 
         # assign acm function to configuration
         ln -s functions/acm.GS0 configs/c.1

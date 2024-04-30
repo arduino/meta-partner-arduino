@@ -58,6 +58,7 @@ ARDUINO = " \
     arduino-ootb \
     m4-proxy \
     udev-rules-portenta \
+    libusbgx-config \
 "
 
 CORE_IMAGE_BASE_INSTALL += " \
