@@ -89,7 +89,7 @@ IMAGE_INSTALL:append:portenta-x8 = " openocd"
 fakeroot do_populate_rootfs_add_custom_sudoers () {
     # Allow sudo group users to use sudo
     bbwarn Changing sudoers for arduino ootb!
-    install -m 0440 ${WORKDIR}/sudoers-arduino ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/51-arduino
+    install -m 0440 ${WORKDIR}/sudoers-arduino-lmp-base ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/51-arduino
 }
 
 IMAGE_PREPROCESS_COMMAND += "do_populate_rootfs_add_custom_sudoers; "
