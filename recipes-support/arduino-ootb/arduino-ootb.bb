@@ -12,6 +12,7 @@ SRC_URI = " \
     file://connection_status_led \
     file://ec200a-eu.service \
     file://compose-apps-aklite-offline-run.service \
+    file://set_cpu_freq \
 "
 
 inherit systemd
@@ -31,6 +32,11 @@ do_install() {
 
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/connection_status_led ${D}${bindir}/
+}
+
+do_install:append:lmp-base() {
+    install -d ${D}${bindir}
+    install -m 0755 ${WORKDIR}/set_cpu_freq ${D}${bindir}/
 }
 
 RDEPENDS:${PN} += "systemd udev-rules-portenta"
