@@ -14,7 +14,7 @@ require recipes-samples/images/lmp-feature-sysctl-hang-crash-helper.inc
 EXTRA_IMAGE_FEATURES = "package-management tools-debug"
 
 SRC_URI += "\
-    file://sudoers-arduino \
+    file://sudoers-arduino-lmp-base \
 "
 
 IMAGE_FEATURES += "ssh-server-dropbear"

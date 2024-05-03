@@ -20,7 +20,7 @@ require recipes-samples/images/lmp-feature-ota-utils.inc
 require recipes-samples/images/lmp-feature-sbin-path-helper.inc
 
 SRC_URI += "\
-    file://sudoers-arduino \
+    file://sudoers-arduino-lmp \
 "
 
 IMAGE_FEATURES += "ssh-server-dropbear"
