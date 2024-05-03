@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 
-CPU_FREQUENCIES=(200 400 600 1200 1600)
+CPU_FREQUENCIES="200 400 600 1200 1600"
 
-if [[ ! " ${CPU_FREQUENCIES[@]} " =~ " $1 " ]]; then
-    echo "Error: Invalid min frequency. Must be one of: ${CPU_FREQUENCIES[@]}"
+if ! echo " $CPU_FREQUENCIES " | grep -q " $1 "; then
+    echo "Error: Invalid min frequency. Must be one of: $CPU_FREQUENCIES"
     exit 1
 fi
 
-if [[ ! " ${CPU_FREQUENCIES[@]} " =~ " $2 " ]]; then
-    echo "Error: Invalid max frequency. Must be one of: ${CPU_FREQUENCIES[@]}"
+if ! echo " $CPU_FREQUENCIES " | grep -q " $2 "; then
+    echo "Error: Invalid max frequency. Must be one of: $CPU_FREQUENCIES"
     exit 1
 fi
 
