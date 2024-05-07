@@ -8,8 +8,8 @@ LIC_FILES_CHKSUM = "file://LICENCE;md5=cbc5f665d04f741f1e006d2096236ba7"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://github.com/murata-wireless/cyw-fmac-fw;protocol=https;branch=master"
-SRCREV = "ba140e42c3320262fc52e185c3af93eeb10117df"
-PV = "20210112"
+SRCREV = "db8deb03b8d24e5069ac4581d1c35b767012e926"
+PV = "20240304"
 
 S = "${WORKDIR}/git"
 
