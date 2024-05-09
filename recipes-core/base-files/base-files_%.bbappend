@@ -1,1 +1,1 @@
-FILESEXTRAPATHS:prepend:lmp := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend:lmp-base := "${THISDIR}/${PN}:"
