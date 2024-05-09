@@ -56,7 +56,6 @@ ADB = " \
 
 ARDUINO = " \
     arduino-ootb \
-    automount-boot \
     m4-proxy \
     udev-rules-portenta \
     libusbgx-config \
