@@ -1,0 +1,260 @@
+From da6c942d6b5fa9fef6180c0b662d8989517cac55 Mon Sep 17 00:00:00 2001
+From: Martino Facchin <m.facchin@arduino.cc>
+Date: Fri, 10 May 2024 08:13:08 +0000
+Subject: [PATCH] spi: test
+
+---
+ drivers/spi/spi-imx.c | 156 +++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 138 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/spi/spi-imx.c b/drivers/spi/spi-imx.c
+index 5ab0ec63c4bd..e6ec0fa0b156 100644
+--- a/drivers/spi/spi-imx.c
++++ b/drivers/spi/spi-imx.c
+@@ -24,6 +24,9 @@
+ #include <linux/of_device.h>
+ #include <linux/property.h>
+ 
++/* include for spi_map_buf defined in spi.c */
++#include "internals.h"
++
+ #include <linux/platform_data/dma-imx.h>
+ 
+ #define DRIVER_NAME "spi_imx"
+@@ -118,6 +121,10 @@ struct spi_imx_data {
+ 	struct completion dma_tx_completion;
+ 
+ 	const struct spi_imx_devtype_data *devtype_data;
++
++	/* temporary DMA buffers */
++	u8 dmatxbuf[MAX_SDMA_BD_BYTES];
++	u8 dmarxbuf[MAX_SDMA_BD_BYTES];
+ };
+ 
+ static inline int is_imx27_cspi(struct spi_imx_data *d)
+@@ -223,7 +230,7 @@ static int spi_imx_bytes_per_word(const int bits_per_word)
+ 		return 4;
+ }
+ 
+-static bool spi_imx_can_dma(struct spi_master *master, struct spi_device *spi,
++static bool __spi_imx_can_dma(struct spi_master *master, struct spi_device *spi,
+ 			 struct spi_transfer *transfer)
+ {
+ 	struct spi_imx_data *spi_imx = spi_master_get_devdata(master);
+@@ -245,6 +252,12 @@ static bool spi_imx_can_dma(struct spi_master *master, struct spi_device *spi,
+ 	return true;
+ }
+ 
++static bool spi_imx_can_dma(struct spi_master *master, struct spi_device *spi,
++			 struct spi_transfer *transfer)
++{
++	return false;
++}
++
+ #define MX51_ECSPI_CTRL		0x08
+ #define MX51_ECSPI_CTRL_ENABLE		(1 <<  0)
+ #define MX51_ECSPI_CTRL_XCH		(1 <<  2)
+@@ -1216,25 +1229,29 @@ static irqreturn_t spi_imx_isr(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int spi_imx_dma_configure(struct spi_master *master)
++static int spi_imx_dma_configure(struct spi_master *master, struct spi_transfer *transfer)
+ {
+ 	int ret;
+ 	enum dma_slave_buswidth buswidth;
+ 	struct dma_slave_config rx = {}, tx = {};
+ 	struct spi_imx_data *spi_imx = spi_master_get_devdata(master);
+ 
+-	switch (spi_imx_bytes_per_word(spi_imx->bits_per_word)) {
+-	case 4:
++	if(transfer->len > MX51_ECSPI_CTRL_MAX_BURST) {
++		switch (spi_imx_bytes_per_word(spi_imx->bits_per_word)) {
++		case 4:
++			buswidth = DMA_SLAVE_BUSWIDTH_4_BYTES;
++			break;
++		case 2:
++			buswidth = DMA_SLAVE_BUSWIDTH_2_BYTES;
++			break;
++		case 1:
++			buswidth = DMA_SLAVE_BUSWIDTH_1_BYTE;
++			break;
++		default:
++			return -EINVAL;
++		}
++	} else {
+ 		buswidth = DMA_SLAVE_BUSWIDTH_4_BYTES;
+-		break;
+-	case 2:
+-		buswidth = DMA_SLAVE_BUSWIDTH_2_BYTES;
+-		break;
+-	case 1:
+-		buswidth = DMA_SLAVE_BUSWIDTH_1_BYTE;
+-		break;
+-	default:
+-		return -EINVAL;
+ 	}
+ 
+ 	tx.direction = DMA_MEM_TO_DEV;
+@@ -1312,7 +1329,7 @@ static int spi_imx_setupxfer(struct spi_device *spi,
+ 		spi_imx->dynamic_burst = 0;
+ 	}
+ 
+-	if (spi_imx_can_dma(spi_imx->bitbang.master, spi, t))
++	if (__spi_imx_can_dma(spi_imx->bitbang.master, spi, t))
+ 		spi_imx->usedma = true;
+ 	else
+ 		spi_imx->usedma = false;
+@@ -1416,13 +1433,84 @@ static int spi_imx_dma_transfer(struct spi_imx_data *spi_imx,
+ 	unsigned long transfer_timeout;
+ 	unsigned long timeout;
+ 	struct spi_master *master = spi_imx->bitbang.master;
+-	struct sg_table *tx = &transfer->tx_sg, *rx = &transfer->rx_sg;
+-	struct scatterlist *last_sg = sg_last(rx->sgl, rx->nents);
++	struct sg_table *tx, *rx;
++	struct scatterlist *last_sg;
+ 	unsigned int bytes_per_word, i;
+ 	int ret;
+ 
++	/* simple case (former DMA behaviour)
++	either transfer size > 512 bytes (4kbits) or
++	32 bits per word and len % sizeof(u32) = 0 */
++	int simple = 0;
++	int offset = transfer->len % 4u;
++	int numwords = (transfer->len + sizeof(u32)-1) / sizeof(u32);
++
++	/* in non simple case we need to right align message buffer to 
++	neareest u32 boundary. eCSPI first transfers odd byte count 
++	from the beginning of message */
++	if(offset)
++		offset = 4-offset;
++
++	if(	transfer->len > MX51_ECSPI_CTRL_MAX_BURST 
++	         || (transfer->bits_per_word > 16 && !offset)  )
++	{
++		/* simple case, DMA directly to/from original message buffers */
++		ret = spi_map_buf(master, spi_imx->dev, &transfer->tx_sg,
++			  (void *)transfer->tx_buf, transfer->len,
++			  DMA_TO_DEVICE);
++		ret = spi_map_buf(master, spi_imx->dev, &transfer->rx_sg,
++			  transfer->rx_buf, transfer->len,
++			  DMA_FROM_DEVICE);
++		simple = 1;
++	}
++	else
++	{
++		/* copy tx buffer to temporary location */
++		memcpy(&spi_imx->dmatxbuf[offset], transfer->tx_buf, transfer->len);
++
++		/* 8 and 16 bits per word cases have to be byte shuffled a bit */
++		if(transfer->bits_per_word == 8)
++		{
++			for(i = 0; i < numwords; i++)
++			{
++				swab32s((u32*) &spi_imx->dmatxbuf[i * sizeof(u32)]);
++			}
++		}
++		else if(transfer->bits_per_word == 16)
++		{
++			for(i = 0; i < numwords; i++)
++			{
++				*(u32*)&spi_imx->dmatxbuf[i * sizeof(u32)] =
++						swab32( swahb32(*(u32*)&spi_imx->dmatxbuf[i * sizeof(u32)] ));
++			}
++		}
++		/* map temporary buffers, stretch DMA transfer length to
++		nearest u32 boundary */
++		ret = spi_map_buf(master, spi_imx->dev, &transfer->tx_sg,
++			  (void *)spi_imx->dmatxbuf, (transfer->len + 3) & ~3,
++			  DMA_TO_DEVICE);
++		ret = spi_map_buf(master, spi_imx->dev, &transfer->rx_sg,
++			  spi_imx->dmarxbuf, (transfer->len + 3) & ~3,
++			  DMA_FROM_DEVICE);
++	}
++
++	tx = &transfer->tx_sg;
++	rx = &transfer->rx_sg;
++	last_sg = sg_last(rx->sgl, rx->nents);
++
++	if (transfer->len > MX51_ECSPI_CTRL_MAX_BURST)
++	{
++		/* too long for proper HW CS */		
++		spi_imx_set_burst_len(spi_imx, transfer->bits_per_word);
++		bytes_per_word = spi_imx_bytes_per_word(transfer->bits_per_word);
++	}
++	else
++	{
++		spi_imx_set_burst_len(spi_imx, transfer->len * 8);
++		bytes_per_word = 4;
++	}
++
+ 	/* Get the right burst length from the last sg to ensure no tail data */
+-	bytes_per_word = spi_imx_bytes_per_word(transfer->bits_per_word);
+ 	for (i = spi_imx->devtype_data->fifo_size / 2; i > 0; i--) {
+ 		if (!(sg_dma_len(last_sg) % (i * bytes_per_word)))
+ 			break;
+@@ -1433,7 +1521,7 @@ static int spi_imx_dma_transfer(struct spi_imx_data *spi_imx,
+ 
+ 	spi_imx->wml =  i;
+ 
+-	ret = spi_imx_dma_configure(master);
++	ret = spi_imx_dma_configure(master, transfer);
+ 	if (ret)
+ 		goto dma_failure_no_start;
+ 
+@@ -1500,6 +1588,30 @@ static int spi_imx_dma_transfer(struct spi_imx_data *spi_imx,
+ 		return -ETIMEDOUT;
+ 	}
+ 
++	if(!simple)
++	{
++		/* shuffle rx bytes for 8 and 16 bits per word */
++		if(transfer->bits_per_word == 8)
++		{
++			for(i = 0; i < numwords; i++)
++			{
++				swab32s((u32*) &spi_imx->dmarxbuf[i * sizeof(u32)]);
++			}
++		}
++		else if(transfer->bits_per_word == 16)
++		{
++			for(i = 0; i < numwords; i++)
++			{
++				*(u32*)&spi_imx->dmarxbuf[i * sizeof(u32)] =
++						swab32( swahb32(*(u32*)&spi_imx->dmarxbuf[i * sizeof(u32)] ));
++			}
++		}
++		memcpy(transfer->rx_buf, &spi_imx->dmarxbuf[offset], transfer->len);
++	}
++	spi_unmap_buf(master, spi_imx->dev, &transfer->rx_sg, DMA_FROM_DEVICE);
++	spi_unmap_buf(master, spi_imx->dev, &transfer->tx_sg, DMA_TO_DEVICE);
++
++
+ 	return transfer->len;
+ /* fallback to pio */
+ dma_failure_no_start:
+@@ -1657,6 +1769,13 @@ static int spi_imx_slave_abort(struct spi_master *master)
+ 	return 0;
+ }
+ 
++/* override set_cs from spi-bitbang.c for native CS.
++ * spi-bitbang.c tries to toggle CS itself when CS GPIO is not valid,
++ * introducing unneeded delay and CPU usage with two ndelay() calls */
++static void spi_imx_dummy_set_cs(struct spi_device *spi, bool enable)
++{
++}
++
+ static int spi_imx_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node;
+@@ -1720,6 +1839,7 @@ static int spi_imx_probe(struct platform_device *pdev)
+ 	spi_imx->bitbang.master->prepare_message = spi_imx_prepare_message;
+ 	spi_imx->bitbang.master->unprepare_message = spi_imx_unprepare_message;
+ 	spi_imx->bitbang.master->slave_abort = spi_imx_slave_abort;
++	spi_imx->bitbang.master->set_cs = spi_imx_dummy_set_cs;
+ 	spi_imx->bitbang.master->mode_bits = SPI_CPOL | SPI_CPHA | SPI_CS_HIGH \
+ 					     | SPI_NO_CS;
+ 	if (is_imx35_cspi(spi_imx) || is_imx51_ecspi(spi_imx) ||
+-- 
+2.25.1
+

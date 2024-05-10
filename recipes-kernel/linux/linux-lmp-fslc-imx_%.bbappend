@@ -27,6 +27,7 @@ SRC_URI:append:portenta-x8 = " \
   file://0002-NXP-V4L2-patch-2-3-courtesy-of-weiping.liu-nxp.com.patch \
   file://0003-NXP-V4L2-patch-3-3-courtesy-of-weiping.liu-nxp.com.patch \
   file://QUECTEL-0001-support-ec200a.patch \
+  file://0001-spi-test.patch \
 "
 
 # file://rtc-pcf8563-remove-workaround.patch

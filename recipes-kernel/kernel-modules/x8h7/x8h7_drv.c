@@ -46,6 +46,7 @@
 
 #define DRIVER_NAME     "x8h7"
 #define X8H7_BUF_SIZE   (64*1024)
+#define FIXED_PACKET_LEN  64
 
 //#define DEBUG
 #include "debug.h"
@@ -371,7 +372,7 @@ static int x8h7_pkt_send(void)
 
   DBG_PRINT("\n");
 
-  len = 1024;
+  len = FIXED_PACKET_LEN;
 
   pkt_dump("Send", spidev->x8h7_txb);
 
@@ -448,6 +449,8 @@ static int x8h7_probe(struct spi_device *spi)
   /* Initialize the driver data */
   spidev->spi = spi;
   mutex_init(&spidev->lock);
+
+  //spi->bits_per_word = FIXED_PACKET_LEN * 8;
 
   /* Device speed */
   if (!of_property_read_u32(spi->dev.of_node, "spi-max-frequency", &value))
