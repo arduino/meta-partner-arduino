@@ -46,7 +46,7 @@
 
 #define DRIVER_NAME     "x8h7"
 #define X8H7_BUF_SIZE   (64*1024)
-#define FIXED_PACKET_LEN  64
+#define FIXED_PACKET_LEN  512
 
 //#define DEBUG
 #include "debug.h"
