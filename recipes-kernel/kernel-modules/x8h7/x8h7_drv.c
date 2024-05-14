@@ -153,6 +153,9 @@ void pkt_dump(char *title, void *data)
     for (i=0; i<pkt->size; i++) {
       data_len += sprintf(data_str + data_len, " %02X", ptr[i]);
     }
+    if (pkt->peripheral == 0 || pkt->size == 0) {
+      return;
+    }
     printk("- PKT peripheral: %d %s, opcode: %d, size: %d data: %s\n",
            pkt->peripheral, to_peripheral_string(pkt->peripheral),
            pkt->opcode, pkt->size, data_str);
@@ -293,6 +296,9 @@ static int pkt_parse(struct spidev_data *spidev)
 
     i = pkt->peripheral;
     if (i < X8H7_PERIPH_NUM) {
+      if (pkt->peripheral == 0 || pkt->size == 0) {
+        return 0;
+      }
       if (x8h7_hook[i]) {
         x8h7_pkt_t p;
         p.peripheral = pkt->peripheral;
