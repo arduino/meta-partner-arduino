@@ -395,7 +395,7 @@ static void x8h7_can_tx_work_handler(struct work_struct *ws)
 
   priv->tx_len = priv->tx_frame.field.len;
 
-  x8h7_pkt_send_sync(priv->periph,
+  x8h7_pkt_send_defer(priv->periph,
                      X8H7_CAN_OC_SEND,
                      X8H7_CAN_HEADER_SIZE + priv->tx_frame.field.len, /* Send 4-Byte ID, 1-Byte Length and the required number of data bytes. */
                      priv->tx_frame.buf);

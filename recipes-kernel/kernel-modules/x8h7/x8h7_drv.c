@@ -45,7 +45,7 @@
 #include "x8h7.h"
 
 #define DRIVER_NAME     "x8h7"
-#define X8H7_BUF_SIZE   (64*1024)
+#define X8H7_BUF_SIZE   (512)
 #define FIXED_PACKET_LEN  512
 
 //#define DEBUG
@@ -200,7 +200,7 @@ int x8h7_pkt_enq(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
     return 0;
   }
 
-  return -ENOMEM;
+  return -EAGAIN;
 }
 
 static int x8h7_pkt_send(void);
@@ -240,7 +240,11 @@ int x8h7_pkt_send_defer(uint8_t peripheral, uint8_t opcode, uint16_t size, void 
   mutex_lock(&spidev->lock);
   ret = x8h7_pkt_enq(peripheral, opcode, size, data);
   if (ret < 0) {
-    printk("x8h7_pkt_enq failed with %d", ret);
+    printk("trying packet send since enq failed %d", ret);
+    ret = x8h7_pkt_send();
+    if (ret < 0) {
+      printk("x8h7_pkt_enq failed with %d", ret);
+    }
     mutex_unlock(&spidev->lock);
     return ret;
   }
