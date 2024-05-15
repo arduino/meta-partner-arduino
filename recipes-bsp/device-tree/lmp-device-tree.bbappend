@@ -55,6 +55,7 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_mid_pcie_mini.dts \
     file://ov_carrier_mid_imx219_camera_mipi.dts \
     file://ov_carrier_mid_dsi_panel.dts \
+    file://ov_som_x8h7_spidev.dts \
 "
 
 SRC_URI:append:portenta-mx8mm = " \

@@ -1,0 +1,31 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2024
+ * Portenta-X8 SoM
+ * Enable:
+ * - SPI (SPI_X8H7, ecspi3)
+ * as spidev device
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	/* Enable SPI (SPI_X8H7) */
+	fragment@0 {
+		target = <&ecspi3>;
+		__overlay__ {
+			status = "okay";
+			spidev_cb: spidev@0 {
+				compatible = "rohm,dh2228fv";
+				spi-max-frequency = <2000000>;
+				reg = <0>;
+			};
+		};
+	};
+};
