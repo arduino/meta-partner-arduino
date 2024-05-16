@@ -63,7 +63,7 @@
 				interrupt-parent = <&gpio1>;
 				interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
 				flow-ctrl-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
-				spi-max-frequency = <2000000>;
+				spi-max-frequency = <20000000>;
 			};
 		};
 	};
