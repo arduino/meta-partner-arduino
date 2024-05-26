@@ -131,6 +131,7 @@
 
 			bluetooth {
 				compatible = "brcm,bcm43438-bt";
+				max-speed = "<3000000>;
 			};
 		};
 	};
