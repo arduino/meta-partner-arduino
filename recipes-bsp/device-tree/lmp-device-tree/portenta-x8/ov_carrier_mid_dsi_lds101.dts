@@ -20,6 +20,7 @@
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
+				startup-delay-us = <2000000>;
 			};
 
 			reg_bl: reg-bl {
@@ -28,6 +29,7 @@
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
+				startup-delay-us = <2000000>;
 			};
 
 			backlight: backlight-controller {
