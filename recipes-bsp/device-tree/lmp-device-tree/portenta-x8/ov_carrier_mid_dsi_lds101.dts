@@ -1,0 +1,93 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Enable display dsi panel and touch screen
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			reg_dldo2: reg-dldo2 {
+				compatible = "regulator-fixed";
+				regulator-name = "mipi_panel_reg";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+
+			reg_bl: reg-bl {
+				compatible = "regulator-fixed";
+				regulator-name = "mipi_panel_backlight";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+
+			backlight: backlight-controller {
+				compatible = "pwm-backlight";
+				pwms = <&x8h7_pwm 8 100000 0>;
+				power-supply = <&reg_bl>;
+				brightness-levels = <0 11 20 30 40 50 60 70 80 90 100>;
+				default-brightness-level = <9>;	/* => 90 */
+			};
+		};
+
+	};
+
+	fragment@1 {
+		target = <&mipi_dsi>;
+		__overlay__ {
+			status = "okay";
+
+			panel@0 {
+				pinctrl-names = "default";
+				compatible = "usmp_leadership,ek79202d","jadard,ek79202d";
+				reg = <0>;
+				VCC-supply = <&reg_dldo2>;
+				IOVCC-supply = <&reg_dldo2>;
+				reset-gpios = <&x8h7_gpio 0 GPIO_ACTIVE_HIGH>;
+				backlight = <&backlight>;
+				dsi-lanes = <4>;
+				video-mode = <2>;	/* 0: burst mode
+									 * 1: non-burst mode with sync event
+									 * 2: non-burst mode with sync pulse
+									 */
+				status = "okay";
+
+				port {
+					panel0_in: endpoint {
+						remote-endpoint = <&mipi0_panel_out>;
+					};
+				};
+			};
+
+			port@1 {
+				mipi0_panel_out: endpoint {
+					attach-bridge;
+					remote-endpoint = <&panel0_in>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&i2c3>;
+		__overlay__ {
+			touchscreen@4a {
+				pinctrl-names = "default";
+				compatible = "atmel,atmel_mxt_ts";
+				reg = <0x4a>;
+				interrupts-extended = <&x8h7_gpio 2 GPIO_ACTIVE_HIGH>;
+				irq-gpios = <&x8h7_gpio 2 GPIO_ACTIVE_HIGH>;
+				reset-gpios = <&x8h7_gpio 3 GPIO_ACTIVE_LOW>;
+			};
+		};
+	};
+};
