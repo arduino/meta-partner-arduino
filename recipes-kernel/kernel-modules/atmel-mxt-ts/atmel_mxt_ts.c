@@ -3135,7 +3135,7 @@ static int mxt_probe(struct i2c_client *client, const struct i2c_device_id *id)
 		return error;
 
 	data->reset_gpio = devm_gpiod_get_optional(&client->dev,
-						   "reset", GPIOD_OUT_LOW);
+						   "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(data->reset_gpio)) {
 		error = PTR_ERR(data->reset_gpio);
 		dev_err(&client->dev, "Failed to get reset gpio: %d\n", error);
@@ -3143,7 +3143,7 @@ static int mxt_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	}
 
 	error = devm_request_threaded_irq(&client->dev, client->irq,
-					  NULL, mxt_interrupt, IRQF_ONESHOT,
+					  NULL, mxt_interrupt, IRQF_ONESHOT | IRQF_TRIGGER_FALLING,
 					  client->name, data);
 	if (error) {
 		dev_err(&client->dev, "Failed to register interrupt\n");

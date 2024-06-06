@@ -9,6 +9,7 @@
 
 #include "imx8mm-pinfunc.h"
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
 
 / {
 	fragment@0 {
@@ -86,9 +87,9 @@
 				pinctrl-names = "default";
 				compatible = "atmel,atmel_mxt_ts";
 				reg = <0x4a>;
-				interrupts-extended = <&x8h7_gpio 2 GPIO_ACTIVE_HIGH>;
-				irq-gpios = <&x8h7_gpio 2 GPIO_ACTIVE_HIGH>;
-				reset-gpios = <&x8h7_gpio 3 GPIO_ACTIVE_LOW>;
+				interrupt-parent = <&x8h7_gpio>;
+				interrupts = <2 IRQ_TYPE_LEVEL_LOW>;
+				reset-gpios = <&x8h7_gpio 3 GPIO_ACTIVE_HIGH>;
 			};
 		};
 	};
