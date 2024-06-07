@@ -101,6 +101,7 @@
 		};
 	};
 
+	/* Note: properties below used by anx7625 driver */
 	fragment@4 {
 		target = <&lcdif>;
 		__overlay__ {
