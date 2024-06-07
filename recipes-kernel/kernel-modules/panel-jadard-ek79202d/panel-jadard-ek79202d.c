@@ -185,8 +185,6 @@ static int ek79202d_enable(struct drm_panel *panel)
 //	gpiod_set_value_cansleep(ctx->reset_gpio, 1); // set to high
 //	msleep(50);
 
-	backlight_enable(ctx->backlight);
-
 	return 0;
 }
 
@@ -296,18 +294,17 @@ static int ek79202d_dsi_probe(struct mipi_dsi_device *dsi)
 	u32 video_mode, dsi_lanes;
 	
 	ctx = devm_kzalloc(&dsi->dev, sizeof(*ctx), GFP_KERNEL);
-	if (!ctx)
-	return -ENOMEM;
-	mipi_dsi_set_drvdata(dsi, ctx);
-	ctx->dsi = dsi;
-	
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
 // Add for switch panel function
 	ctx->desc = of_device_get_match_data(&dsi->dev);
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	drm_panel_init(&ctx->panel, dev, &ek79202d_funcs, DRM_MODE_CONNECTOR_DSI);
 	ctx->panel.dev = &dsi->dev;
 	ctx->panel.funcs = &ek79202d_funcs;
-	
+
 	ctx->vdd = devm_regulator_get(&dsi->dev, "vdd");
 	if (IS_ERR(ctx->vdd)) {
 		dev_err(&dsi->dev, "Couldn't get vdd regulator\n");
@@ -325,21 +322,16 @@ static int ek79202d_dsi_probe(struct mipi_dsi_device *dsi)
 		dev_err(&dsi->dev, "Couldn't get our reset GPIO\n");
 		return PTR_ERR(ctx->reset_gpio);
 	}
-	
-	np = of_parse_phandle(dsi->dev.of_node, "backlight", 0);
-	if (np) {
-		ctx->backlight = of_find_backlight_by_node(np);
-		of_node_put(np);
-		
-		if (!ctx->backlight)
-		return -EPROBE_DEFER;
-	}
+
+	ret = drm_panel_of_backlight(&ctx->panel);
+	if (ret)
+		return ret;
 
 	drm_panel_add(&ctx->panel);
-//	ret = drm_panel_add(&ctx->panel);
-//	if (ret < 0)
-//	return ret;
-	
+
+	mipi_dsi_set_drvdata(dsi, ctx);
+	ctx->dsi = dsi;
+
 	/* get DSI Mode and Data Lanes from device tree */
 	dsi->mode_flags = MIPI_DSI_MODE_VIDEO_HSE | MIPI_DSI_MODE_VIDEO;
 	ret = of_property_read_u32(dsi->dev.of_node, "video-mode", &video_mode);
@@ -376,10 +368,7 @@ static void ek79202d_dsi_remove(struct mipi_dsi_device *dsi)
 	
 	mipi_dsi_detach(dsi);
 	drm_panel_remove(&ctx->panel);
-	
-	if (ctx->backlight)
-	put_device(&ctx->backlight->dev);
-	
+
 	return;
 }
 
