@@ -7,7 +7,7 @@ inherit module
 
 SRC_URI = " \
     git://github.com/hailo-ai/hailort-drivers.git;branch=master;protocol=https \
-    file://0001-OE-fix-Makefile.patch \
+    file://0001-OE-fix-Makefile.patch;patchdir=../../ \
 "
 SRCREV = "43e8a9a575654c773edf95789f93cde40c708a6a"
 
