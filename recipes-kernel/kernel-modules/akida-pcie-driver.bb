@@ -12,6 +12,4 @@ SRCREV = "656640c901b07ef4540f425a015c72d1653fb9da"
 
 S = "${WORKDIR}/git"
 
-EXTRA_OEMAKE += "KDIR='${KERNEL_SRC}'"
-
 RPROVIDES_${PN} += "kernel-module-aikida-pcie-driver"
