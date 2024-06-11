@@ -224,7 +224,7 @@ static int ek79202d_unprepare(struct drm_panel *panel)
 
 static const struct drm_display_mode ek79202d_leadership_mode = {
 
-	.clock 	= 68200,
+	.clock 	= 70000,
 //	.clock 	= 72400,
 	
 	.hdisplay 	= 1280,
