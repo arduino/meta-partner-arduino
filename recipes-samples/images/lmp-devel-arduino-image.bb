@@ -17,7 +17,7 @@ SRC_URI += "\
     file://sudoers-arduino-lmp-base \
 "
 
-IMAGE_FEATURES += "ssh-server-dropbear tools-profile"
+IMAGE_FEATURES += "ssh-server-dropbear"
 
 CORE_IMAGE_BASE_INSTALL_GPLV3 = "\
     packagegroup-core-full-cmdline-utils \
@@ -43,7 +43,6 @@ LMP_EXTRA = " \
     libgpiod-tools \
     dtc \
     stress-ng \
-    perf \
 "
 
 ADB = " \
