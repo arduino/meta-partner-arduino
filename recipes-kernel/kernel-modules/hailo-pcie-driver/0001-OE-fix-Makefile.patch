@@ -1,0 +1,113 @@
+diff --git a/linux/pcie/Makefile b/linux/pcie/Makefile
+index 705d15d..56e0e61 100755
+--- a/linux/pcie/Makefile
++++ b/linux/pcie/Makefile
+@@ -65,99 +65,20 @@ PWD  := $(shell pwd)
+ PUBLIC_INC_DIR = $(BUILD_DIR)/include
+ PUBLIC_INC_FILE = $(PUBLIC_INC_DIR)/hailo_pcie_ioctl.h
+ 
+-default: help
+-
+-help:
+-	$(Q)echo "******************************************************************************"
+-	$(Q)echo "*                            PCIe Driver                                      "
+-	$(Q)echo "* usage: make [options] [target]                                              "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "* options:                                                                    "
+-	$(Q)echo "*   DEBUG=1: Activate CONFIG_DEBUG_INFO and CONFIG_FRAME_POINTER flag to      "
+-	$(Q)echo "*            gdb debugging.                                                   "
+-	$(Q)echo "*   Q=     : Activate makefile verbose mode                                   "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "* target:                                                                     " 
+-	$(Q)echo "*   all          Generate the ko file in $(BUILD_DIR)/[release|debug]/$(ARCH) "
+-	$(Q)echo "*                copy the public include files in $(PUBLIC_INC_DIR)           "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "*   clean        Delete the generated files                                   "
+-	$(Q)echo "*                Delete $(BUILD_DIR) directory                                "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "*   install      Installs the driver, setup auto boot.                        "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "*   install_dkms Installs the driver using DKMS.                              "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "*   uninstall    Uninstalls the driver                                        "
+-	$(Q)echo "*                                                                             "
+-	$(Q)echo "*   help:        Display this help                                            "
+-	$(Q)echo "******************************************************************************"
+-
+-all: $(PUBLIC_INC_FILE) $(TARGET_DIR)
+-	$(Q)$(MAKE)  -C $(KERNEL_DIR) M=$(PWD) $(GDB_FLAG) $(USER_FLAGS) modules
+-	$(Q)cp $(DRIVER_NAME) $(TARGET_DIR)
+-
+-$(TARGET_DIR):
+-	$(Q)mkdir -p $@
+-
+-$(PUBLIC_INC_DIR):
+-	$(Q)mkdir -p $@
+-
+-$(PUBLIC_INC_FILE): $(PUBLIC_INC_DIR)
+-	$(Q)cp -f $(PWD)/include/* $(PUBLIC_INC_DIR)/
++all:
++	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules
+ 
+-clean:
+-	$(Q)$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
+-	$(Q)rm -rf $(BUILD_DIR)
+-	$(Q)rm -f src/*o.ur-safe
+-
+-install:
+-	$(Q)$(MAKE) -C $(KERNEL_DIR) M=$(PWD) INSTALL_MOD_DIR=kernel/drivers/misc modules_install
+-	$(Q)$(DEPMOD) -a
+-
+-uninstall: uninstall_all_dkms
+-ifneq ($(wildcard $(MODULES)),)
+-	$(Q)rm -f $(MODULES)kernel/drivers/misc/$(DRIVER_NAME)
+-	$(Q)$(DEPMOD) -a
+-endif
++modules_install:
++	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
+ 
+-install_dkms: uninstall
+-ifneq ($(shell id -u),0)
+-	@echo "make install_dkms should run as root"
+-	exit 1
+-endif 
+-ifeq ($(strip $(shell which dkms)),)
+-	@echo "make install_dkms requires dkms to be installed"
+-	exit 1
+-endif 
+-# build DKMS
+-	$(Q)mkdir -p /usr/src/$(DRIVER_NAME_NO_EXT)-$(DRIVER_VERSION)/linux
+-	$(Q)cp -r . /usr/src/$(DRIVER_NAME_NO_EXT)-$(DRIVER_VERSION)/linux/pcie
+-	$(Q)cp -r $(COMMON_SRC_DIRECTORY) /usr/src/$(DRIVER_NAME_NO_EXT)-$(DRIVER_VERSION)/
+-	$(Q)cp -r $(VDMA_SRC_DIRECTORY) /usr/src/$(DRIVER_NAME_NO_EXT)-$(DRIVER_VERSION)/linux
+-	$(Q)cp -r $(UTILS_SRC_DIRECTORY) /usr/src/$(DRIVER_NAME_NO_EXT)-$(DRIVER_VERSION)/linux
+-	$(Q)sed 's/@PCIE_DRIVER_VERSION@/$(DRIVER_VERSION)/g' dkms.conf.in > /usr/src/$(DRIVER_NAME_NO_EXT)-$(DRIVER_VERSION)/dkms.conf
+-	$(Q)dkms add -m $(DRIVER_NAME_NO_EXT) -v $(DRIVER_VERSION)
+-	$(Q)dkms build -m $(DRIVER_NAME_NO_EXT) -v $(DRIVER_VERSION) || (cat /var/lib/dkms/$(DRIVER_NAME_NO_EXT)/$(DRIVER_VERSION)/build/make.log; exit 1)
+-
+-# install DKMS
+-	$(Q)dkms install -m $(DRIVER_NAME_NO_EXT) -v $(DRIVER_VERSION) --force
+-
+-uninstall_all_dkms: 
+-ifneq ($(shell id -u),0)
+-	@echo "make uninstall_all_dkms should run as root"
+-	exit 1
+-endif 
+-# Uninstall driver from dkms, if dkms is installed
+-# If the driver wasn't installed with dkms, the following commands won't do anything
+-ifneq ($(strip $(shell which dkms)),)
+-	-$(Q)sh dkms_uninstall.sh
+-endif
++clean:
++	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
++	rm -f Module.markers Module.symvers modules.order
++	rm -rf .tmp_versions Modules.symvers
+ 
+ endif
+ 
+ .PHONY: help
+ .PHONY: all
++.PHONY: modules_install
+ .PHONY: clean
+-.PHONY: install
+-.PHONY: uninstall

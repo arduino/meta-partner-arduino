@@ -6,6 +6,9 @@ SDPV: delay 1000
 SDPV: write -f u-boot-mfgtool.itb
 SDPV: jump
 
+# Print board info structure, should include ram info
+FB: ucmd bdinfo
+
 # Show base ram address (offset) for ram commands
 FB: ucmd base
 
@@ -24,13 +27,14 @@ FB: ucmd md.b ${loadaddr} 0x100
 # Display a single 32-bit word at address 0x1000
 FB: ucmd md.b 0x1000 0x04
 
-# Perform continuous write/read ram tests on the range
-# that will be used to store kernel fitImage
-# and is suggested in u-boot config menu
-# !!!WARNING!!! This breaks uuu usb communication with Pc
-# !!!WARNING!!! This test takes some secs see target's console
-# with ctrl+c on target console
+# Perform continuous write/read ram tests on the first ram block
+# specified from previous bdinfo command, lmb_dump_all section
+# lmb_dump_all:
+# memory.cnt  = 0x1
+# memory[0]      [0x40000000-0xbdffffff], 0x7e000000 bytes flags: 0
+# reserved.cnt  = 0x1
+# reserved[0]    [0xb5ede280-0xbdffffff], 0x08121d80 bytes flags: 0
 # mtest [start [end [pattern [iterations]]]]
-FB: ucmd mtest 0x40800000 0x40840000 0xaa55aa55 0x100
+FB: acmd mtest 0x40000000 0x40040000 0xaa55aa55 0x100
 
 FB: done

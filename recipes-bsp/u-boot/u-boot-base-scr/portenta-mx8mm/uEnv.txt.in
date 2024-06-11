@@ -43,7 +43,7 @@ bootcmd_ovl=fdt addr ${fdt_addr}; fdt resize 0x${filesize}; \
               ${ovlload} ${ovltype} ${ovldev}:${ovlpart} ${fdtovaddr} ${ovlpath}/${ov}.dtbo && \
               fdt apply ${fdtovaddr} \
             done
-bootcmd_args=setenv bootargs console=${console} root=/dev/mmcblk2p2 rootwait rw
+bootcmd_args=setenv bootargs console=${console} root=/dev/mmcblk${devnum}p2 rootwait rw
 bootcmd_load_k=fatload ${devtype} ${devnum}:1 ${loadaddr} ${image}
 bootcmd_run=booti ${loadaddr} - ${fdt_addr}
 bootcmd=run bootcmd_ovl_auto_detect; run bootcmd_dtb; run bootcmd_ovl; run bootcmd_args; run bootcmd_load_k; run bootcmd_saveenv; run bootcmd_run

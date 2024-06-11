@@ -1,0 +1,13 @@
+--- weston-init/weston.service	2024-05-25 17:32:33.633707501 +0000
++++ weston-init/weston.service_new	2024-05-25 17:42:35.276170539 +0000
+@@ -30,6 +30,10 @@
+ # for now.
+ ConditionPathExists=/dev/tty0
+ 
++# Prevent starting without lcdif node in devicetree
++# (applies to i.MX8M Mini and similar)
++ConditionPathExists=/sys/devices/platform/soc@0/32c00000.bus/32c00000.bus:display-subsystem/drm
++
+ [Service]
+ # Requires systemd-notify.so Weston plugin.
+ Type=notify

@@ -1,0 +1,25 @@
+diff --git a/Makefile b/Makefile
+index fb1edb1..7b0921b 100644
+--- a/Makefile
++++ b/Makefile
+@@ -106,13 +106,15 @@ endif
+ 
+ else
+ # normal makefile
+-KERNEL_VERSION ?= $(shell uname -r)
+-KERNEL_PATH ?= /lib/modules/$(KERNEL_VERSION)/build
+-
+ all:
+-	$(MAKE) -C $(KERNEL_PATH) M=$$PWD modules
++	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules
++
++modules_install:
++	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
+ 
+ clean:
+-	$(MAKE) -C $(KERNEL_PATH) M=$$PWD clean
++	rm -f *.o *~ core .depend .*.cmd *.ko *.mod.c
++	rm -f Module.markers Module.symvers modules.order
++	rm -rf .tmp_versions Modules.symvers
+ 
+ endif

@@ -13,4 +13,5 @@ do_deploy:prepend:portenta-x8() {
     install -m 0644 ${WORKDIR}/probe_sdcard.uuu ${DEPLOYDIR}/${PN}/probe_sdcard.uuu
     install -m 0644 ${WORKDIR}/linux_initramfs.uuu ${DEPLOYDIR}/${PN}/linux_initramfs.uuu
     install -m 0644 ${WORKDIR}/test_ram.uuu ${DEPLOYDIR}/${PN}/test_ram.uuu
+    install -m 0644 ${WORKDIR}/erase_emmc.uuu ${DEPLOYDIR}/${PN}/erase_emmc.uuu
 }
