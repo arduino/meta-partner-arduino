@@ -5,6 +5,7 @@ SRC_URI:append:portenta-x8 = " \
     file://probe_sdcard.uuu \
     file://linux_initramfs.uuu \
     file://test_ram.uuu \
+    file://erase_emmc.uuu \
 "
 
 do_deploy:prepend:portenta-x8() {
