@@ -1,6 +1,6 @@
 [Unit]
 Description=Program stm32h7 on Portenta-X8 boards
-Before=docker.service
+Before=psplash-start.service
 
 [Service]
 Type=oneshot
@@ -10,4 +10,4 @@ ExecStart=/bin/sh /usr/arduino/extra/program-h7.sh
 ExecStartPost=/bin/sh /usr/arduino/extra/load_modules_post.sh
 
 [Install]
-WantedBy=basic.target
+WantedBy=sysinit.target
