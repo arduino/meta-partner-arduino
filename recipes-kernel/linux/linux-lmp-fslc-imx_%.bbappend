@@ -20,4 +20,5 @@ SRC_URI:append:portenta-x8 = " \
   file://QUECTEL-0001-support-ec200a.patch \
   file://DVFS-0001-Add_400MHz_200MHz_100MHz.patch \
   file://0001-spi-test.patch \
+  file://0001-drm-mipi-dsi-Fix-detach-call-without-attach.patch \
 "
