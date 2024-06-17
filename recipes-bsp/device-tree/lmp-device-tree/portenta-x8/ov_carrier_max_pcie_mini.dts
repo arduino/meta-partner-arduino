@@ -58,7 +58,7 @@
 	fragment@2 {
 		target = <&pcie_phy>;
 		__overlay__ {
-			fsl,refclk-pad-mode = <IMX8_PCIE_REFCLK_PAD_UNUSED>;
+			fsl,refclk-pad-mode = <IMX8_PCIE_REFCLK_PAD_OUTPUT>;
 			fsl,tx-deemph-gen1 = <0x2d>;
 			/*fsl,tx-deemph-gen2 = <0xf>;*/
 			clocks = <&pcie0_refclk>;
