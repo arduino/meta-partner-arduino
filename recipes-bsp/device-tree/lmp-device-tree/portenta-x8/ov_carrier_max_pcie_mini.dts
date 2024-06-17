@@ -50,7 +50,7 @@
 				gpio = <&x8h7_gpio 29 GPIO_ACTIVE_HIGH>; /* stm32h7 PWM6 */
 				enable-active-high;
 				regulator-always-on;
-				startup-delay-us = <500000>;
+				startup-delay-us = <10000>;
 			};
 		};
 	};
