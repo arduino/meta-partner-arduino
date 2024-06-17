@@ -1,5 +1,6 @@
 [Unit]
 Description=Program stm32h7 on Portenta-X8 boards
+After=local-fs.target
 Before=docker.service psplash-start.service
 
 [Service]
