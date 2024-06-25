@@ -12,4 +12,4 @@ SRCREV = "656640c901b07ef4540f425a015c72d1653fb9da"
 
 S = "${WORKDIR}/git"
 
-RPROVIDES_${PN} += "kernel-module-aikida-pcie-driver"
+RPROVIDES_${PN} += "kernel-module-akida-pcie-driver"
