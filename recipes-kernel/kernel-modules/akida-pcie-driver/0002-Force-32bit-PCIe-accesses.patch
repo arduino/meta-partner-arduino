@@ -1,0 +1,16 @@
+diff --git a/Makefile b/Makefile
+index 7b0921b..d35d276 100644
+--- a/Makefile
++++ b/Makefile
+@@ -58,6 +58,11 @@ ifeq ($(CONFIG_ARCH_BCM2835),y)
+ ccflags-y += -DAKIDA_DW_EDMA_FORCE_32BIT
+ endif
+ 
++ifeq ($(CONFIG_SOC_IMX8M),y)
++# Kernel built to support a i.MX8M -> Force 32bit PCIe accesses
++ccflags-y += -DAKIDA_DW_EDMA_FORCE_32BIT
++endif
++
+ obj-m := akida-pcie.o
+ 
+ akida-pcie-y += akida-pcie-core.o
