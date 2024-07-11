@@ -6,13 +6,12 @@ SDPV: delay 1000
 SDPV: write -f u-boot-mfgtool.itb
 SDPV: jump
 
+FB: ucmd setenv loadaddr 0x50000000
 FB: ucmd setenv fastboot_buffer ${loadaddr}
-
 FB: download -f fitImage-portenta-x8-mfgtool
 
-FB: ucmd setenv earlycon "ec_imx6q,0x30890000,115200"
-#FB: ucmd setenv bootargs console=${console},${baudrate} rdinit=/linuxrc clk_ignore_unused
-FB: ucmd setenv bootargs console=${console},${baudrate} earlycon=${earlycon},${baudrate} rdinit=/linuxrc
+FB: ucmd setenv earlycon "ec_imx6q,0x30880000,115200"
+FB: ucmd setenv bootargs console=${console},${baudrate} rdinit=/linuxrc clk_ignore_unused
 SDPV: delay 1000
 
 FB: acmd bootm ${loadaddr}
