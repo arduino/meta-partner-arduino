@@ -36,7 +36,7 @@ do_install() {
     install -m 0755 ${WORKDIR}/disable-ssh ${D}${bindir}/
 }
 
-do_install:append:lmp-base() {
+do_install:append() {
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/set_cpu_freq ${D}${bindir}/
 }
