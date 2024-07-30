@@ -72,7 +72,6 @@ CORE_IMAGE_BASE_INSTALL += " \
 # No default password is configured for the device
 EXTRA_USERS_PARAMS += "\
     usermod -p '' ${LMP_USER}; \
-    passwd -d ${LMP_USER}; \
 "
 
 # Packages to be installed in Portenta-X8 machine only
