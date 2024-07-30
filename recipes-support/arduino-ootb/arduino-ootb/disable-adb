@@ -1,6 +1,11 @@
 #!/bin/bash
-# Ensure service will be kept disabled accross system updates
 
+if [ "$1" != "-y" ]; then
+    echo "Usage: $0 -y"
+    exit 1
+fi
+
+# Ensure service will be kept disabled accross system updates
 systemctl disable android-tools-adbd.service
 mkdir -p /etc/systemd/system-preset
 ln -s /dev/null /etc/systemd/system-preset/98-android-tools-adbd.preset
