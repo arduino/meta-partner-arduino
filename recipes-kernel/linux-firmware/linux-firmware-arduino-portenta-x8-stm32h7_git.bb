@@ -16,8 +16,8 @@ SRC_URI = " \
     file://monitor-m4-elf-file.path \
     file://monitor-m4-elf-file.service \
 "
-SRCREV = "${AUTOREV}"
-PV = "0.0.3"
+SRCREV = "555d7b4dca11ec2ce5c5c843b8a5aa579b462b3d"
+PV = "0.0.4"
 
 S = "${WORKDIR}/git"
 
