@@ -1,5 +1,5 @@
 [Unit]
-Description=M4 builtin led forwarder
+Description=M4 Proxy
 Requires=stm32h7-program.service
 After=stm32h7-program.service
 StartLimitIntervalSec=120
