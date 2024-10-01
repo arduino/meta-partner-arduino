@@ -11,13 +11,12 @@ require recipes-samples/images/lmp-feature-wifi.inc
 require recipes-samples/images/lmp-feature-sbin-path-helper.inc
 require recipes-samples/images/lmp-feature-sysctl-hang-crash-helper.inc
 
+# Add any partner layer requirements
+include recipes-samples/images/lmp-partner-image.inc
+
 EXTRA_IMAGE_FEATURES = "package-management tools-debug"
 
-SRC_URI += "\
-    file://sudoers-arduino-lmp-base \
-"
-
-IMAGE_FEATURES += "ssh-server-dropbear"
+SUDOERS_FILE = "sudoers-arduino-lmp-base"
 
 CORE_IMAGE_BASE_INSTALL_GPLV3 = "\
     packagegroup-core-full-cmdline-utils \
@@ -33,30 +32,10 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${@bb.utils.contains('LMP_DISABLE_GPLV3', '1', '', '${CORE_IMAGE_BASE_INSTALL_GPLV3}', d)} \
 "
 
-# Arduino additions
+# Arduino development changes
 
-LMP_EXTRA = " \
-    lmp-device-tree \
-    lmp-auto-hostname \
-    u-boot-fio-env \
-    tmate \
-    libgpiod-tools \
-    dtc \
-    stress-ng \
-"
-
-ADB = " \
-    android-tools \
-    android-tools-adbd \
-"
-
-ARDUINO = " \
-    arduino-ootb \
-    automount-boot \
-    m4-proxy \
-    udev-rules-portenta \
-    libusbgx-config \
-"
+# early start not needed for lmp-base image
+LMP_EXTRA:remove = "compose-apps-early-start"
 
 VIDEOTOOLS = " \
     gstreamer1.0 \
@@ -74,22 +53,10 @@ OPENCV = " \
 "
 
 CORE_IMAGE_BASE_INSTALL += " \
-    libdrm \
-    usb-modeswitch \
+    automount-boot \
+    dtc \
+    stress-ng \
+    u-boot-fio-env \
     u-boot-fw-utils \
-    ${LMP_EXTRA} \
-    ${ADB} \
-    ${ARDUINO} \
     ${OPENCV} \
 "
-
-# Packages to be installed in Portenta-X8 machine only
-IMAGE_INSTALL:append:portenta-x8 = " openocd"
-
-fakeroot do_populate_rootfs_add_custom_sudoers () {
-    # Allow sudo group users to use sudo
-    bbwarn Changing sudoers for arduino ootb!
-    install -m 0440 ${WORKDIR}/sudoers-arduino-lmp-base ${IMAGE_ROOTFS}${sysconfdir}/sudoers.d/51-arduino
-}
-
-IMAGE_PREPROCESS_COMMAND += "do_populate_rootfs_add_custom_sudoers; "
