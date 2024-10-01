@@ -1,4 +1,5 @@
-SUMMARY = "Minimal partner image which includes OTA Lite, Docker, and OpenSSH support"
+SUMMARY = "Arduino factory image which includes OTA Lite, Docker, and OpenSSH support"
+
 FILESEXTRAPATHS:prepend := "${THISDIR}/configs:"
 
 require recipes-samples/images/lmp-image-common.inc
@@ -19,10 +20,6 @@ require recipes-samples/images/lmp-feature-wifi.inc
 require recipes-samples/images/lmp-feature-ota-utils.inc
 require recipes-samples/images/lmp-feature-sbin-path-helper.inc
 
-SRC_URI += "\
-    file://sudoers-arduino-lmp \
-"
-
 IMAGE_FEATURES += "ssh-server-dropbear"
 
 CORE_IMAGE_BASE_INSTALL_GPLV3 = "\
@@ -39,7 +36,9 @@ CORE_IMAGE_BASE_INSTALL += " \
     ${@bb.utils.contains('LMP_DISABLE_GPLV3', '1', '', '${CORE_IMAGE_BASE_INSTALL_GPLV3}', d)} \
 "
 
-# Arduino additions
+SRC_URI += "\
+    file://sudoers-arduino-lmp \
+"
 
 LMP_EXTRA = " \
     lmp-device-tree \
