@@ -2,7 +2,7 @@
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/configs:"
 
-IMAGE_FEATURES:remove "ssh-server-openssh"
+IMAGE_FEATURES:remove = " ssh-server-openssh"
 IMAGE_FEATURES += "ssh-server-dropbear"
 
 SUDOERS_FILE ?= "sudoers-arduino-lmp"
