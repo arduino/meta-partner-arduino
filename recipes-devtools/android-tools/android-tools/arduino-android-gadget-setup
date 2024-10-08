@@ -82,6 +82,29 @@ start()
 stop()
 {
     echo "Removing Arduino usb gadgets..."
+
+    # go to configfs directory for USB gadgets
+    cd /sys/kernel/config/usb_gadget/g1
+
+    # Unbind the gadget
+    echo "" > UDC
+
+    # Remove all functions from configuration
+    find configs/c.1 -type l -exec rm {} \;
+
+    # Remove all function directories
+    rm -rf functions/*
+
+    # Remove configuration
+    rmdir configs/c.1/strings/0x409
+    rmdir configs/c.1
+
+    # Remove strings
+    rmdir strings/0x409
+
+    # Remove gadget directory
+    cd ..
+    rmdir g1
 }
 
 case "$1" in
