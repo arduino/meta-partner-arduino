@@ -37,36 +37,43 @@ start()
 
         # populate config, optional
         mkdir configs/c.1/strings/0x409
-        CFG_STRING="adb+acm"
-        if [[ $ENABLED_SCHEMAS =~ "ncm" ]]; then
-            CFG_STRING="adb+acm+ncm"
-        fi
+        CFG_STRING=$(echo $ENABLED_SCHEMAS | tr ' ' '+')
         echo $CFG_STRING > configs/c.1/strings/0x409/configuration
         echo 900 > configs/c.1/MaxPower
 
-        # create a generic ffs for adb
-        mkdir functions/ffs.adb
-
-        # create the acm (serial) function
-        mkdir functions/acm.GS0
-
-        if [[ $ENABLED_SCHEMAS =~ "ncm" ]]; then
-            # create the ncm function
-            mkdir functions/ncm.usb0
-
-            # assign ncm function to configuration
-            ln -s functions/ncm.usb0/ configs/c.1
-        fi
-
-        # assign acm function to configuration
-        ln -s functions/acm.GS0 configs/c.1
-
-        # assign generic ffs to configuration
-        ln -s functions/ffs.adb/ configs/c.1
-
-        # create adb ffs device dir and mount it
-        mkdir -p /dev/usb-ffs/adb
-        mount -o uid=1000,gid=1000 -t functionfs adb /dev/usb-ffs/adb
+        # Loop through each element in ENABLED_SCHEMAS
+        acm_count=0
+        ncm_count=0
+        for schema in $ENABLED_SCHEMAS; do
+            case $schema in
+                acm)
+                    # create the acm (serial) function with unique name
+                    mkdir -p functions/acm.GS$acm_count
+                    # assign acm function to configuration
+                    ln -s functions/acm.GS$acm_count configs/c.1
+                    acm_count=$((acm_count + 1))
+                    ;;
+                ffs)
+                    # create a generic ffs for adb
+                    mkdir functions/ffs.adb
+                    # assign generic ffs to configuration
+                    ln -s functions/ffs.adb/ configs/c.1
+                    # create adb ffs device dir and mount it
+                    mkdir -p /dev/usb-ffs/adb
+                    mount -o uid=1000,gid=1000 -t functionfs adb /dev/usb-ffs/adb
+                    ;;
+                ncm)
+                    # create the ncm function with unique name
+                    mkdir -p functions/ncm.usb$ncm_count
+                    # assign ncm function to configuration
+                    ln -s functions/ncm.usb$ncm_count configs/c.1
+                    ncm_count=$((ncm_count + 1))
+                    ;;
+                *)
+                    echo "Unknown schema: $schema"
+                    ;;
+            esac
+        done
 
         # execute adbd
         # /usr/bin/adbd
