@@ -1,0 +1,48 @@
+/**
+ * Portenta-X8 dtb overlay file
+ * Arduino 2023
+ * Rasp-Tenta base board
+ * Enable:
+ * - SPI (SPI1, ecspi1)
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include "imx8mm-pinfunc.h"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/ {
+	compatible = "fsl,imx8mm-evk", "fsl,imx8mm";
+
+	/* Enable SPI (SPI1) */
+	fragment@0 {
+		target = <&ecspi1>;
+		__overlay__ {
+			cs-gpios = <&x8h7_gpio 32 GPIO_ACTIVE_LOW>;
+			status = "okay";
+			eth4: lan865x@0{
+				compatible = "microchip,lan865x";
+				reg = <0>;
+				pinctrl-names = "default";
+				interrupt-parent = <&x8h7_gpio>;
+				interrupts = <29 IRQ_TYPE_LEVEL_HIGH>;
+				local-mac-address = [14 15 16 11 12 13];
+				spi-max-frequency = <15000000>;
+				/* PLCA settings */
+				plca-enable = /bits/ 8 <1>; /* 1 - PLCA enable, 0 - CSMA/CD enable */
+				plca-node-id = /bits/ 8 <0>; /* PLCA node id range: 0 to 254 */
+				plca-node-count = /bits/ 8 <8>; /* PLCA node count range: 1 to 255 */
+				plca-burst-count = /bits/ 8 <0x0>; /* PLCA burst count range: 0x0 to 0xFF */
+				plca-burst-timer = /bits/ 8 <0x80>; /* PLCA burst timer */
+				plca-to-timer = /bits/ 8 <0x20>; /* PLCA TO value */
+				tx-cut-through-mode = /bits/ 8 <0>; /* 1 - tx cut through mode enable, 0 - Store and forward mode enable */
+				rx-cut-through-mode = /bits/ 8 <0>; /* 1 - rx cut through mode enable, 0 - Store and forward mode enable */
+				oa-chunk-size = /bits/ 8 <64>;
+				oa-protected = /bits/ 8 <0>;
+				status = "okay";
+			};
+		};
+	};
+};

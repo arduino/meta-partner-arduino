@@ -53,6 +53,7 @@ DTB_OVERLAYS:append:portenta-x8 = " \
     file://ov_carrier_ditto_base.dts \
     file://ov_carrier_mid_ov5647_camera_mipi.dts \
     file://ov_carrier_mid_pcie_mini.dts \
+    file://ov_carrier_mid_pro_demo_t1s.dts \
     file://ov_carrier_mid_imx219_camera_mipi.dts \
     file://ov_carrier_mid_dsi_panel.dts \
     file://ov_carrier_mid_dsi_lds101.dts \

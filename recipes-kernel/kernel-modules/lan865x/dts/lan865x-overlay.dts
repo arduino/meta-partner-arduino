@@ -1,0 +1,97 @@
+// Overlay for the Microchip LAN865X Ethernet Controller
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target = <&spi0>;
+		__overlay__ {
+			/* needed to avoid dtc warning */
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			status = "okay";
+
+		/* Settings for the lan865x click board connected with Mikro Bus 2 */
+		eth2: lan865x@1{
+				compatible = "microchip,lan865x";
+				reg = <1>; /* CE1 */
+				pinctrl-names = "default";
+				pinctrl-0 = <&eth2_pins>;
+				interrupt-parent = <&gpio>;
+				interrupts = <26 0x2>; /* 0x2 - falling edge trigger, 0x8 - active low level-sensitive */
+				local-mac-address = [14 15 16 11 12 13];
+				spi-max-frequency = <15000000>;
+				/* PLCA settings */
+				plca-enable = /bits/ 8 <1>; /* 1 - PLCA enable, 0 - CSMA/CD enable */
+				plca-node-id = /bits/ 8 <0>; /* PLCA node id range: 0 to 254 */
+				plca-node-count = /bits/ 8 <8>; /* PLCA node count range: 1 to 255 */
+				plca-burst-count = /bits/ 8 <0x0>; /* PLCA burst count range: 0x0 to 0xFF */
+				plca-burst-timer = /bits/ 8 <0x80>; /* PLCA burst timer */
+				plca-to-timer = /bits/ 8 <0x20>; /* PLCA TO value */
+				tx-cut-through-mode = /bits/ 8 <0>; /* 1 - tx cut through mode enable, 0 - Store and forward mode enable */
+				rx-cut-through-mode = /bits/ 8 <0>; /* 1 - rx cut through mode enable, 0 - Store and forward mode enable */
+				oa-chunk-size = /bits/ 8 <64>;
+				oa-protected = /bits/ 8 <0>;
+				status = "okay";
+			};
+		/* Settings for the lan865x click board connected with Mikro Bus 1 */
+		eth1: lan865x@0{
+				compatible = "microchip,lan865x";
+				reg = <0>; /* CE0 */
+				pinctrl-names = "default";
+				pinctrl-0 = <&eth1_pins>;
+				interrupt-parent = <&gpio>;
+				interrupts = <6 0x2>; /* 0x2 - falling edge trigger, 0x8 - active low level-sensitive */
+				local-mac-address = [04 05 06 01 02 03];
+				spi-max-frequency = <15000000>;
+				/* PLCA settings */
+				plca-enable = /bits/ 8 <1>; /* 1 - PLCA enable, 0 - CSMA/CD enable */
+				plca-node-id = /bits/ 8 <0>; /* PLCA node id range: 0 to 254 */
+				plca-node-count = /bits/ 8 <8>; /* PLCA node count range: 1 to 255 */
+				plca-burst-count = /bits/ 8 <0x0>; /* PLCA burst count range: 0x0 to 0xFF */
+				plca-burst-timer = /bits/ 8 <0x80>; /* PLCA burst timer */
+				plca-to-timer = /bits/ 8 <0x20>; /* PLCA TO value */
+				tx-cut-through-mode = /bits/ 8 <0>; /* 1 - tx cut through mode enable, 0 - Store and forward mode enable */
+				rx-cut-through-mode = /bits/ 8 <0>; /* 1 - rx cut through mode enable, 0 - Store and forward mode enable */
+                                oa-chunk-size = /bits/ 8 <64>;
+                                oa-protected = /bits/ 8 <1>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&spidev0>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <&gpio>;
+		__overlay__ {
+			eth1_pins: eth1_pins {
+				brcm,pins = <6>;
+				brcm,function = <0>; /* in */
+				brcm,pull = <0>; /* none */
+			};
+			eth2_pins: eth2_pins {
+				brcm,pins = <26>;
+				brcm,function = <0>; /* in */
+				brcm,pull = <0>; /* none */
+			};
+		};
+	};
+
+	__overrides__ {
+		int_pin_1 = <&eth1>, "interrupts:0",
+		          <&eth1_pins>, "brcm,pins:0";
+		speed_1   = <&eth1>, "spi-max-frequency:0";
+		int_pin_2 = <&eth2>, "interrupts:0",
+		          <&eth2_pins>, "brcm,pins:0";
+		speed_2   = <&eth2>, "spi-max-frequency:0";
+	};
+};
