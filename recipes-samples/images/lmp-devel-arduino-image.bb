@@ -60,3 +60,12 @@ CORE_IMAGE_BASE_INSTALL += " \
     u-boot-fw-utils \
     ${OPENCV} \
 "
+
+# Custom task to write git SHA to /etc/os-release
+write_git_sha() {
+    META_LAYER_DIR="${BSPDIR}/layers/meta-partner-arduino"
+    GIT_SHA=$(cd ${META_LAYER_DIR} && git rev-parse HEAD)
+    echo "META_LAYER_GIT_SHA=${GIT_SHA}" >> ${IMAGE_ROOTFS}/etc/os-release
+}
+
+ROOTFS_POSTPROCESS_COMMAND += "write_git_sha; "
