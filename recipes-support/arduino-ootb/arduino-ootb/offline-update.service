@@ -1,9 +1,11 @@
 [Unit]
 Description=Start offline update
 ConditionPathExists=/var/sota/offline-updates
+Conflicts=connection-status-led.timer connection-status-led.service m4-led-forwarder.service
 
 [Service]
 Type=oneshot
-SuccessExitStatus=0 100 101
-ExecStart=/usr/bin/aklite-offline install --log-level=0 --src-dir /var/sota/offline-updates/
+ExecStartPre=/bin/sh -c 'echo heartbeat > /sys/class/leds/ledG/trigger; echo none > /sys/class/leds/ledR/trigger'
+ExecStart=/bin/sh -c '/usr/bin/aklite-offline install --log-level=0 --src-dir /var/sota/offline-updates/; RET=$?; if [ $RET -eq 0 ] || [ $RET -eq 100 ] || [ $RET -eq 101 ]; then touch /var/run/offline-update-success; else rm -f /var/run/offline-update-success; fi'
+ExecStartPost=/bin/sh -c 'if [ -f /var/run/offline-update-success ]; then echo default-on > /sys/class/leds/ledG/trigger; echo none > /sys/class/leds/ledR/trigger; else echo none > /sys/class/leds/ledG/trigger; echo default-on > /sys/class/leds/ledR/trigger; fi'
 ExecStartPost=/bin/sh -c 'touch /var/sota/offline-update-pending; shutdown -r 1'
