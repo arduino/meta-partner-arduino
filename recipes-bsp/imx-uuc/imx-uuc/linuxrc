@@ -185,10 +185,10 @@ function launch_acm() {
 	# start agetty on ttyGS0
 	hostname portenta-x8
 	echo "Arduino Initramfs lmp-v91 \n \l" > /etc/issue
-	/sbin/agetty --issue-file /etc/issue -o '-p -- \\u' 115200 ttyGS0 $TERM &
+	/sbin/agetty -o "-p -- \\u" --noclear 115200 ttyGS0 $TERM &
 
 	# start agetty on ttymxc2
-	/sbin/agetty --issue-file /etc/issue -o '-p -- \\u' 115200 ttymxc2 $TERM &
+	/sbin/agetty -o "-p -- \\u" --noclear 115200 ttymxc2 $TERM &
 }
 
 while true; do
