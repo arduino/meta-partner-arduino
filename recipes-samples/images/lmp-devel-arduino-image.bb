@@ -63,7 +63,7 @@ CORE_IMAGE_BASE_INSTALL += " \
 
 # Custom task to write git SHA to /etc/os-release
 write_git_sha() {
-    META_LAYER_DIR="${BSPDIR}/layers/meta-partner-arduino"
+    META_LAYER_DIR="${OEROOT}/layers/meta-partner-arduino"
     GIT_SHA=$(cd ${META_LAYER_DIR} && git rev-parse HEAD)
     echo "META_LAYER_GIT_SHA=${GIT_SHA}" >> ${IMAGE_ROOTFS}/etc/os-release
 }
