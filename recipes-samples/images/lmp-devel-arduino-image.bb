@@ -18,11 +18,6 @@ EXTRA_IMAGE_FEATURES = "package-management tools-debug"
 
 SUDOERS_FILE = "sudoers-arduino-lmp-base"
 
-# @TODO: beware USERADD is configured at DISTRO level by lmp see
-# meta-lmp/meta-lmp-base/conf/distro/include/lmp.inc
-USERADD_UID_TABLES:lmp="files/arduino-passwd-table"
-USERADD_GID_TABLES:lmp="files/arduino-group-table"
-
 CORE_IMAGE_BASE_INSTALL_GPLV3 = "\
     packagegroup-core-full-cmdline-utils \
     packagegroup-core-full-cmdline-multiuser \
