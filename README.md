@@ -1,5 +1,8 @@
 `meta-partner-arduino`
 ======================
+
+This layer is now substituted by new [meta-arduino official Yocto layer](https://github.com/arduino/meta-arduino), checkout! Project will be archived soon.
+
 [![Spell Check](https://github.com/arduino/meta-partner-arduino/actions/workflows/spell-check.yml/badge.svg)](https://github.com/arduino/meta-partner-arduino/actions/workflows/spell-check.yml)
 [![Sync Labels status](https://github.com/arduino/meta-partner-arduino/actions/workflows/sync-labels.yml/badge.svg)](https://github.com/arduino/meta-partner-arduino/actions/workflows/sync-labels.yml)
 
